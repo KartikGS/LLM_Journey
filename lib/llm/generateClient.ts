@@ -13,6 +13,9 @@ let ort: typeof OrtType | null = null;
 async function getOrt(): Promise<typeof OrtType> {
   if (!ort) {
     ort = await import("onnxruntime-web");
+    // Configure environment immediately after loading
+    ort.env.wasm.numThreads = 1;
+    ort.env.wasm.simd = true;
   }
   return ort;
 }
@@ -22,7 +25,7 @@ async function getSession(): Promise<OrtType.InferenceSession> {
     const ortModule = await getOrt();
     session = await ortModule.InferenceSession.create(
       "/models/bigram.onnx",
-      { executionProviders: ["wasm"] }
+      { executionProviders: ["wasm"], graphOptimizationLevel: "all" }
     );
   }
   return session;
@@ -39,50 +42,43 @@ export async function generate({
 }) {
   const { stoi, itos, block_size } = meta;
   const session = await getSession();
+  const ortModule = await getOrt();
+  const vocabSize = Object.keys(itos).length;
 
-  // encode prompt
+  // Encode prompt
   let idx: number[] = prompt.split("").map(c => stoi[c] ?? 0);
-
   if (idx.length === 0) idx = [0];
 
   for (let step = 0; step < maxNewTokens; step++) {
-    // crop to block_size (causal window)
-    const idxCond =
-      idx.length > block_size
-        ? idx.slice(idx.length - block_size)
-        : idx;
+    // 1. Efficiently crop context
+    const idxCond = idx.length > block_size
+      ? idx.slice(-block_size)
+      : idx;
 
-    // ONNX expects int64 - use BigInt64Array for web
-    const ortModule = await getOrt();
+    // 2. Create tensor once per step
     const inputTensor = new ortModule.Tensor(
       "int64",
       new BigInt64Array(idxCond.map(BigInt)),
       [1, idxCond.length]
     );
 
-    const outputs = await session.run({
-      input_ids: inputTensor,
-    });
-
-    // logits shape: [1, T, vocab]
+    // 3. Inference
+    const outputs = await session.run({ input_ids: inputTensor });
     const logits = outputs.logits.data as Float32Array;
-    const vocabSize = Object.keys(itos).length;
+
+    // 4. Extract last logit without full Array.from overhead
     const T = idxCond.length;
+    const lastLogits = logits.subarray((T - 1) * vocabSize, T * vocabSize);
 
-    // take last timestep logits
-    const start = (T - 1) * vocabSize;
-    const end = start + vocabSize;
-    const lastLogits = Array.from(logits.slice(start, end));
-
-    // softmax + sampling
-    const probs = softmax(lastLogits);
+    // 5. Softmax & Sample (ensure these accept Float32Array)
+    const probs = softmax(Array.from(lastLogits));
     const nextToken = sampleMultinomial(probs);
 
-    // append
     idx.push(nextToken);
+
+    // Optional: Add a callback here to stream tokens to the UI
+    // onToken(itos[String(nextToken)]); 
   }
 
-  // decode
   return idx.map(i => itos[String(i)] ?? "").join("");
 }
-

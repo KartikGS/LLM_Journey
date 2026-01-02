@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LLM Journey
+
+A comprehensive web application that demonstrates the progression of Large Language Models (LLMs) from base models to advanced agents. This interactive platform showcases various LLM improvements and techniques over time, providing hands-on experience with different stages of LLM development.
+
+## Overview
+
+LLM Journey is an educational platform built with Next.js that walks through the evolution of language models, from basic transformer architectures to sophisticated agent systems. The application features interactive demos, reference materials, and practical implementations of key LLM concepts.
+
+## Features
+
+### Core Modules
+
+- **Base LLM**: A decoder-only self-attention transformer model (~0.2M parameters) trained on the Shakespeare dataset, running locally via ONNX Runtime
+- **Training**: Learn about model training processes and techniques
+- **Fine-tuning**: Explore fine-tuning methods for adapting pre-trained models
+- **Tools**: Integration with external tools and APIs
+- **RAG (Retrieval-Augmented Generation)**: Implementation of RAG for enhanced context-aware responses
+- **Agents**: Advanced agent systems with reasoning capabilities
+- **MCP (Model Context Protocol)**: Protocol-based model interactions
+- **Deployment**: Best practices for deploying LLM applications
+- **Safety**: Safety considerations and guardrails for LLM applications
+- **Evaluation**: Methods for evaluating LLM performance
+
+### Technical Highlights
+
+- **Local Inference**: Client-side model inference using ONNX Runtime Web
+- **Interactive Chat Interface**: Real-time interaction with various LLM implementations
+- **Model Loading**: Dynamic model loading with progress tracking
+- **Hugging Face Integration**: Support for Hugging Face model inference
+- **Modern UI**: Responsive design with dark mode support
+
+## Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org) 15.5.7 (App Router)
+- **UI Library**: React 19.0.1
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 3.4.1
+- **ML Runtime**: ONNX Runtime Web 1.23.0
+- **Package Manager**: pnpm
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 20 or higher
+- pnpm (or npm/yarn/bun)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/KartikGS/LLM_Journey
+cd LLM-Journey
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables (if needed):
+```bash
+# Create a .env.local file for any required API keys
+# For example, if using Hugging Face API:
+HF_token=your_token_here
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Running the Development Server
 
-## Learn More
+Start the development server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application will be available at [http://localhost:3001](http://localhost:3001).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Building for Production
 
-## Deploy on Vercel
+```bash
+pnpm build
+pnpm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+LLM-Journey/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── base-llm/         # Base LLM implementation
+│   ├── fine-tuning/      # Fine-tuning module
+│   ├── rag/              # RAG implementation
+│   ├── tools/            # Tools integration
+│   ├── mcps/             # MCP protocol implementation
+│   ├── ui/               # Reusable UI components
+│   └── lib/              # Utility functions and actions
+├── lib/                   # Shared libraries
+│   ├── llm/              # LLM generation logic
+│   └── tokenizer/        # Tokenization utilities
+├── public/                # Static assets
+│   └── models/           # ONNX model files
+└── package.json          # Project dependencies
+```
+
+## Key Components
+
+- **BaseLLMChat**: Interactive chat interface for the base transformer model
+- **InteractLLM**: Main interaction component with model loading
+- **ChatInput**: Input component for user messages
+- **LoadButton**: Model loading button with state management
+- **Navbar**: Navigation component for module selection
+
+## Model Information
+
+The base model included in this project:
+- **Architecture**: Decoder-only transformer with self-attention
+- **Parameters**: ~0.2M
+- **Training Data**: Shakespeare dataset
+- **Format**: ONNX (for efficient browser-based inference)
+- **Runtime**: ONNX Runtime Web (WASM backend)
+
+**Note**: The base model is intentionally small and trained on limited data for educational purposes. Outputs may appear somewhat illogical, demonstrating the progression from basic to advanced models.
+
+## Development
+
+### Linting
+
+```bash
+pnpm lint
+```
+
+### Type Checking
+
+TypeScript is configured for strict type checking. The project uses ESLint with Next.js configuration.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is private and not licensed for public use.
+
+## Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/)
+- [React Documentation](https://react.dev)
+
+## Acknowledgments
+
+This project is designed as an educational resource to understand the evolution and capabilities of Large Language Models.
