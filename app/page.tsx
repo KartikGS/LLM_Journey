@@ -1,6 +1,5 @@
 import Image from "next/image";
 import InteractLLM from "./ui/InteractLLM";
-import Navbar from "./ui/navbar";
 
 export default function Home() {
 

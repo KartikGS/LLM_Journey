@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const navItems = [
   { name: 'Home', href: '/' },
@@ -22,13 +22,12 @@ export default function Navbar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [showHamburger, setShowHamburger] = useState(true)
+  const isOpenRef = useRef(isOpen)
 
-  // Close menu when pathname changes (on mobile)
+  // Keep ref in sync with state
   useEffect(() => {
-    if (isOpen) {
-      handleClose()
-    }
-  }, [pathname])
+    isOpenRef.current = isOpen
+  }, [isOpen])
 
   const handleClose = () => {
     setIsOpen(false)
@@ -43,6 +42,14 @@ export default function Navbar() {
     setShowHamburger(false)
     setIsOpen(true)
   }
+
+  // Close menu when pathname changes (on mobile)
+  useEffect(() => {
+    if (isOpenRef.current) {
+      handleClose()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   return (
     <>
@@ -117,8 +124,8 @@ export default function Navbar() {
                   key={item.name}
                   href={item.href}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${isActive
-                      ? 'bg-black/[.05] dark:bg-white/[.06] text-foreground'
-                      : 'text-foreground/70 hover:text-foreground hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a]'
+                    ? 'bg-black/[.05] dark:bg-white/[.06] text-foreground'
+                    : 'text-foreground/70 hover:text-foreground hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a]'
                     }`}
                 >
                   {item.name}
