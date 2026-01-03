@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
+import { ModelMeta } from "@/types/llm";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",
@@ -14,12 +15,6 @@ const sampleInputs = [
     "No more talking on't; let it be done: away, away!"
 ];
 
-interface ModelMeta {
-    stoi: Record<string, number>;
-    itos: Record<string, string>;
-    block_size: number;
-}
-
 export default function BaseLLMChat() {
     const [response, setResponse] = useState("Model Response ...");
     const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +24,7 @@ export default function BaseLLMChat() {
 
     useEffect(() => {
         // Load meta.json on client side
-        fetch('/lib/tokenizer/meta.json')
+        fetch('/tokenizer/meta.json')
             .then(res => res.json())
             .then(data => setMeta(data))
             .catch(err => {

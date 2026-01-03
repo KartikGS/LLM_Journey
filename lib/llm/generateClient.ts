@@ -1,11 +1,6 @@
+import { ModelMeta } from "@/types/llm";
 import { softmax, sampleMultinomial } from "./sampling";
 import type * as OrtType from "onnxruntime-web";
-
-interface ModelMeta {
-  stoi: Record<string, number>;
-  itos: Record<string, string>;
-  block_size: number;
-}
 
 let session: OrtType.InferenceSession | null = null;
 let ort: typeof OrtType | null = null;

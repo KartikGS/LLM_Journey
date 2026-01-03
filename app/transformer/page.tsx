@@ -1,4 +1,5 @@
-import BaseLLMChat from "./BaseLLMChat";
+import BaseLLMChat from "./components/BaseLLMChat";
+import Link from "next/link";
 
 export default function BaseLLMPage() {
   return (
@@ -243,6 +244,19 @@ export default function BaseLLMPage() {
           </a>
         </div>
 
+      </div>
+
+      {/* Next page redirection*/}
+      <div className="w-full flex flex-col lg:flex-row items-center justify-around gap-4">
+        <div className="text-base sm:text-2xl text-gray-700 dark:text-gray-300 text-center">
+          The small transformer produces meaningless text, but when it is scaled we get LLMs which produces text that makes sence.
+        </div>
+        <Link
+          href="/llm"
+          className="text-blue-600 dark:text-blue-400 text-base sm:text-2xl hover:underline"
+        >
+          Explore LLM →
+        </Link>
       </div>
     </div>
   );
