@@ -1,6 +1,6 @@
 'use client'
 
-import { logger } from "@/lib/utils/logger"
+import { loggerClient } from "@/lib/utils/logger/client"
 
 export default function Error({
     error,
@@ -9,7 +9,7 @@ export default function Error({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    logger.error('Error boundary caught error', error)
+    loggerClient.error('Error boundary caught error', error)
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">

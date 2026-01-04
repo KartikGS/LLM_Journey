@@ -3,7 +3,7 @@
 import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
 import { ModelMeta } from "@/types/llm";
-import { logger } from "@/lib/utils/logger";
+import { loggerClient } from "@/lib/utils/logger/client";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",
@@ -29,7 +29,7 @@ export default function BaseLLMChat() {
             .then(res => res.json())
             .then(data => setMeta(data))
             .catch(err => {
-                logger.error('Failed to load meta.json:', err);
+                loggerClient.error('Failed to load meta.json:', err);
                 setResponse("Error loading model metadata");
             });
     }, []);
@@ -62,7 +62,7 @@ export default function BaseLLMChat() {
             setResponse(result || "Error generating text");
             setHasGeneratedText(true);
         } catch (error) {
-            logger.error('Generation error:', error);
+            loggerClient.error('Generation error:', error);
             setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
             setHasGeneratedText(true);
         } finally {
