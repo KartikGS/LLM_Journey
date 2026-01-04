@@ -4,6 +4,7 @@ import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
 import { ModelMeta } from "@/types/llm";
 import { loggerClient } from "@/lib/utils/logger/client";
+import { metricsRegistry } from "@/lib/utils/metrics";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",
@@ -26,10 +27,26 @@ export default function BaseLLMChat() {
     useEffect(() => {
         // Load meta.json on client side
         fetch('/tokenizer/meta.json')
-            .then(res => res.json())
-            .then(data => setMeta(data))
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`Failed to load metadata: ${res.status} ${res.statusText}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                setMeta(data);
+                loggerClient.debug('Model metadata loaded successfully', { 
+                    component: 'BaseLLMChat',
+                    blockSize: data.block_size,
+                    vocabSize: Object.keys(data.itos).length,
+                });
+            })
             .catch(err => {
-                loggerClient.error('Failed to load meta.json:', err);
+                loggerClient.error('Failed to load meta.json', err, {
+                    component: 'BaseLLMChat',
+                    url: '/tokenizer/meta.json',
+                    action: 'metadata_load',
+                });
                 setResponse("Error loading model metadata");
             });
     }, []);
@@ -39,6 +56,10 @@ export default function BaseLLMChat() {
 
         if (!meta) {
             setResponse("Model metadata not loaded yet...");
+            loggerClient.warn('Generation attempted before metadata loaded', {
+                component: 'BaseLLMChat',
+                action: 'submit_form',
+            });
             return;
         }
 
@@ -53,16 +74,51 @@ export default function BaseLLMChat() {
             return;
         }
 
+        const startTime = Date.now();
+        const inputLength = inputText.length;
+
+        // Track user interaction
+        loggerClient.debug('Generation started', {
+            component: 'BaseLLMChat',
+            action: 'generate_text',
+            inputLength,
+            maxNewTokens: 200,
+        });
+
         try {
             const result = await generate({
                 meta,
                 prompt: inputText,
                 maxNewTokens: 200,
             });
+            
+            const duration = Date.now() - startTime;
+            const outputLength = result?.length || 0;
+            
             setResponse(result || "Error generating text");
             setHasGeneratedText(true);
+            
+            loggerClient.debug('Generation completed successfully', {
+                component: 'BaseLLMChat',
+                action: 'generate_text',
+                inputLength,
+                outputLength,
+                duration,
+                status: 'success',
+            });
         } catch (error) {
-            loggerClient.error('Generation error:', error);
+            const duration = Date.now() - startTime;
+            
+            loggerClient.error('Generation error', error, {
+                component: 'BaseLLMChat',
+                action: 'generate_text',
+                inputLength,
+                duration,
+                status: 'error',
+                errorType: error instanceof Error ? error.name : 'Unknown',
+                errorMessage: error instanceof Error ? error.message : String(error),
+            });
+            
             setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
             setHasGeneratedText(true);
         } finally {
@@ -79,6 +135,13 @@ export default function BaseLLMChat() {
             // Clear output when sample input is selected
             setResponse("");
             setHasGeneratedText(false);
+            
+            loggerClient.debug('Sample input selected', {
+                component: 'BaseLLMChat',
+                action: 'select_sample',
+                sampleLength: sample.length,
+                truncatedLength: truncated.length,
+            });
         }
     }
 
