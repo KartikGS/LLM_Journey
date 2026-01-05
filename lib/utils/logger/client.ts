@@ -68,8 +68,10 @@ function getBrowserContext(): LogContext {
 
 // Log queue for batching
 interface QueuedLog {
+    requestId: string;
     entry: ClientLogPayload;
     retries: number;
+    inFlight: boolean;
 }
 
 let logQueue: QueuedLog[] = [];
@@ -88,69 +90,79 @@ if (typeof window !== 'undefined') {
 }
 
 function flushLogQueue() {
-    if (!isOnline || logQueue.length === 0) {
-        return;
-    }
+    if (!isOnline || logQueue.length === 0) return;
 
-    const batch = logQueue.splice(0, config.observability.clientLogBatchSize);
+    const batch = logQueue
+        .filter(q => !q.inFlight)
+        .slice(0, config.observability.clientLogBatchSize);
+
     if (batch.length === 0) return;
 
-    sendLogBatch(batch.map(q => q.entry));
-
-    // Clear timer if queue is empty
-    if (logQueue.length === 0 && batchTimer) {
-        clearTimeout(batchTimer);
-        batchTimer = null;
-    }
+    batch.forEach(q => q.inFlight = true);
+    sendLogBatch(batch);
 }
 
-async function sendLogBatch(entries: ClientLogPayload[]): Promise<void> {
-    if (entries.length === 0) return;
-
+async function sendLogBatch(batch: QueuedLog[]): Promise<void> {
     try {
         const response = await fetch('/api/log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(entries),
+            body: JSON.stringify(batch.map(b => b.entry)),
         });
 
         if (!response.ok) {
             throw new Error(`Log API returned ${response.status}`);
         }
+
+        // remove successful entries
+        logQueue = logQueue.filter(q => !batch.some(b => b.requestId === q.requestId));
+
+        // cleanup timer
+        if (logQueue.length === 0 && batchTimer) {
+            clearTimeout(batchTimer);
+            batchTimer = null;
+        }
+
     } catch (error) {
-        // Re-queue failed logs for retry (up to retry limit)
-        entries.forEach(entry => {
-            const existing = logQueue.find(q => q.entry === entry);
-            if (existing) {
-                if (existing.retries < config.observability.clientLogRetryAttempts) {
-                    existing.retries++;
-                } else {
-                    // Max retries reached, remove from queue
-                    const index = logQueue.indexOf(existing);
-                    if (index > -1) {
-                        logQueue.splice(index, 1);
-                    }
-                    // Log to console as fallback
-                    console.error('[LOGGER] Failed to send log after max retries:', entry);
-                }
+        batch.forEach(q => {
+            q.inFlight = false;
+            q.retries++;
+
+            if (q.retries >= config.observability.clientLogRetryAttempts) {
+                logQueue = logQueue.filter(item => item.requestId !== q.requestId);
+                console.error('[LOGGER] Failed to send log after max retries:', q.entry);
             }
         });
+        if (!batchTimer && logQueue.some(q => !q.inFlight)) {
+            batchTimer = setTimeout(flushLogQueue, config.observability.clientLogRetryDelay);
+        }
     }
 }
 
 async function sendLogWithRetry(
+    requestId: string,
     entry: ClientLogPayload,
     retries: number = 0
 ): Promise<void> {
     if (!isOnline) {
         // Queue for later when online
-        logQueue.push({ entry, retries: 0 });
+        if (!logQueue.some(q => q.requestId === requestId)) {
+            if (logQueue.length >= config.observability.clientMaxQueueSize) {
+                logQueue.shift(); // drop oldest
+            }
+            logQueue.push({ requestId, entry, retries: 0, inFlight: false });
+        }
         return;
     }
 
     if (config.observability.clientLogBatchingEnabled) {
         // Add to batch queue
-        logQueue.push({ entry, retries: 0 });
+        if (!logQueue.some(q => q.requestId === requestId)) {
+            if (logQueue.length >= config.observability.clientMaxQueueSize) {
+                logQueue.shift(); // drop oldest
+            }
+            logQueue.push({ requestId, entry, retries: 0, inFlight: false });
+        }
 
         // Schedule batch flush
         if (!batchTimer) {
@@ -160,7 +172,8 @@ async function sendLogWithRetry(
         }
 
         // Flush immediately if batch is full
-        if (logQueue.length >= config.observability.clientLogBatchSize) {
+        const readyCount = logQueue.filter(q => !q.inFlight).length;
+        if (readyCount >= config.observability.clientLogBatchSize) {
             if (batchTimer) {
                 clearTimeout(batchTimer);
                 batchTimer = null;
@@ -183,8 +196,8 @@ async function sendLogWithRetry(
             if (retries < config.observability.clientLogRetryAttempts) {
                 // Retry after delay
                 setTimeout(() => {
-                    sendLogWithRetry(entry, retries + 1);
-                }, config.observability.clientLogRetryDelay * (retries + 1));
+                    sendLogWithRetry(requestId, entry, retries + 1);
+                }, config.observability.clientLogRetryDelay * Math.pow(2, retries));
             } else {
                 console.error('[LOGGER] Failed to send log after max retries:', entry);
             }
@@ -218,7 +231,7 @@ function logClient(
         },
     };
 
-    sendLogWithRetry(entry);
+    sendLogWithRetry(requestId, entry);
 }
 
 export const loggerClient: Logger = {
@@ -245,16 +258,49 @@ export function flushClientLogs() {
     flushLogQueue();
 }
 
+function sendLogBatchBeacon(batch: QueuedLog[]) {
+    if (!navigator.sendBeacon) return false;
+
+    const payload = JSON.stringify(batch.map(b => b.entry));
+    return navigator.sendBeacon('/api/log', payload);
+}
+
+export function flushClientLogsUsingBeacon() {
+    if (batchTimer) {
+        clearTimeout(batchTimer);
+        batchTimer = null;
+    }
+
+    if (logQueue.length === 0) return;
+
+    const batch = logQueue
+        .filter(q => !q.inFlight)
+        .slice(0, config.observability.clientLogBatchSize);
+
+    if (batch.length === 0) return;
+
+    batch.forEach(q => q.inFlight = true);
+
+    const sent = sendLogBatchBeacon(batch);
+
+    if (sent) {
+        logQueue = logQueue.filter(
+            q => !batch.some(b => b.requestId === q.requestId)
+        );
+    } else {
+        sendLogBatch(batch);
+    }
+}
+
 // Flush logs on page unload
 if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-        flushClientLogs();
+        flushClientLogsUsingBeacon();
     });
 
-    // Also flush on visibility change (page hidden)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            flushClientLogs();
+            flushClientLogsUsingBeacon();
         }
     });
 }

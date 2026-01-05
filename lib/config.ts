@@ -19,6 +19,7 @@ export const config = {
         
         // Client logging
         clientLogBatchingEnabled: process.env.CLIENT_LOG_BATCHING !== 'false',
+        clientMaxQueueSize: parseInt(process.env.CLIENT_MAX_QUEUE_SIZE || '500', 10),
         clientLogBatchSize: parseInt(process.env.CLIENT_LOG_BATCH_SIZE || '10', 10),
         clientLogBatchDelay: parseInt(process.env.CLIENT_LOG_BATCH_DELAY || '5000', 10), // ms
         clientLogRetryAttempts: parseInt(process.env.CLIENT_LOG_RETRY_ATTEMPTS || '3', 10),
