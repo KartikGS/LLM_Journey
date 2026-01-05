@@ -9,7 +9,8 @@ export const REQUEST_ID_HEADER = 'x-request-id';
  * Generate a unique trace/request ID
  */
 export function generateTraceId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
