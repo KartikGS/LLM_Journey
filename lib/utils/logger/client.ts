@@ -18,7 +18,7 @@ function shouldLog(level: LogLevel): boolean {
 // Generate or retrieve session ID
 function getSessionId(): string {
     if (typeof window === 'undefined') return '';
-    
+
     const key = '__llm_journey_session_id__';
     let sessionId = sessionStorage.getItem(key);
     if (!sessionId) {
@@ -40,11 +40,11 @@ function normalizeError(error: unknown): ErrorDetails | unknown {
             message: error.message,
             stack: error.stack,
         };
-        
+
         if ('cause' in error && error.cause) {
             errorDetails.cause = error.cause;
         }
-        
+
         return errorDetails;
     }
     return error;
@@ -54,7 +54,7 @@ function getBrowserContext(): LogContext {
     if (typeof window === 'undefined') {
         return {};
     }
-    
+
     return {
         userAgent: navigator.userAgent,
         url: window.location.href,
@@ -96,7 +96,7 @@ function flushLogQueue() {
     if (batch.length === 0) return;
 
     sendLogBatch(batch.map(q => q.entry));
-    
+
     // Clear timer if queue is empty
     if (logQueue.length === 0 && batchTimer) {
         clearTimeout(batchTimer);
@@ -151,14 +151,14 @@ async function sendLogWithRetry(
     if (config.observability.clientLogBatchingEnabled) {
         // Add to batch queue
         logQueue.push({ entry, retries: 0 });
-        
+
         // Schedule batch flush
         if (!batchTimer) {
             batchTimer = setTimeout(() => {
                 flushLogQueue();
             }, config.observability.clientLogBatchDelay);
         }
-        
+
         // Flush immediately if batch is full
         if (logQueue.length >= config.observability.clientLogBatchSize) {
             if (batchTimer) {
@@ -250,7 +250,7 @@ if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
         flushClientLogs();
     });
-    
+
     // Also flush on visibility change (page hidden)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {

@@ -1,19 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getOrCreateTraceId, getTraceIdFromHeaders, TRACE_HEADER } from './lib/middleware/tracing';
+import { NextRequest, NextResponse } from "next/server";
+import {
+    getOrCreateTraceId,
+    getTraceIdFromHeaders,
+    TRACE_HEADER,
+} from "./lib/middleware/tracing";
 
 export function middleware(request: NextRequest) {
     // Get or create trace ID
     const existingTraceId = getTraceIdFromHeaders(request.headers);
     const traceId = getOrCreateTraceId(existingTraceId);
 
-    // Create response with trace ID header
-    const response = NextResponse.next();
+    // Extract request headers
+    const requestHeaders = new Headers(request.headers);
+    // Add trace ID to request headers for server-side correlation
+    requestHeaders.set(TRACE_HEADER, traceId);
 
+    // Create response with request header
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
     // Add trace ID to response headers for client-side correlation
     response.headers.set(TRACE_HEADER, traceId);
-
-    // Also add to request headers for server-side access
-    request.headers.set(TRACE_HEADER, traceId);
 
     return response;
 }
@@ -29,7 +38,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * - public folder files (images, etc.)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|onnx)).*)',
+        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|onnx)).*)",
     ],
 };
-

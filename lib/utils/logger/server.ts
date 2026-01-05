@@ -26,17 +26,17 @@ function normalizeError(error: unknown): ErrorDetails | unknown {
             message: error.message,
             stack: error.stack,
         };
-        
+
         // Add code if available (e.g., from Node.js errors)
         if ('code' in error && error.code) {
             errorDetails.code = error.code as string | number;
         }
-        
+
         // Add cause if available (Error.cause in newer Node.js)
         if ('cause' in error && error.cause) {
             errorDetails.cause = error.cause;
         }
-        
+
         return errorDetails;
     }
     return error;
@@ -85,6 +85,7 @@ async function logServer(
     // Always log to console in development
     if (isDevelopment) {
         fallbackConsole(level, message, error, context);
+        return;
     }
 
     // Send to Axiom in production (or if explicitly configured)
