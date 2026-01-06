@@ -1,46 +1,15 @@
 import 'server-only';
 import { LogEntry, Logger, LogLevel, LogContext, ErrorDetails } from '@/types/logs';
 import { config } from '@/lib/config';
+import { shouldLog } from './shared/levels';
+import { normalizeError } from './shared/errors';
+import { createLogger } from './shared/logger-factory';
 
 const AXIOM_API_TOKEN = process.env.AXIOM_API_TOKEN;
 const AXIOM_DATASET = process.env.AXIOM_DATASET;
 const AXIOM_URL = process.env.AXIOM_URL;
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-const logLevelPriority: Record<LogLevel, number> = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3,
-};
-
-function shouldLog(level: LogLevel): boolean {
-    const configuredLevel = config.observability.logLevel;
-    return logLevelPriority[level] >= logLevelPriority[configuredLevel];
-}
-
-function normalizeError(error: unknown): ErrorDetails | unknown {
-    if (error instanceof Error) {
-        const errorDetails: ErrorDetails = {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-        };
-
-        // Add code if available (e.g., from Node.js errors)
-        if ('code' in error && error.code) {
-            errorDetails.code = error.code as string | number;
-        }
-
-        // Add cause if available (Error.cause in newer Node.js)
-        if ('cause' in error && error.cause) {
-            errorDetails.cause = error.cause;
-        }
-
-        return errorDetails;
-    }
-    return error;
-}
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 function fallbackConsole(level: LogLevel, message: string, error?: unknown, context?: LogContext) {
     const contextStr = context ? ` ${JSON.stringify(context)}` : '';
@@ -66,7 +35,7 @@ async function logServer(
     error?: unknown,
     context?: LogContext
 ) {
-    if (!shouldLog(level)) {
+    if (!shouldLog(level, config.observability.clientLogLevel)) {
         return;
     }
 
@@ -122,17 +91,4 @@ async function logServer(
     }
 }
 
-export const loggerServer: Logger = {
-    error(message: string, error?: unknown, context?: LogContext) {
-        logServer('error', message, error, context);
-    },
-    warn(message: string, context?: LogContext) {
-        logServer('warn', message, undefined, context);
-    },
-    info(message: string, context?: LogContext) {
-        logServer('info', message, undefined, context);
-    },
-    debug(message: string, context?: LogContext) {
-        logServer('debug', message, undefined, context);
-    },
-};
+export const loggerServer = createLogger(logServer);

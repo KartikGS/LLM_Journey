@@ -3,35 +3,9 @@
 import { ClientLogPayload, Logger, LogLevel, LogContext, ErrorDetails, QueuedLog } from "@/types/logs";
 import { config } from "@/lib/config";
 import { getSessionId, generateRequestId } from "../context/client";
-
-const logLevelPriority: Record<LogLevel, number> = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3,
-};
-
-function shouldLog(level: LogLevel): boolean {
-    const configuredLevel = config.observability.clientLogLevel;
-    return logLevelPriority[level] >= logLevelPriority[configuredLevel];
-}
-
-function normalizeError(error: unknown): ErrorDetails | unknown {
-    if (error instanceof Error) {
-        const errorDetails: ErrorDetails = {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-        };
-
-        if ('cause' in error && error.cause) {
-            errorDetails.cause = error.cause;
-        }
-
-        return errorDetails;
-    }
-    return error;
-}
+import { shouldLog } from "./shared/levels";
+import { normalizeError } from "./shared/errors";
+import { createLogger } from "./shared/logger-factory";
 
 function getBrowserContext(): LogContext {
     if (typeof window === 'undefined') {
@@ -104,7 +78,7 @@ async function sendLogBatch(batch: QueuedLog[]): Promise<void> {
 
             if (q.retries >= config.observability.clientLogRetryAttempts) {
                 logQueue = logQueue.filter(item => item.requestId !== q.requestId);
-                console.error('[LOGGER] Failed to send log after max retries:', q.entry);
+                //console.error('[LOGGER] Failed to send log after max retries:', q.entry);
             }
 
             q.inFlight = false;
@@ -176,7 +150,7 @@ async function sendLogWithRetry(
                     sendLogWithRetry(requestId, entry, retries + 1);
                 }, config.observability.clientLogRetryDelay * Math.pow(2, retries));
             } else {
-                console.error('[LOGGER] Failed to send log after max retries:', entry);
+                // console.error('[LOGGER] Failed to send log after max retries:', entry);
             }
         }
     }
@@ -188,7 +162,7 @@ function logClient(
     error?: unknown,
     context?: LogContext
 ) {
-    if (!shouldLog(level)) {
+    if (!shouldLog(level, config.observability.clientLogLevel)) {
         return;
     }
 
@@ -211,20 +185,7 @@ function logClient(
     sendLogWithRetry(requestId, entry);
 }
 
-export const loggerClient: Logger = {
-    error(message: string, error?: unknown, context?: LogContext) {
-        logClient('error', message, error, context);
-    },
-    warn(message: string, context?: LogContext) {
-        logClient('warn', message, undefined, context);
-    },
-    info(message: string, context?: LogContext) {
-        logClient('info', message, undefined, context);
-    },
-    debug(message: string, context?: LogContext) {
-        logClient('debug', message, undefined, context);
-    },
-};
+export const loggerClient: Logger = createLogger(logClient)
 
 // Export function to manually flush logs
 export function flushClientLogs() {

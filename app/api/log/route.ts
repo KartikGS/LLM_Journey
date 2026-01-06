@@ -24,8 +24,23 @@ export async function POST(req: NextRequest) {
         };
 
         // Parse request body - support both single log and batch
-        const body = await req.json();
+        let body: unknown;
+        try {
+            body = await req.json();
+        } catch (e) {
+            metricsRegistry.apiErrors.inc({ endpoint: '/api/log', reason: 'invalid_json' });
+            loggerServer.warn('Invalid JSON in log request', { url: req.url });
+            return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400 });
+        }
+
+
         const logs: ClientLogPayload[] = Array.isArray(body) ? body : [body];
+        if (logs.length > 100) {
+            return NextResponse.json(
+                { success: false, error: 'Too many log entries' },
+                { status: 413 }
+            );
+        }
 
         // Process each log entry
         for (const data of logs) {
@@ -58,17 +73,12 @@ export async function POST(req: NextRequest) {
 
         // Track API metrics
         metricsRegistry.apiRequests.inc({ endpoint: '/api/log', method: 'POST', status: '200' });
-        const duration = (Date.now() - startTime) / 1000; // Convert to seconds
-        metricsRegistry.apiRequestDuration.observe({ endpoint: '/api/log', method: 'POST' }, duration);
 
         return NextResponse.json({ success: true, count: logs.length });
     } catch (error) {
         // Track error metrics
         metricsRegistry.apiErrors.inc({ endpoint: '/api/log', method: 'POST' });
         metricsRegistry.apiRequests.inc({ endpoint: '/api/log', method: 'POST', status: '500' });
-
-        const duration = (Date.now() - startTime) / 1000;
-        metricsRegistry.apiRequestDuration.observe({ endpoint: '/api/log', method: 'POST' }, duration);
 
         loggerServer.error('Failed to process log request', error, {
             url: req.url,
@@ -79,5 +89,8 @@ export async function POST(req: NextRequest) {
             { success: false, error: 'Failed to process logs' },
             { status: 500 }
         );
+    } finally {
+        const duration = (Date.now() - startTime) / 1000;
+        metricsRegistry.apiRequestDuration.observe({ endpoint: '/api/log', method: 'POST' }, duration);
     }
 }
