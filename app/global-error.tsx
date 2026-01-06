@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react';
-import { loggerClient } from "@/lib/utils/logger/client"
+import { loggerClient } from "@/lib/observability/logger/client"
 
 // Simple error fingerprinting for grouping similar errors
 function getErrorFingerprint(error: Error): string {
@@ -26,7 +26,7 @@ export default function GlobalError({
     useEffect(() => {
         // Create error fingerprint for grouping
         const fingerprint = getErrorFingerprint(error);
-        
+
         // Get additional context
         const errorContext = {
             component: 'GlobalErrorBoundary',

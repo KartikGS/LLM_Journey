@@ -45,3 +45,11 @@ export type Logger = {
     error(message: string, error?: unknown, context?: LogContext): void;
     debug(message: string, context?: LogContext): void;
 };
+
+// Log queue for batching
+export interface QueuedLog {
+    requestId: string;
+    entry: ClientLogPayload;
+    retries: number;
+    inFlight: boolean;
+}

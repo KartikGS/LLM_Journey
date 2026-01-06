@@ -91,25 +91,22 @@ async function logServer(
     // Send to Axiom in production (or if explicitly configured)
     if (AXIOM_API_TOKEN && AXIOM_DATASET && AXIOM_URL) {
         try {
-            const response = await fetch(`${AXIOM_URL}/${AXIOM_DATASET}`, {
+            void fetch(`${AXIOM_URL}/${AXIOM_DATASET}`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${AXIOM_API_TOKEN}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify([entry]),
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text().catch(() => 'Unknown error');
+            }).catch((err) => {
                 if (isDevelopment) {
-                    console.error(`[LOGGER] Failed to send log to Axiom: ${response.status} ${errorText}`);
+                    console.error('[LOGGER] Failed to send log to Axiom:', err);
                 }
-                // Fallback to console if Axiom fails
+
                 if (!isDevelopment) {
                     fallbackConsole(level, message, error, context);
                 }
-            }
+            });
         } catch (fetchError) {
             if (isDevelopment) {
                 console.error('[LOGGER] Error sending log to Axiom:', fetchError);

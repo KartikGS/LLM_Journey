@@ -1,7 +1,8 @@
 'use client';
 
-import { ClientLogPayload, Logger, LogLevel, LogContext, ErrorDetails } from "@/types/logs";
+import { ClientLogPayload, Logger, LogLevel, LogContext, ErrorDetails, QueuedLog } from "@/types/logs";
 import { config } from "@/lib/config";
+import { getSessionId, generateRequestId } from "../context/client";
 
 const logLevelPriority: Record<LogLevel, number> = {
     debug: 0,
@@ -13,24 +14,6 @@ const logLevelPriority: Record<LogLevel, number> = {
 function shouldLog(level: LogLevel): boolean {
     const configuredLevel = config.observability.clientLogLevel;
     return logLevelPriority[level] >= logLevelPriority[configuredLevel];
-}
-
-// Generate or retrieve session ID
-function getSessionId(): string {
-    if (typeof window === 'undefined') return '';
-
-    const key = '__llm_journey_session_id__';
-    let sessionId = sessionStorage.getItem(key);
-    if (!sessionId) {
-        sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-        sessionStorage.setItem(key, sessionId);
-    }
-    return sessionId;
-}
-
-// Generate request ID for current request
-function generateRequestId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
 function normalizeError(error: unknown): ErrorDetails | unknown {
@@ -64,14 +47,6 @@ function getBrowserContext(): LogContext {
         screenWidth: window.screen.width,
         screenHeight: window.screen.height,
     };
-}
-
-// Log queue for batching
-interface QueuedLog {
-    requestId: string;
-    entry: ClientLogPayload;
-    retries: number;
-    inFlight: boolean;
 }
 
 let logQueue: QueuedLog[] = [];
@@ -125,13 +100,14 @@ async function sendLogBatch(batch: QueuedLog[]): Promise<void> {
 
     } catch (error) {
         batch.forEach(q => {
-            q.inFlight = false;
             q.retries++;
 
             if (q.retries >= config.observability.clientLogRetryAttempts) {
                 logQueue = logQueue.filter(item => item.requestId !== q.requestId);
                 console.error('[LOGGER] Failed to send log after max retries:', q.entry);
             }
+
+            q.inFlight = false;
         });
         if (!batchTimer && logQueue.some(q => !q.inFlight)) {
             batchTimer = setTimeout(flushLogQueue, config.observability.clientLogRetryDelay);
@@ -164,21 +140,22 @@ async function sendLogWithRetry(
             logQueue.push({ requestId, entry, retries: 0, inFlight: false });
         }
 
-        // Schedule batch flush
-        if (!batchTimer) {
-            batchTimer = setTimeout(() => {
-                flushLogQueue();
-            }, config.observability.clientLogBatchDelay);
-        }
+        const readyCount = logQueue.filter(q => !q.inFlight).length;
 
         // Flush immediately if batch is full
-        const readyCount = logQueue.filter(q => !q.inFlight).length;
         if (readyCount >= config.observability.clientLogBatchSize) {
             if (batchTimer) {
                 clearTimeout(batchTimer);
                 batchTimer = null;
             }
             flushLogQueue();
+        }
+        // Otherwise, schedule delayed flush
+        else if (!batchTimer) {
+            batchTimer = setTimeout(
+                flushLogQueue,
+                config.observability.clientLogBatchDelay
+            );
         }
     } else {
         // Send immediately without batching
@@ -249,7 +226,7 @@ export const loggerClient: Logger = {
     },
 };
 
-// Export function to manually flush logs (useful for page unload)
+// Export function to manually flush logs
 export function flushClientLogs() {
     if (batchTimer) {
         clearTimeout(batchTimer);

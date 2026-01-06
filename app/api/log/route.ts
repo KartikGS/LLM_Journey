@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loggerServer } from '@/lib/utils/logger/server';
+import { loggerServer } from '@/lib/observability/logger/server';
 import { ClientLogPayload } from '@/types/logs';
 import { getTraceIdFromHeaders } from '@/lib/middleware/tracing';
-import { metricsRegistry } from '@/lib/utils/metrics';
-import { measureTime } from '@/lib/utils/metrics';
+import { metricsRegistry } from '@/lib/observability/metrics';
+import { measureTime } from '@/lib/observability/metrics';
 
 // export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
     const startTime = Date.now();
-    
+
     try {
         // Extract trace ID from request headers
         const traceId = getTraceIdFromHeaders(req.headers);
-        
+
         // Get request metadata
         const requestMetadata = {
             url: req.url,
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         // Track error metrics
         metricsRegistry.apiErrors.inc({ endpoint: '/api/log', method: 'POST' });
         metricsRegistry.apiRequests.inc({ endpoint: '/api/log', method: 'POST', status: '500' });
-        
+
         const duration = (Date.now() - startTime) / 1000;
         metricsRegistry.apiRequestDuration.observe({ endpoint: '/api/log', method: 'POST' }, duration);
 

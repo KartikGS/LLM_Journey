@@ -3,8 +3,8 @@
 import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
 import { ModelMeta } from "@/types/llm";
-import { loggerClient } from "@/lib/utils/logger/client";
-import { metricsRegistry } from "@/lib/utils/metrics";
+import { loggerClient } from "@/lib/observability/logger/client";
+import { metricsRegistry } from "@/lib/observability/metrics";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",
@@ -35,7 +35,7 @@ export default function BaseLLMChat() {
             })
             .then(data => {
                 setMeta(data);
-                loggerClient.debug('Model metadata loaded successfully', { 
+                loggerClient.debug('Model metadata loaded successfully', {
                     component: 'BaseLLMChat',
                     blockSize: data.block_size,
                     vocabSize: Object.keys(data.itos).length,
@@ -91,13 +91,13 @@ export default function BaseLLMChat() {
                 prompt: inputText,
                 maxNewTokens: 200,
             });
-            
+
             const duration = Date.now() - startTime;
             const outputLength = result?.length || 0;
-            
+
             setResponse(result || "Error generating text");
             setHasGeneratedText(true);
-            
+
             loggerClient.debug('Generation completed successfully', {
                 component: 'BaseLLMChat',
                 action: 'generate_text',
@@ -108,7 +108,7 @@ export default function BaseLLMChat() {
             });
         } catch (error) {
             const duration = Date.now() - startTime;
-            
+
             loggerClient.error('Generation error', error, {
                 component: 'BaseLLMChat',
                 action: 'generate_text',
@@ -118,7 +118,7 @@ export default function BaseLLMChat() {
                 errorType: error instanceof Error ? error.name : 'Unknown',
                 errorMessage: error instanceof Error ? error.message : String(error),
             });
-            
+
             setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
             setHasGeneratedText(true);
         } finally {
@@ -135,7 +135,7 @@ export default function BaseLLMChat() {
             // Clear output when sample input is selected
             setResponse("");
             setHasGeneratedText(false);
-            
+
             loggerClient.debug('Sample input selected', {
                 component: 'BaseLLMChat',
                 action: 'select_sample',

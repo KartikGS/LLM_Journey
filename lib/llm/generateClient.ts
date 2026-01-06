@@ -1,7 +1,7 @@
 import { ModelMeta } from "@/types/llm";
 import { softmax, sampleMultinomial } from "./sampling";
 import type * as OrtType from "onnxruntime-web";
-import { metricsRegistry } from "@/lib/utils/metrics";
+import { metricsRegistry } from "@/lib/observability/metrics";
 
 let session: OrtType.InferenceSession | null = null;
 let ort: typeof OrtType | null = null;
@@ -54,7 +54,7 @@ export async function generate({
 }) {
   const startTime = Date.now();
   const generationId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  
+
   try {
     const { stoi, itos, block_size } = meta;
     const session = await getSession();
@@ -64,7 +64,7 @@ export async function generate({
     // Encode prompt
     let idx: number[] = prompt.split("").map(c => stoi[c] ?? 0);
     if (idx.length === 0) idx = [0];
-    
+
     // Track input tokens
     const inputTokenCount = idx.length;
     metricsRegistry.llmTokensInput.inc({ model: 'bigram.onnx' }, inputTokenCount);
@@ -102,7 +102,7 @@ export async function generate({
 
     const outputText = idx.map(i => itos[String(i)] ?? "").join("");
     const outputTokenCount = idx.length - inputTokenCount;
-    
+
     // Track metrics
     const duration = (Date.now() - startTime) / 1000; // Convert to seconds
     metricsRegistry.llmGenerations.inc({ model: 'bigram.onnx', status: 'success' });
@@ -114,11 +114,11 @@ export async function generate({
     // Track error metrics
     metricsRegistry.llmGenerations.inc({ model: 'bigram.onnx', status: 'error' });
     metricsRegistry.llmErrors.inc({ type: 'generation', model: 'bigram.onnx' });
-    
+
     // Track duration even on error
     const duration = (Date.now() - startTime) / 1000;
     metricsRegistry.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'error' }, duration);
-    
+
     throw error;
   }
 }
