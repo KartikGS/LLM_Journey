@@ -54,3 +54,23 @@ export interface QueuedLog {
     retries: number;
     inFlight: boolean;
 }
+
+export interface ClientLogContext {
+    sessionId: string;
+    requestId: string;
+    page: string;
+    component?: string;
+}
+
+export interface ServerLogContext {
+    traceId: string;
+    ip?: string;
+}
+
+export interface ClientSessionContext {
+    sessionId: string;
+    userAgent: string;
+    language: string;
+    platform: string;
+    screen: string;
+}

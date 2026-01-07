@@ -16,10 +16,6 @@ export async function POST(req: NextRequest) {
 
         // Get request metadata
         const requestMetadata = {
-            url: req.url,
-            method: req.method,
-            userAgent: req.headers.get('user-agent') || undefined,
-            referer: req.headers.get('referer') || undefined,
             ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
         };
 

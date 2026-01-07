@@ -1,25 +1,18 @@
 'use client';
 
-import { ClientLogPayload, Logger, LogLevel, LogContext, QueuedLog } from "@/types/logs";
+import { ClientLogPayload, Logger, LogLevel, LogContext, QueuedLog, ClientLogContext } from "@/types/logs";
 import { config } from "@/lib/config";
 import { getSessionId, generateRequestId } from "../context/client";
 import { shouldLog } from "./shared/levels";
 import { normalizeError } from "./shared/errors";
 import { createLogger } from "./shared/logger-factory";
 
-function getBrowserContext(): LogContext {
-    if (typeof window === 'undefined') {
-        return {};
-    }
+export function getPageContext() {
+    if (typeof window === "undefined") return {};
 
     return {
-        userAgent: navigator.userAgent,
-        url: window.location.href,
+        page: window.location.pathname,
         referrer: document.referrer || undefined,
-        language: navigator.language,
-        platform: navigator.platform,
-        screenWidth: window.screen.width,
-        screenHeight: window.screen.height,
     };
 }
 
@@ -166,7 +159,7 @@ function logClient(
         return;
     }
 
-    const browserContext = getBrowserContext();
+    const pageContext = getPageContext();
     const sessionId = getSessionId();
     const requestId = generateRequestId();
 
@@ -175,7 +168,7 @@ function logClient(
         message,
         error: error ? normalizeError(error) : undefined,
         context: {
-            ...browserContext,
+            ...pageContext,
             ...context,
             sessionId,
             requestId,

@@ -4,21 +4,21 @@ const MAX_STRING_LENGTH = 300;
 const MAX_KEYS = 25;
 const MAX_DEPTH = 2;
 
-const ALLOWED_CONTEXT_KEYS = new Set<string>([
-    'userAgent',
-    'url',
-    'referrer',
-    'language',
-    'platform',
-    'screenWidth',
-    'screenHeight',
-    'sessionId',
-    'requestId',
-    'feature',
-    'component',
-    'route',
-    'action',
-]);
+// const ALLOWED_CONTEXT_KEYS = new Set<string>([
+//     'userAgent',
+//     'url',
+//     'referrer',
+//     'language',
+//     'platform',
+//     'screenWidth',
+//     'screenHeight',
+//     'sessionId',
+//     'requestId',
+//     'feature',
+//     'component',
+//     'route',
+//     'action',
+// ]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
     return (
@@ -74,7 +74,7 @@ export function sanitizeContext(
     if (!isPlainObject(context)) return undefined;
 
     const entries = Object.entries(context)
-        .filter(([key]) => ALLOWED_CONTEXT_KEYS.has(key))
+        //.filter(([key]) => ALLOWED_CONTEXT_KEYS.has(key))
         .slice(0, MAX_KEYS);
 
     const sanitized: Record<string, unknown> = {};
