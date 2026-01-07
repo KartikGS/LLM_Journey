@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { config } from '@/lib/config';
 
+type CheckStatus = 'ok' | 'degraded' | 'failed';
+
 interface HealthStatus {
     status: 'healthy' | 'degraded' | 'unhealthy';
     timestamp: string;
@@ -8,25 +10,25 @@ interface HealthStatus {
     buildId: string;
     environment: string;
     checks: {
-        api: 'ok' | 'degraded' | 'failed';
-        [key: string]: string;
+        api: CheckStatus;
+        [key: string]: CheckStatus;
     };
 }
 
 export async function GET() {
     const checks: HealthStatus['checks'] = {
-        api: 'ok',
+        api: process.uptime() > 0 ? 'ok' : 'failed',
     };
 
     // Determine overall status
     const hasFailures = Object.values(checks).some(status => status === 'failed');
     const hasDegraded = Object.values(checks).some(status => status === 'degraded');
-    
-    const status: HealthStatus['status'] = hasFailures 
-        ? 'unhealthy' 
-        : hasDegraded 
-        ? 'degraded' 
-        : 'healthy';
+
+    const status: HealthStatus['status'] = hasFailures
+        ? 'unhealthy'
+        : hasDegraded
+            ? 'degraded'
+            : 'healthy';
 
     const healthStatus: HealthStatus = {
         status,
@@ -39,7 +41,12 @@ export async function GET() {
 
     const statusCode = status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503;
 
-    return NextResponse.json(healthStatus, { status: statusCode });
+    return NextResponse.json(healthStatus, {
+        status: statusCode,
+        headers: {
+            'Cache-Control': 'no-store',
+        }
+    });
 }
 
 // Also support HEAD request for simple health checks

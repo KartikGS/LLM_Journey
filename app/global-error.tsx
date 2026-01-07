@@ -5,7 +5,8 @@ import { loggerClient } from "@/lib/observability/logger/client"
 
 // Simple error fingerprinting for grouping similar errors
 function getErrorFingerprint(error: Error): string {
-    const key = `${error.name}:${error.message}`;
+    const stackTop = error.stack?.split('\n')[1] ?? '';
+    const key = `${error.name}:${error.message}:${stackTop}`;
     // Simple hash function
     let hash = 0;
     for (let i = 0; i < key.length; i++) {
@@ -16,6 +17,8 @@ function getErrorFingerprint(error: Error): string {
     return Math.abs(hash).toString(36);
 }
 
+const loggedErrors = new Set<string>();
+
 export default function GlobalError({
     error,
     reset,
@@ -24,19 +27,23 @@ export default function GlobalError({
     reset: () => void
 }) {
     useEffect(() => {
+        if (error.message.includes('ResizeObserver')) return;
         // Create error fingerprint for grouping
         const fingerprint = getErrorFingerprint(error);
+        if (loggedErrors.has(fingerprint)) return;
+        loggedErrors.add(fingerprint);
 
         // Get additional context
         const errorContext = {
             component: 'GlobalErrorBoundary',
-            errorName: error.name,
-            errorMessage: error.message,
+            //errorName: error.name,
+            //errorMessage: error.message,
             errorDigest: error.digest,
             fingerprint,
-            stack: error.stack,
+            //stack: error.stack,
             url: typeof window !== 'undefined' ? window.location.href : undefined,
             userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+            severity: error.name === 'ChunkLoadError' ? 'warn' : 'error',
         };
 
         loggerClient.error('Global error boundary caught error', error, errorContext);

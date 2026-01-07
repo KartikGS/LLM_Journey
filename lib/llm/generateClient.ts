@@ -53,7 +53,6 @@ export async function generate({
   maxNewTokens: number;
 }) {
   const startTime = Date.now();
-  const generationId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
   try {
     const { stoi, itos, block_size } = meta;
@@ -106,7 +105,7 @@ export async function generate({
     // Track metrics
     const duration = (Date.now() - startTime) / 1000; // Convert to seconds
     metricsRegistry.llmGenerations.inc({ model: 'bigram.onnx', status: 'success' });
-    metricsRegistry.llmGenerationDuration.observe({ model: 'bigram.onnx' }, duration);
+    metricsRegistry.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'success' }, duration);
     metricsRegistry.llmTokensGenerated.inc({ model: 'bigram.onnx' }, outputTokenCount);
 
     return outputText;

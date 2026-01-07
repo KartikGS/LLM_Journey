@@ -114,9 +114,9 @@ export default function BaseLLMChat() {
                 action: 'generate_text',
                 inputLength,
                 duration,
-                status: 'error',
-                errorType: error instanceof Error ? error.name : 'Unknown',
-                errorMessage: error instanceof Error ? error.message : String(error),
+                //status: 'error',
+                //errorType: error instanceof Error ? error.name : 'Unknown',
+                //errorMessage: error instanceof Error ? error.message : String(error),
             });
 
             setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
