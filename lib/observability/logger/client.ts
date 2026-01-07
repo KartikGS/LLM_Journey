@@ -1,6 +1,6 @@
 'use client';
 
-import { ClientLogPayload, Logger, LogLevel, LogContext, ErrorDetails, QueuedLog } from "@/types/logs";
+import { ClientLogPayload, Logger, LogLevel, LogContext, QueuedLog } from "@/types/logs";
 import { config } from "@/lib/config";
 import { getSessionId, generateRequestId } from "../context/client";
 import { shouldLog } from "./shared/levels";

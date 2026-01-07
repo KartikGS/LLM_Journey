@@ -44,7 +44,7 @@ async function logServer(
         message,
         timestamp: new Date().toISOString(),
         env: process.env.NODE_ENV,
-        runtime: 'server',
+        runtime: context?.runtime ? context.runtime : 'server',
         error: error ? normalizeError(error) : undefined,
         context,
         version: config.observability.version,

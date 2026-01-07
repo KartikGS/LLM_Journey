@@ -3,7 +3,7 @@ import { loggerServer } from '@/lib/observability/logger/server';
 import { ClientLogPayload } from '@/types/logs';
 import { getTraceIdFromHeaders } from '@/lib/middleware/tracing';
 import { metricsRegistry } from '@/lib/observability/metrics';
-import { measureTime } from '@/lib/observability/metrics';
+import { sanitizeContext } from '@/lib/observability/logger/shared/sanitize';
 
 // export const runtime = 'edge';
 
@@ -46,9 +46,12 @@ export async function POST(req: NextRequest) {
         for (const data of logs) {
             // Enhance context with request metadata and trace ID
             const enhancedContext = {
-                ...data.context,
-                requestId: traceId || data.context?.requestId,
-                ...requestMetadata,
+                runtime: 'client' as 'client' | 'server',
+                client: sanitizeContext(data.context),
+                server: {
+                    traceId: traceId,
+                    ...requestMetadata,
+                },
             };
 
             // Increment log counter

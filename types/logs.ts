@@ -9,6 +9,7 @@ export interface LogContext {
     url?: string;
     method?: string;
     userAgent?: string;
+    runtime?: 'client' | 'server';
     [key: string]: unknown;
 }
 
@@ -25,7 +26,7 @@ export interface LogEntry {
     message: string;
     timestamp: string;
     env?: string;
-    runtime: 'browser' | 'server';
+    runtime: 'client' | 'server';
     error?: ErrorDetails | unknown;
     context?: LogContext;
     version?: string;
