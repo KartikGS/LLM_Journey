@@ -4,7 +4,6 @@ import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
 import { ModelMeta } from "@/types/llm";
 import { loggerClient } from "@/lib/observability/logger/client";
-import { metricsRegistry } from "@/lib/observability/metrics";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",

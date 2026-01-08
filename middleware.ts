@@ -1,30 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-    getOrCreateTraceId,
-    getTraceIdFromHeaders,
-    TRACE_HEADER,
-} from "./lib/middleware/tracing";
+import { trace, context } from '@opentelemetry/api';
+import { extractTraceContext, injectTraceContext, getTraceIdFromHeaders } from "./lib/middleware/tracing";
+import { SEMATTRS_HTTP_METHOD, SEMATTRS_HTTP_URL, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
 export function middleware(request: NextRequest) {
-    // Get or create trace ID
-    const existingTraceId = getTraceIdFromHeaders(request.headers);
-    const traceId = getOrCreateTraceId(existingTraceId);
-
-    // Extract request headers
-    const requestHeaders = new Headers(request.headers);
-    // Add trace ID to request headers for server-side correlation
-    requestHeaders.set(TRACE_HEADER, traceId);
-
-    // Create response with request header
-    const response = NextResponse.next({
-        request: {
-            headers: requestHeaders,
-        },
+    // Extract trace context from incoming request
+    const extractedContext = extractTraceContext(request.headers);
+    
+    // Create a span for the request
+    const tracer = trace.getTracer('llm-journey-middleware');
+    
+    return context.with(extractedContext, () => {
+        const span = tracer.startSpan('http.request', {
+            attributes: {
+                [SEMATTRS_HTTP_METHOD]: request.method,
+                [SEMATTRS_HTTP_URL]: request.url,
+                [SEMATTRS_HTTP_ROUTE]: request.nextUrl.pathname,
+            },
+        });
+        
+        return context.with(trace.setSpan(context.active(), span), () => {
+            // Extract request headers
+            const requestHeaders = new Headers(request.headers);
+            
+            // Inject trace context into request headers for server-side correlation
+            injectTraceContext(requestHeaders);
+            
+            // Also add trace ID for backward compatibility
+            const traceId = span.spanContext().traceId;
+            requestHeaders.set('x-trace-id', traceId);
+            
+            // Create response with request header
+            const response = NextResponse.next({
+                request: {
+                    headers: requestHeaders,
+                },
+            });
+            
+            // Inject trace context into response headers
+            injectTraceContext(response.headers);
+            
+            // Add trace ID to response headers for client-side correlation
+            response.headers.set('x-trace-id', traceId);
+            
+            // Note: Span will be ended by the route handler or automatically by OpenTelemetry
+            // We don't end it here to allow route handlers to add attributes
+            
+            return response;
+        });
     });
-    // Add trace ID to response headers for client-side correlation
-    response.headers.set(TRACE_HEADER, traceId);
-
-    return response;
 }
 
 // Configure which routes to run middleware on

@@ -6,6 +6,7 @@ import { getSessionId, generateRequestId } from "../context/client";
 import { shouldLog } from "./shared/levels";
 import { normalizeError } from "./shared/errors";
 import { createLogger } from "./shared/logger-factory";
+import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 
 export function getPageContext() {
     if (typeof window === "undefined") return {};
@@ -157,6 +158,34 @@ function logClient(
 ) {
     if (!shouldLog(level, config.observability.clientLogLevel)) {
         return;
+    }
+
+    // Log to OpenTelemetry trace as events
+    try {
+        const tracer = trace.getTracer('llm-journey', config.observability.version);
+        const activeSpan = trace.getActiveSpan();
+        
+        if (activeSpan) {
+            activeSpan.addEvent(message, {
+                'log.level': level,
+                'log.message': message,
+                ...(error ? {
+                    'error': true,
+                    'error.name': error instanceof Error ? error.name : 'Unknown',
+                    'error.message': error instanceof Error ? error.message : String(error),
+                } : {}),
+                ...(context ? Object.fromEntries(
+                    Object.entries(context).map(([k, v]) => [`log.context.${k}`, v])
+                ) : {}),
+            });
+
+            if (level === 'error' && error) {
+                activeSpan.recordException(error instanceof Error ? error : new Error(String(error)));
+                activeSpan.setStatus({ code: SpanStatusCode.ERROR });
+            }
+        }
+    } catch (otelError) {
+        // Silently fail OpenTelemetry logging
     }
 
     const pageContext = getPageContext();

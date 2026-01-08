@@ -1,251 +1,281 @@
 import { config } from '@/lib/config';
+import { Counter, Gauge, Histogram, MetricLabels } from '@/types/metrics';
+import { metrics as otelMetrics, Meter } from '@opentelemetry/api';
+import { MeterProvider as SDKMeterProvider } from '@opentelemetry/sdk-metrics';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
-export interface MetricLabels {
-    [key: string]: string | number;
+const enabled = config.observability.metricsEnabled;
+const prefix = config.observability.metricsPrefix ?? "llm_journey";
+
+// Initialize meter provider if not already initialized
+let meterProvider: SDKMeterProvider | null = null;
+let meter: Meter | null = null;
+
+function getMeter(): Meter {
+    if (!meter) {
+        if (!meterProvider) {
+            const resource = resourceFromAttributes({
+                [SEMRESATTRS_SERVICE_NAME]: 'llm-journey',
+                [SEMRESATTRS_SERVICE_VERSION]: config.observability.version,
+                'service.build.id': config.observability.buildId,
+            });
+
+            meterProvider = new SDKMeterProvider({
+                resource,
+            });
+
+            // Set the global meter provider
+            otelMetrics.setGlobalMeterProvider(meterProvider);
+        }
+
+        meter = otelMetrics.getMeter('llm-journey', config.observability.version);
+    }
+
+    return meter;
 }
 
-export interface Counter {
-    inc(labels?: MetricLabels, value?: number): void;
-    get(labels?: MetricLabels): number;
-    reset(): void;
-}
-
-export interface Gauge {
-    set(labels: MetricLabels, value: number): void;
-    inc(labels?: MetricLabels, value?: number): void;
-    dec(labels?: MetricLabels, value?: number): void;
-    get(labels?: MetricLabels): number;
-    reset(): void;
-}
-
-export interface Histogram {
-    observe(labels: MetricLabels, value: number): void;
-    get(labels?: MetricLabels): Array<{ le: string; count: number }>;
-    reset(): void;
-}
+const getMetricName = (n: string) => `${prefix}_${n}`;
+const toLabelSet = (l?: MetricLabels) => l ?? {};
 
 class CounterImpl implements Counter {
-    private counts: Map<string, number> = new Map();
+    private counter: ReturnType<Meter['createCounter']>;
 
-    private getKey(labels?: MetricLabels): string {
-        if (!labels || Object.keys(labels).length === 0) {
-            return '__default__';
+    constructor(name: string, help: string) {
+        if (!enabled) {
+            this.counter = null as any;
+            return;
         }
-        return Object.keys(labels)
-            .sort()
-            .map(k => `${k}:${labels[k]}`)
-            .join('|');
+        const m = getMeter();
+        this.counter = m.createCounter(getMetricName(name), {
+            description: help,
+        });
     }
 
     inc(labels?: MetricLabels, value: number = 1): void {
-        if (!config.observability.metricsEnabled) return;
-
-        const key = this.getKey(labels);
-        const current = this.counts.get(key) || 0;
-        this.counts.set(key, current + value);
-    }
-
-    get(labels?: MetricLabels): number {
-        const key = this.getKey(labels);
-        return this.counts.get(key) || 0;
-    }
-
-    reset(): void {
-        this.counts.clear();
+        if (!enabled || !this.counter) return;
+        this.counter.add(value, toLabelSet(labels));
     }
 }
 
 class GaugeImpl implements Gauge {
-    private values: Map<string, number> = new Map();
+    private gauge: ReturnType<Meter['createObservableGauge']>;
+    private currentValue: Map<string, number> = new Map();
+    private callbackRegistered: boolean = false;
+
+    constructor(name: string, help: string) {
+        if (!enabled) {
+            this.gauge = null as any;
+            return;
+        }
+        const m = getMeter();
+        this.gauge = m.createObservableGauge(getMetricName(name), {
+            description: help,
+        });
+    }
+
+    private ensureCallback(): void {
+        if (this.callbackRegistered || !this.gauge) return;
+        
+        const m = getMeter();
+        m.addBatchObservableCallback(
+            (observableResult) => {
+                for (const [key, value] of this.currentValue.entries()) {
+                    const labels = this.parseKey(key);
+                    observableResult.observe(this.gauge, value, labels);
+                }
+            },
+            [this.gauge]
+        );
+        this.callbackRegistered = true;
+    }
+
+    private parseKey(key: string): MetricLabels {
+        if (!key || key === 'default') return {};
+        const labels: MetricLabels = {};
+        const parts = key.split(',');
+        for (const part of parts) {
+            const [k, v] = part.split('=');
+            if (k && v) {
+                labels[k] = v;
+            }
+        }
+        return labels;
+    }
 
     private getKey(labels?: MetricLabels): string {
-        if (!labels || Object.keys(labels).length === 0) {
-            return '__default__';
-        }
-        return Object.keys(labels)
-            .sort()
-            .map(k => `${k}:${labels[k]}`)
-            .join('|');
+        if (!labels || Object.keys(labels).length === 0) return 'default';
+        return Object.entries(labels)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}=${v}`)
+            .join(',');
     }
 
     set(labels: MetricLabels, value: number): void {
-        if (!config.observability.metricsEnabled) return;
-
+        if (!enabled) return;
+        this.ensureCallback();
         const key = this.getKey(labels);
-        this.values.set(key, value);
+        this.currentValue.set(key, value);
     }
 
     inc(labels?: MetricLabels, value: number = 1): void {
-        if (!config.observability.metricsEnabled) return;
-
+        if (!enabled) return;
+        this.ensureCallback();
         const key = this.getKey(labels);
-        const current = this.values.get(key) || 0;
-        this.values.set(key, current + value);
+        const current = this.currentValue.get(key) || 0;
+        this.currentValue.set(key, current + value);
     }
 
     dec(labels?: MetricLabels, value: number = 1): void {
-        if (!config.observability.metricsEnabled) return;
-
+        if (!enabled) return;
+        this.ensureCallback();
         const key = this.getKey(labels);
-        const current = this.values.get(key) || 0;
-        this.values.set(key, current - value);
-    }
-
-    get(labels?: MetricLabels): number {
-        const key = this.getKey(labels);
-        return this.values.get(key) || 0;
-    }
-
-    reset(): void {
-        this.values.clear();
+        const current = this.currentValue.get(key) || 0;
+        this.currentValue.set(key, Math.max(0, current - value));
     }
 }
 
 class HistogramImpl implements Histogram {
-    private buckets: number[] = [0.1, 0.5, 1, 5, 10, 30, 60, 300, 600, 3600]; // seconds
-    private observations: Map<string, number[]> = new Map();
+    private histogram: ReturnType<Meter['createHistogram']>;
 
-    private getKey(labels?: MetricLabels): string {
-        if (!labels || Object.keys(labels).length === 0) {
-            return '__default__';
+    constructor(name: string, help: string, buckets: number[]) {
+        if (!enabled) {
+            this.histogram = null as any;
+            return;
         }
-        return Object.keys(labels)
-            .sort()
-            .map(k => `${k}:${labels[k]}`)
-            .join('|');
+        const m = getMeter();
+        this.histogram = m.createHistogram(getMetricName(name), {
+            description: help,
+        });
     }
 
     observe(labels: MetricLabels, value: number): void {
-        if (!config.observability.metricsEnabled) return;
-
-        const key = this.getKey(labels);
-        const counts = this.observations.get(key) ?? new Array(this.buckets.length + 1).fill(0);
-        for (let i = 0; i < this.buckets.length; i++) {
-            if (value <= this.buckets[i]) {
-                counts[i]++;
-            }
-        }
-        counts[this.buckets.length]++; // +Inf
-        this.observations.set(key, counts);
-    }
-
-    get(labels?: MetricLabels): Array<{ le: string; count: number }> {
-        const key = this.getKey(labels);
-        const counts =
-            this.observations.get(key) ??
-            new Array(this.buckets.length + 1).fill(0);
-
-        const result = this.buckets.map((le, i) => ({
-            le: le.toString(),
-            count: counts[i],
-        }));
-
-        // +Inf bucket
-        result.push({
-            le: '+Inf',
-            count: counts[this.buckets.length],
-        });
-
-        return result;
-    }
-
-    reset(): void {
-        this.observations.clear();
+        if (!enabled || !this.histogram) return;
+        this.histogram.record(value, toLabelSet(labels));
     }
 }
 
-// Global metrics storage
-const metrics: Map<string, Counter | Gauge | Histogram> = new Map();
+// Global metrics storage for compatibility
+const defined = new Set<string>();
 
-function createCounter(name: string): Counter {
-    const counter = new CounterImpl();
-    if (metrics.has(name)) {
-        throw new Error(`Metric ${name} already exists`);
+function define<T>(name: string, factory: () => T): T {
+    if (defined.has(name)) {
+        throw new Error(`Metric '${name}' already defined`);
     }
-    metrics.set(name, counter);
-    return counter;
-}
+    defined.add(name);
 
-function createGauge(name: string): Gauge {
-    const gauge = new GaugeImpl();
-    if (metrics.has(name)) {
-        throw new Error(`Metric ${name} already exists`);
+    if (!enabled) {
+        // Return a no-op metric matching the interface
+        return {
+            inc() { },
+            observe() { },
+            set() { },
+            dec() { },
+        } as unknown as T;
     }
-    metrics.set(name, gauge);
-    return gauge;
-}
 
-function createHistogram(name: string): Histogram {
-    const histogram = new HistogramImpl();
-    if (metrics.has(name)) {
-        throw new Error(`Metric ${name} already exists`);
-    }
-    metrics.set(name, histogram);
-    return histogram;
-}
-
-function getMetric(name: string): Counter | Gauge | Histogram | undefined {
-    return metrics.get(name);
+    return factory();
 }
 
 // Predefined metrics
-export const metricsRegistry = {
+export const metrics = {
     // API metrics
-    apiRequests: createCounter('api_requests_total'),
-    apiRequestDuration: createHistogram('api_request_duration_seconds'),
-    apiErrors: createCounter('api_errors_total'),
+    apiRequests: define(
+        "api_requests_total",
+        () => new CounterImpl("api_requests_total", "Total number of API requests")
+    ),
+    apiRequestDuration: define(
+        "api_request_duration_seconds",
+        () => new HistogramImpl(
+            "api_request_duration_seconds",
+            "API request duration in seconds",
+            [0.1, 0.5, 1, 5, 10, 30, 60]
+        )
+    ),
+    apiErrors: define(
+        "api_errors_total",
+        () => new CounterImpl("api_errors_total", "Total number of API errors")
+    ),
 
     // LLM metrics
-    llmGenerations: createCounter('llm_generations_total'),
-    llmGenerationDuration: createHistogram('llm_generation_duration_seconds'),
-    llmTokensGenerated: createCounter('llm_tokens_generated_total'),
-    llmTokensInput: createCounter('llm_tokens_input_total'),
-    llmErrors: createCounter('llm_errors_total'),
-    llmModelLoadTime: createHistogram('llm_model_load_duration_seconds'),
+    llmGenerations: define(
+        "llm_generations_total",
+        () => new CounterImpl("llm_generations_total", "Total number of LLM generations")
+    ),
+    llmGenerationDuration: define(
+        "llm_generation_duration_seconds",
+        () => new HistogramImpl(
+            "llm_generation_duration_seconds",
+            "LLM generation duration in seconds",
+            [0.1, 0.5, 1, 5, 10, 30, 60, 300, 600]
+        )
+    ),
+    llmTokensGenerated: define(
+        "llm_tokens_generated_total",
+        () => new CounterImpl("llm_tokens_generated_total", "LLM tokens generated")
+    ),
+    llmTokensInput: define(
+        "llm_tokens_input_total",
+        () => new CounterImpl("llm_tokens_input_total", "Total number of input tokens to LLM")
+    ),
+    llmErrors: define(
+        "llm_errors_total",
+        () => new CounterImpl("llm_errors_total", "Total number of LLM errors")
+    ),
+    llmModelLoadTime: define(
+        "llm_model_load_duration_seconds",
+        () => new HistogramImpl(
+            "llm_model_load_duration_seconds",
+            "LLM model loading duration in seconds",
+            [0.1, 0.5, 1, 5, 10, 30, 60]
+        )
+    ),
 
     // System metrics
-    logEntries: createCounter('log_entries_total'),
-    errorsTotal: createCounter('errors_total'),
+    logEntries: define(
+        "log_entries_total",
+        () => new CounterImpl("log_entries_total", "Total number of log entries")
+    ),
+    errorsTotal: define(
+        "errors_total",
+        () => new CounterImpl("errors_total", "Total number of errors")
+    ),
 };
 
-// Helper function to measure execution time
 export async function measureTime<T>(
     metric: Histogram,
     labels: MetricLabels,
     fn: () => Promise<T>
 ): Promise<T> {
-    const start = Date.now();
+    const start = process.hrtime.bigint();
     try {
-        const result = await fn();
-        const duration = (Date.now() - start) / 1000; // Convert to seconds
+        return await fn();
+    } finally {
+        const duration =
+            Number(process.hrtime.bigint() - start) / 1e9;
         metric.observe(labels, duration);
-        return result;
-    } catch (error) {
-        const duration = (Date.now() - start) / 1000;
-        metric.observe(labels, duration);
-        throw error;
     }
 }
 
-// Helper function to measure synchronous execution time
-export function measureTimeSync<T>(
+export async function measureTimeSync<T>(
     metric: Histogram,
     labels: MetricLabels,
     fn: () => T
-): T {
-    const start = Date.now();
+): Promise<T> {
+    const start = process.hrtime.bigint();
     try {
-        const result = fn();
-        const duration = (Date.now() - start) / 1000; // Convert to seconds
+        return fn();
+    } finally {
+        const duration =
+            Number(process.hrtime.bigint() - start) / 1e9;
         metric.observe(labels, duration);
-        return result;
-    } catch (error) {
-        const duration = (Date.now() - start) / 1000;
-        metric.observe(labels, duration);
-        throw error;
     }
 }
 
-// Export metric registry access
-export { metrics, getMetric, createCounter, createGauge, createHistogram };
-
+// Export function to get metrics in Prometheus format (for backward compatibility)
+// Note: This requires a Prometheus exporter if you want Prometheus format
+export async function metricsEndpoint(): Promise<string> {
+    // For now, return empty string or implement Prometheus exporter if needed
+    // OpenTelemetry metrics are exported via OTLP, not Prometheus format
+    return '# OpenTelemetry metrics are exported via OTLP endpoint\n# Use /metrics endpoint only if Prometheus exporter is configured\n';
+}

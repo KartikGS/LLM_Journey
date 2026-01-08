@@ -1,7 +1,8 @@
 import { ModelMeta } from "@/types/llm";
 import { softmax, sampleMultinomial } from "./sampling";
 import type * as OrtType from "onnxruntime-web";
-import { metricsRegistry } from "@/lib/observability/metrics";
+import { metrics } from "@/lib/observability/metrics";
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 let session: OrtType.InferenceSession | null = null;
 let ort: typeof OrtType | null = null;
@@ -29,11 +30,11 @@ async function getSession(): Promise<OrtType.InferenceSession> {
       // Track model loading time
       if (modelLoadStartTime !== null) {
         const loadDuration = (Date.now() - modelLoadStartTime) / 1000; // Convert to seconds
-        metricsRegistry.llmModelLoadTime.observe({ model: 'bigram.onnx' }, loadDuration);
+        metrics.llmModelLoadTime.observe({ model: 'bigram.onnx' }, loadDuration);
         modelLoadStartTime = null;
       }
     } catch (error) {
-      metricsRegistry.llmErrors.inc({ type: 'model_load', model: 'bigram.onnx' });
+      metrics.llmErrors.inc({ type: 'model_load', model: 'bigram.onnx' });
       if (modelLoadStartTime !== null) {
         modelLoadStartTime = null;
       }
@@ -53,6 +54,14 @@ export async function generate({
   maxNewTokens: number;
 }) {
   const startTime = Date.now();
+  const tracer = trace.getTracer('llm-journey-generate');
+  const span = tracer.startSpan('llm.generate', {
+    attributes: {
+      'llm.model': 'bigram.onnx',
+      'llm.max_new_tokens': maxNewTokens,
+      'llm.prompt_length': prompt.length,
+    },
+  });
 
   try {
     const { stoi, itos, block_size } = meta;
@@ -66,7 +75,7 @@ export async function generate({
 
     // Track input tokens
     const inputTokenCount = idx.length;
-    metricsRegistry.llmTokensInput.inc({ model: 'bigram.onnx' }, inputTokenCount);
+    metrics.llmTokensInput.inc({ model: 'bigram.onnx' }, inputTokenCount);
 
     for (let step = 0; step < maxNewTokens; step++) {
       // 1. Efficiently crop context
@@ -104,19 +113,40 @@ export async function generate({
 
     // Track metrics
     const duration = (Date.now() - startTime) / 1000; // Convert to seconds
-    metricsRegistry.llmGenerations.inc({ model: 'bigram.onnx', status: 'success' });
-    metricsRegistry.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'success' }, duration);
-    metricsRegistry.llmTokensGenerated.inc({ model: 'bigram.onnx' }, outputTokenCount);
+    metrics.llmGenerations.inc({ model: 'bigram.onnx', status: 'success' });
+    metrics.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'success' }, duration);
+    metrics.llmTokensGenerated.inc({ model: 'bigram.onnx' }, outputTokenCount);
+
+    span.setAttributes({
+      'llm.output_length': outputText.length,
+      'llm.tokens_generated': outputTokenCount,
+      'llm.tokens_input': inputTokenCount,
+      'llm.duration': duration,
+      'llm.status': 'success',
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
 
     return outputText;
   } catch (error) {
     // Track error metrics
-    metricsRegistry.llmGenerations.inc({ model: 'bigram.onnx', status: 'error' });
-    metricsRegistry.llmErrors.inc({ type: 'generation', model: 'bigram.onnx' });
+    metrics.llmGenerations.inc({ model: 'bigram.onnx', status: 'error' });
+    metrics.llmErrors.inc({ type: 'generation', model: 'bigram.onnx' });
 
     // Track duration even on error
     const duration = (Date.now() - startTime) / 1000;
-    metricsRegistry.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'error' }, duration);
+    metrics.llmGenerationDuration.observe({ model: 'bigram.onnx', status: 'error' }, duration);
+
+    span.recordException(error instanceof Error ? error : new Error(String(error)));
+    span.setStatus({ 
+      code: SpanStatusCode.ERROR, 
+      message: error instanceof Error ? error.message : String(error) 
+    });
+    span.setAttributes({
+      'llm.status': 'error',
+      'llm.duration': duration,
+    });
+    span.end();
 
     throw error;
   }
