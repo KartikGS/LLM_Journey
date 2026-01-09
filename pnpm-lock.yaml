@@ -14,6 +14,9 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: ^0.67.3
         version: 0.67.3(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
+      '@opentelemetry/context-zone':
+        specifier: 2.2.0
+        version: 2.2.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/exporter-logs-otlp-http':
         specifier: ^0.208.0
         version: 0.208.0(@opentelemetry/api@1.9.0)
@@ -431,6 +434,17 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/context-zone-peer-dep@2.2.0':
+    resolution: {integrity: sha512-/jSqc9MDpI7abRYNoM77G7xrJL8RhvOoQzmWg4Exj642NN1+ZwsqW0EODgaR99/w06nS2IGgY7AJRt5eZY/6QQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+      zone.js: ^0.10.2 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^0.14.0 || ^0.15.0
+
+  '@opentelemetry/context-zone@2.2.0':
+    resolution: {integrity: sha512-Wq0nUuRyVBmXIeISO1Sg9yTz+mUypCGjwGHSPR9iaY4f+n+F728+5hh85lko6fnm/oJAiKhmSmvvH/o8PhSUnw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
 
   '@opentelemetry/core@2.2.0':
     resolution: {integrity: sha512-FuabnnUm8LflnieVxs6eP7Z383hgQU4W1e3KJS6aOG3RxWxcHyBxH8fDMHNgu/gFx/M2jvTOW/4/PHhLz6bjWw==}
@@ -2476,6 +2490,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zone.js@0.15.1:
+    resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -2791,6 +2808,18 @@ snapshots:
   '@opentelemetry/context-async-hooks@2.2.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
+
+  '@opentelemetry/context-zone-peer-dep@2.2.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      zone.js: 0.15.1
+
+  '@opentelemetry/context-zone@2.2.0(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/context-zone-peer-dep': 2.2.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
+      zone.js: 0.15.1
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
 
   '@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -4004,7 +4033,7 @@ snapshots:
       debug: 4.3.7
       enhanced-resolve: 5.17.1
       eslint: 9.39.1(jiti@1.21.6)
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@9.39.1(jiti@1.21.6))
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.1(jiti@1.21.6)))(eslint@9.39.1(jiti@1.21.6))
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -4017,7 +4046,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@9.39.1(jiti@1.21.6)):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.1(jiti@1.21.6)))(eslint@9.39.1(jiti@1.21.6)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -4039,7 +4068,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.1(jiti@1.21.6)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@9.39.1(jiti@1.21.6))
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@8.48.1(eslint@9.39.1(jiti@1.21.6))(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.1(jiti@1.21.6)))(eslint@9.39.1(jiti@1.21.6))
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -5301,3 +5330,5 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
+
+  zone.js@0.15.1: {}

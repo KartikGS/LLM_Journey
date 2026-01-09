@@ -2,7 +2,7 @@ import 'server-only';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
@@ -20,8 +20,8 @@ export function initializeOpenTelemetry() {
     }
 
     const resource = resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: 'llm-journey',
-        [SEMRESATTRS_SERVICE_VERSION]: config.observability.version,
+        [ATTR_SERVICE_NAME]: 'llm-journey',
+        [ATTR_SERVICE_VERSION]: config.observability.version,
         'service.build.id': config.observability.buildId,
         'deployment.environment': process.env.NODE_ENV || 'development',
     });

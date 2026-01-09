@@ -3,7 +3,7 @@ import { Counter, Gauge, Histogram, MetricLabels } from '@/types/metrics';
 import { metrics as otelMetrics, Meter } from '@opentelemetry/api';
 import { MeterProvider as SDKMeterProvider } from '@opentelemetry/sdk-metrics';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 const enabled = config.observability.metricsEnabled;
 const prefix = config.observability.metricsPrefix ?? "llm_journey";
@@ -16,8 +16,8 @@ function getMeter(): Meter {
     if (!meter) {
         if (!meterProvider) {
             const resource = resourceFromAttributes({
-                [SEMRESATTRS_SERVICE_NAME]: 'llm-journey',
-                [SEMRESATTRS_SERVICE_VERSION]: config.observability.version,
+                [ATTR_SERVICE_NAME]: 'llm-journey',
+                [ATTR_SERVICE_VERSION]: config.observability.version,
                 'service.build.id': config.observability.buildId,
             });
 
@@ -76,7 +76,7 @@ class GaugeImpl implements Gauge {
 
     private ensureCallback(): void {
         if (this.callbackRegistered || !this.gauge) return;
-        
+
         const m = getMeter();
         m.addBatchObservableCallback(
             (observableResult) => {
