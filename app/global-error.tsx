@@ -1,7 +1,5 @@
 'use client'
 
-import { loggerClient } from "@/lib/utils/logger/client"
-
 export default function GlobalError({
     error,
     reset,
@@ -9,7 +7,6 @@ export default function GlobalError({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    loggerClient.error('Global error boundary caught error', error)
 
     return (
         <html lang="en">
