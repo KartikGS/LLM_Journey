@@ -7,6 +7,8 @@ export default function GlobalError({
     error: Error & { digest?: string }
     reset: () => void
 }) {
+    // Supress unused var warning
+    void error;
 
     return (
         <html lang="en">

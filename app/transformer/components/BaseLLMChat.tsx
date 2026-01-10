@@ -27,7 +27,7 @@ export default function BaseLLMChat() {
         fetch('/tokenizer/meta.json')
             .then(res => res.json())
             .then(data => setMeta(data))
-            .catch(err => {
+            .catch(() => {
                 setResponse("Error loading model metadata");
             });
     }, []);
