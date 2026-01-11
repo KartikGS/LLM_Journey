@@ -82,6 +82,33 @@ pnpm build
 pnpm start
 ```
 
+### Observability Infrastructure
+
+The project includes an observability stack using Grafana Tempo for distributed tracing and Grafana for visualization.
+
+1. Start the observability services:
+```bash
+docker compose up -d
+```
+
+2. Access Grafana at [http://localhost:3100](http://localhost:3100) (pre-configured with Tempo datasource).
+
+3. Stop the services:
+```bash
+docker compose down
+```
+
+#### Component Versions
+
+All observability components are pinned to explicit versions to ensure reproducibility.
+latest tags are intentionally avoided due to potential breaking changes in metrics schemas, storage formats, and scrape behavior.
+
+Tested stack versions:
+- OpenTelemetry JS SDK: 2.3.0
+- Grafana Tempo: 2.4.1
+- Prometheus: 2.48.1
+- Grafana: 10.2.3
+
 ## Project Structure
 
 ```

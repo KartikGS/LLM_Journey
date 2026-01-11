@@ -11,6 +11,17 @@ services:
       - "4317:4317"  # otlp grpc
       - "4318:4318"  # otlp http
 
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+    ports:
+      - "9090:9090"
+    depends_on:
+      - tempo
+
   grafana:
     image: grafana/grafana:10.2.3
     volumes:
@@ -23,3 +34,5 @@ services:
       - "3100:3000" # grafana ui (3100 to avoid conflicts)
     depends_on:
       - tempo
+      - prometheus
+

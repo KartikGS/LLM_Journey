@@ -34,6 +34,9 @@ overrides:
   metrics_generator_processors: [service-graphs, span-metrics]
 
 metrics_generator:
+  ring:
+    kvstore:
+      store: inmemory
   registry:
     external_labels:
       source: tempo
