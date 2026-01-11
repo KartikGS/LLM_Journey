@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -49,7 +50,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config, { isServer, dev, nextRuntime }) => {
     // Handle onnxruntime-web for client-side only
     if (!isServer) {
       config.resolve.fallback = {
@@ -57,6 +58,25 @@ const nextConfig: NextConfig = {
         fs: false,
         path: false,
         crypto: false,
+        stream: false,
+        http: false,
+        https: false,
+        zlib: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        os: false,
+        constants: false,
+        timers: false,
+        console: false,
+        dns: false,
+      };
+    }
+
+    if (!isServer || nextRuntime === 'edge') {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        [path.resolve(__dirname, 'lib/otel/server.ts')]: false,
       };
     }
     // Production optimizations
@@ -66,6 +86,11 @@ const nextConfig: NextConfig = {
         minimize: true,
       };
     }
+
+    config.ignoreWarnings = [
+      { module: /node_modules\/@opentelemetry\/instrumentation/ },
+    ];
+
     return config;
   },
 };

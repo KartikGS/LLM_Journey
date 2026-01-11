@@ -1,7 +1,33 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "local"
+    environment: "development"
 
 scrape_configs:
-  - job_name: "tempo-metrics"
+  # Prometheus self-metrics
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # OpenTelemetry Collector – exported metrics
+  - job_name: "otel-collector"
+    static_configs:
+      - targets: ["otel-collector:8889"]
+        labels:
+          service: "otel-collector"
+
+  # OpenTelemetry Collector – internal telemetry
+  - job_name: "otel-collector-internal"
+    static_configs:
+      - targets: ["otel-collector:8888"]
+        labels:
+          service: "otel-collector-internal"
+
+  # Tempo metrics
+  - job_name: "tempo"
     static_configs:
       - targets: ["tempo:3200"]
+        labels:
+          service: "tempo"
