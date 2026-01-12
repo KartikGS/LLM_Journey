@@ -80,27 +80,6 @@ services:
     networks:
       - observability
 
-  # -------------------------
-  # Grafana Alloy (Log Shipper)
-  # -------------------------
-  alloy:
-    image: grafana/alloy:v1.5.1
-    container_name: alloy
-    command:
-      - run
-      - /etc/alloy/config.alloy
-      - --storage.path=/var/lib/alloy/data
-      - --server.http.listen-addr=0.0.0.0:12345
-    volumes:
-      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./logs:/logs:ro
-    ports:
-      - "12345:12345" # Alloy UI
-    depends_on:
-      - loki
-    networks:
-      - observability
 
   # -------------------------
   # Grafana (Visualization)

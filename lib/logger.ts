@@ -1,48 +1,100 @@
-import pino from 'pino';
+import { logs, SeverityNumber } from '@opentelemetry/api-logs';
 import { context, trace } from '@opentelemetry/api';
-import path from 'path';
 
-// Log file path - writes to ./logs/app.log for Alloy to collect
-const LOG_FILE_PATH = path.join(process.cwd(), 'logs', 'app.log');
+const SERVICE_NAME = 'llm-journey-server';
 
-const logger = pino({
-    level: process.env.LOG_LEVEL || 'info',
+/**
+ * Get the OpenTelemetry logger instance.
+ */
+function getLogger() {
+    return logs.getLogger(SERVICE_NAME);
+}
 
-    base: {
-        service_name: 'llm-journey-server',
-    },
+type LogAttributes = Record<string, unknown>;
 
-    formatters: {
-        log(object) {
-            const span = trace.getSpan(context.active());
-            if (!span) return object;
+/**
+ * Emit a log record with automatic trace context correlation.
+ */
+function emitLog(
+    severityNumber: SeverityNumber,
+    severityText: string,
+    message: string,
+    attributes?: LogAttributes
+) {
+    const logger = getLogger();
+    const span = trace.getSpan(context.active());
+    const spanContext = span?.spanContext();
 
-            const spanContext = span.spanContext();
-
-            return {
-                ...object,
+    logger.emit({
+        severityNumber,
+        severityText,
+        body: message,
+        attributes: {
+            ...attributes,
+            ...(spanContext && {
                 trace_id: spanContext.traceId,
                 span_id: spanContext.spanId,
-            };
+            }),
         },
+    });
+
+    // Also log to console for development visibility
+    const logLevel = severityText.toLowerCase();
+    const logFn = logLevel === 'error' ? console.error :
+        logLevel === 'warn' ? console.warn :
+            logLevel === 'debug' ? console.debug :
+                console.info;
+
+    if (attributes && Object.keys(attributes).length > 0) {
+        logFn(`[${severityText}] ${message}`, attributes);
+    } else {
+        logFn(`[${severityText}] ${message}`);
+    }
+}
+
+/**
+ * Parse arguments to support both Pino-style (object, message) and simple (message) signatures.
+ */
+function parseArgs(
+    attrsOrMessage: LogAttributes | string,
+    maybeMessage?: string
+): { message: string; attributes?: LogAttributes } {
+    if (typeof attrsOrMessage === 'string') {
+        return { message: attrsOrMessage };
+    }
+    return {
+        message: maybeMessage ?? '',
+        attributes: attrsOrMessage,
+    };
+}
+
+/**
+ * OpenTelemetry-based logger with trace correlation.
+ * 
+ * Supports both call signatures:
+ * - logger.info('Simple message')
+ * - logger.info({ key: 'value' }, 'Message with attributes')
+ */
+const logger = {
+    debug(attrsOrMessage: LogAttributes | string, maybeMessage?: string) {
+        const { message, attributes } = parseArgs(attrsOrMessage, maybeMessage);
+        emitLog(SeverityNumber.DEBUG, 'DEBUG', message, attributes);
     },
 
-    transport: {
-        targets: [
-            // Console output for development
-            {
-                target: 'pino/file',
-                level: 'info',
-                options: { destination: 1 }, // stdout
-            },
-            // File output for Alloy to collect
-            {
-                target: 'pino/file',
-                level: 'info',
-                options: { destination: LOG_FILE_PATH, mkdir: true },
-            },
-        ],
+    info(attrsOrMessage: LogAttributes | string, maybeMessage?: string) {
+        const { message, attributes } = parseArgs(attrsOrMessage, maybeMessage);
+        emitLog(SeverityNumber.INFO, 'INFO', message, attributes);
     },
-});
+
+    warn(attrsOrMessage: LogAttributes | string, maybeMessage?: string) {
+        const { message, attributes } = parseArgs(attrsOrMessage, maybeMessage);
+        emitLog(SeverityNumber.WARN, 'WARN', message, attributes);
+    },
+
+    error(attrsOrMessage: LogAttributes | string, maybeMessage?: string) {
+        const { message, attributes } = parseArgs(attrsOrMessage, maybeMessage);
+        emitLog(SeverityNumber.ERROR, 'ERROR', message, attributes);
+    },
+};
 
 export default logger;

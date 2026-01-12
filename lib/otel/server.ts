@@ -9,7 +9,7 @@ import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
 const OTEL_EXPORTER_OTLP_ENDPOINT =
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://otel-collector:4318';
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318';
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
