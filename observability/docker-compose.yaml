@@ -4,11 +4,11 @@ networks:
   observability:
     driver: bridge
 
-volumes:
-  tempo-data:
-  loki-data:
-  prometheus-data:
-  grafana-data:
+# volumes:
+#   tempo-data:
+#   loki-data:
+#   prometheus-data:
+#   grafana-data:
 
 services:
   # -------------------------
@@ -20,7 +20,7 @@ services:
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
       - ./tempo.yaml:/etc/tempo.yaml:ro
-      - tempo-data:/var/tempo
+      # - tempo-data:/var/tempo
     ports:
       - "3200:3200" # Tempo HTTP API (querying from Grafana)
     networks:
@@ -33,8 +33,8 @@ services:
     image: grafana/loki:2.9.4
     container_name: loki
     command: ["-config.file=/etc/loki/local-config.yaml"]
-    volumes:
-      - loki-data:/loki
+    # volumes:
+      # - loki-data:/loki
     ports:
       - "3100:3100"
     networks:
@@ -52,7 +52,7 @@ services:
       - "--web.enable-lifecycle"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
-      - prometheus-data:/prometheus
+      # - prometheus-data:/prometheus
     ports:
       - "9090:9090"
     networks:
@@ -89,7 +89,7 @@ services:
     container_name: grafana
     volumes:
       - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
-      - grafana-data:/var/lib/grafana
+      # - grafana-data:/var/lib/grafana
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"

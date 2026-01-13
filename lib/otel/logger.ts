@@ -45,10 +45,12 @@ function emitLog(
             logLevel === 'debug' ? console.debug :
                 console.info;
 
-    if (attributes && Object.keys(attributes).length > 0) {
-        logFn(`[${severityText}] ${message}`, attributes);
-    } else {
-        logFn(`[${severityText}] ${message}`);
+    if (process.env.NODE_ENV !== 'production') {
+        if (attributes && Object.keys(attributes).length > 0) {
+            logFn(`[${severityText}] ${message}`, attributes);
+        } else {
+            logFn(`[${severityText}] ${message}`);
+        }
     }
 }
 
@@ -63,7 +65,7 @@ function parseArgs(
         return { message: attrsOrMessage };
     }
     return {
-        message: maybeMessage ?? '',
+        message: maybeMessage ?? '[log]',
         attributes: attrsOrMessage,
     };
 }

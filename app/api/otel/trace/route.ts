@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import logger from '@/lib/logger';
+import logger from '@/lib/otel/logger';
 import { getTracer } from '@/lib/otel/tracing';
 import {
     getOtelProxyRequestsCounter,
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
                 const endpoint =
                     process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
-                    process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+                    `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`;
 
                 if (!endpoint) {
                     getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });

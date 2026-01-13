@@ -1,17 +1,17 @@
 # LLM Journey
 
-A comprehensive web application that demonstrates the progression of Large Language Models (LLMs) from base models to advanced agents. This interactive platform showcases various LLM improvements and techniques over time, providing hands-on experience with different stages of LLM development.
+A comprehensive web application that demonstrates the progression of Large Language Models (LLMs) from base models to advanced agents. This interactive platform showcases various LLM improvements and techniques over time.
 
 ## Overview
 
-LLM Journey is an educational platform built with Next.js that walks through the evolution of language models, from basic transformer architectures to sophisticated agent systems. The application features interactive demos, reference materials, and practical implementations of key LLM concepts.
+LLM Journey is an educational platform built with Next.js that walks through the evolution of language models, from basic transformer architectures to sophisticated agent systems. The application features reference materials, and practical implementations of key LLM concepts.
 
 ## Features
 
 ### Core Modules
 
-- **Base LLM**: A decoder-only self-attention transformer model (~0.2M parameters) trained on the Shakespeare dataset, running locally via ONNX Runtime
-- **Training**: Learn about model training processes and techniques
+- **Transformer**: A decoder-only self-attention transformer model (~0.2M parameters) trained on the Shakespeare dataset, running locally via ONNX Runtime
+- **LLM**: See how scaling transformer improves text generation
 - **Fine-tuning**: Explore fine-tuning methods for adapting pre-trained models
 - **Tools**: Integration with external tools and APIs
 - **RAG (Retrieval-Augmented Generation)**: Implementation of RAG for enhanced context-aware responses
@@ -48,17 +48,20 @@ LLM Journey is an educational platform built with Next.js that walks through the
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/KartikGS/LLM_Journey
 cd LLM-Journey
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables (if needed):
+
 ```bash
 # Create a .env.local file for any required API keys
 # For example, if using Hugging Face API:
@@ -87,13 +90,16 @@ pnpm start
 The project includes an observability stack using Grafana Tempo for distributed tracing and Grafana for visualization.
 
 1. Start the observability services:
+
 ```bash
+cd observability
 docker compose up -d
 ```
 
-2. Access Grafana at [http://localhost:3100](http://localhost:3100) (pre-configured with Tempo datasource).
+2. Access Grafana at [http://localhost:3000](http://localhost:3000).
 
 3. Stop the services:
+
 ```bash
 docker compose down
 ```
@@ -104,10 +110,12 @@ All observability components are pinned to explicit versions to ensure reproduci
 latest tags are intentionally avoided due to potential breaking changes in metrics schemas, storage formats, and scrape behavior.
 
 Tested stack versions:
+
 - OpenTelemetry JS SDK: 2.3.0
 - Grafana Tempo: 2.4.1
 - Prometheus: 2.48.1
 - Grafana: 10.2.3
+- Loki: 2.9.4
 
 ## Project Structure
 
@@ -141,6 +149,7 @@ LLM-Journey/
 ## Model Information
 
 The base model included in this project:
+
 - **Architecture**: Decoder-only transformer with self-attention
 - **Parameters**: ~0.2M
 - **Training Data**: Shakespeare dataset
@@ -167,7 +176,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is private and not licensed for public use.
+Temp.
 
 ## Resources
 

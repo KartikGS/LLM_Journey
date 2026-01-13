@@ -48,8 +48,8 @@ exporters:
     namespace: "llm_journey"
 
   # Dev-only
-  debug:
-    verbosity: detailed
+  # debug:
+  #   verbosity: detailed
 
 extensions:
   health_check:
@@ -72,4 +72,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, attributes/loki, batch]
-      exporters: [loki, debug]
+      exporters: [loki] # [loki, debug]
