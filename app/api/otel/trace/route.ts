@@ -36,9 +36,7 @@ export async function POST(req: NextRequest) {
                     return new NextResponse('Payload too large', { status: 413 });
                 }
 
-                const endpoint =
-                    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
-                    `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`;
+                const endpoint = `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`;
 
                 if (!endpoint) {
                     getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });

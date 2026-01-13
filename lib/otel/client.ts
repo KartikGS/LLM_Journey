@@ -18,7 +18,7 @@ export function initOtel() {
     const resource = resourceFromAttributes({
         [ATTR_SERVICE_NAME]: 'llm-journey-client',
         'service.version': process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev',
-        'deployment.environment': process.env.NEXT_PUBLIC_ENV ?? 'development',
+        'deployment.environment': process.env.NODE_ENV ?? 'development',
     });
 
     const exporter = new OTLPTraceExporter({
