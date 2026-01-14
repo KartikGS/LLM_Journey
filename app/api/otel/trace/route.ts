@@ -8,6 +8,7 @@ import {
     getOtelProxyUpstreamLatencyHistogram,
     getOtelProxyErrorsCounter,
 } from '@/lib/otel/metrics';
+import { parseHeaderString } from '@/lib/utils/parseHeaderString';
 
 const MAX_BODY_SIZE = 1_000_000; // 1 MB
 const FETCH_TIMEOUT_MS = 5000;
@@ -38,12 +39,14 @@ export async function POST(req: NextRequest) {
 
                 const endpoint = `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`;
 
-                if (!endpoint) {
-                    getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });
-                    span.setStatus({ code: SpanStatusCode.ERROR, message: 'No endpoint configured' });
-                    logger.error('OTEL proxy: No OTLP endpoint configured');
+                if (!process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+                    // getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });
+                    // span.setStatus({ code: SpanStatusCode.ERROR, message: 'No endpoint configured' });
+                    // logger.error('OTEL proxy: No OTLP endpoint configured');
                     return new NextResponse('Service misconfigured', { status: 503 });
                 }
+
+                const extraHeaders = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
                 const body = await req.arrayBuffer();
 
@@ -61,6 +64,7 @@ export async function POST(req: NextRequest) {
                     method: 'POST',
                     headers: {
                         'Content-Type': req.headers.get('content-type') ?? 'application/x-protobuf',
+                        ...extraHeaders,
                     },
                     body,
                     signal: controller.signal,

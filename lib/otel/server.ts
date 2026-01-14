@@ -7,9 +7,10 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { parseHeaderString } from '../utils/parseHeaderString';
 
-const OTEL_EXPORTER_OTLP_ENDPOINT =
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318';
+const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+const headers = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
@@ -18,17 +19,20 @@ const sdk = new NodeSDK({
 
     traceExporter: new OTLPTraceExporter({
         url: `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
+        headers,
     }),
 
     metricReader: new PeriodicExportingMetricReader({
         exporter: new OTLPMetricExporter({
             url: `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics`,
+            headers,
         }),
     }),
 
     logRecordProcessor: new BatchLogRecordProcessor(
         new OTLPLogExporter({
             url: `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs`,
+            headers,
         })
     ),
 
