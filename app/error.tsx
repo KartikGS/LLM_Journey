@@ -1,7 +1,5 @@
 'use client'
 
-import { loggerClient } from "@/lib/utils/logger/client"
-
 export default function Error({
     error,
     reset,
@@ -9,8 +7,8 @@ export default function Error({
     error: Error & { digest?: string }
     reset: () => void
 }) {
-    loggerClient.error('Error boundary caught error', error)
-
+    // Supress unused var warning
+    void error;
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
             <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>

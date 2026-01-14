@@ -1,0 +1,105 @@
+version: "3.8"
+
+networks:
+  observability:
+    driver: bridge
+
+# volumes:
+#   tempo-data:
+#   loki-data:
+#   prometheus-data:
+#   grafana-data:
+
+services:
+  # -------------------------
+  # Grafana Tempo (Traces)
+  # -------------------------
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+      # - tempo-data:/var/tempo
+    ports:
+      - "3200:3200" # Tempo HTTP API (querying from Grafana)
+    networks:
+      - observability
+
+  # -------------------------
+  # Grafana Loki (Logs)
+  # -------------------------
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    # volumes:
+      # - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - observability
+
+  # -------------------------
+  # Prometheus (Metrics)
+  # -------------------------
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      # - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - observability
+
+  # -------------------------
+  # OpenTelemetry Collector
+  # -------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.93.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC (apps send telemetry here)
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Collector internal metrics
+      - "8889:8889"   # Prometheus exporter
+      - "13133:13133" # Health check
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+    networks:
+      - observability
+
+
+  # -------------------------
+  # Grafana (Visualization)
+  # -------------------------
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      # - grafana-data:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_FEATURE_TOGGLES_ENABLE: "traceqlEditor"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - observability
