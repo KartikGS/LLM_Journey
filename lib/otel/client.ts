@@ -17,12 +17,10 @@ export function initOtel() {
 
     const resource = resourceFromAttributes({
         [ATTR_SERVICE_NAME]: 'llm-journey-client',
-        'service.version': process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev',
-        'deployment.environment': process.env.NODE_ENV ?? 'development',
     });
 
     const exporter = new OTLPTraceExporter({
-        url: process.env.NEXT_PUBLIC_OTEL_TRACE_ENDPOINT ?? '/api/otel/trace',
+        url: '/api/otel/trace',
     });
 
     const spanProcessor = new BatchSpanProcessor(exporter, {
@@ -63,7 +61,6 @@ export function initOtel() {
 
 export function getTracer() {
     return trace.getTracer(
-        'llm-journey-client',
-        process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'
+        'llm-journey-client'
     );
 }
