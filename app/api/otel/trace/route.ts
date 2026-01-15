@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { SpanStatusCode, SpanKind } from '@opentelemetry/api';
 import logger from '@/lib/otel/logger';
 import { getTracer } from '@/lib/otel/tracing';
+import { validateTelemetryToken } from '@/lib/otel/token';
 import {
     getOtelProxyRequestsCounter,
     getOtelProxyRequestSizeHistogram,
@@ -15,6 +17,16 @@ const FETCH_TIMEOUT_MS = 5000;
 
 export async function POST(req: NextRequest) {
     const tracer = getTracer();
+
+    // 1. Token Validation
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get('anon_session')?.value || 'unknown';
+    const headerToken = req.headers.get('x-telemetry-token');
+
+    if (!headerToken || !validateTelemetryToken(headerToken, sessionId)) {
+        // logger.warn({ sessionId }, 'Unauthorized telemetry trace attempt');
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
 
     return tracer.startActiveSpan(
         'otel_proxy.forward_traces',

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./ui/navbar";
-import { OtelProvider } from "../components/otel-provider";
+import { OtelInitializer } from "../components/otel-initializer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,12 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
       >
-        <OtelProvider>
+        <OtelInitializer>
           <div className="h-full flex">
             <Navbar />
             {children}
           </div>
-        </OtelProvider>
+        </OtelInitializer>
       </body>
     </html>
   );

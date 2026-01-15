@@ -11,7 +11,7 @@ import { trace } from '@opentelemetry/api';
 type OtelState = 'uninitialized' | 'initialized';
 let otelState: OtelState = 'uninitialized';
 
-export function initOtel() {
+export function initOtel(token?: string) {
     if (typeof window === 'undefined') return;
     if (otelState === 'initialized') return;
 
@@ -21,6 +21,7 @@ export function initOtel() {
 
     const exporter = new OTLPTraceExporter({
         url: '/api/otel/trace',
+        headers: token ? { 'x-telemetry-token': token } : {},
     });
 
     const spanProcessor = new BatchSpanProcessor(exporter, {
@@ -41,6 +42,7 @@ export function initOtel() {
             new DocumentLoadInstrumentation(),
             new UserInteractionInstrumentation(),
             new FetchInstrumentation({
+                ignoreUrls: [/api\/otel\/trace/],
                 propagateTraceHeaderCorsUrls: [/^\/api\//],
             }),
         ],
