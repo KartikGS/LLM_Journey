@@ -14,11 +14,42 @@ export function getMeter(): Meter {
     return meter;
 }
 
+// Pre-defined metrics for telemetry token
+let telemetryTokenRequests: Counter | null = null;
+let telemetryTokenErrors: Counter | null = null;
+
 // Pre-defined metrics for OTEL proxy
 let otelProxyRequests: Counter | null = null;
 let otelProxyRequestSize: Histogram | null = null;
 let otelProxyUpstreamLatency: Histogram | null = null;
 let otelProxyErrors: Counter | null = null;
+let otel_proxy_auth_failures_total: Counter | null = null;
+
+/**
+ * Counter for total telemetry token requests
+ */
+export function getTelemetryTokenRequestsCounter(): Counter {
+    if (!telemetryTokenRequests) {
+        telemetryTokenRequests = getMeter().createCounter('telemetry_token.requests', {
+            description: 'Total number of Telemetry Token requests',
+            unit: '1',
+        });
+    }
+    return telemetryTokenRequests;
+}
+
+/**
+ * Counter for Telemetry token errors by type
+ */
+export function getTelemetryTokenErrorsCounter(): Counter {
+    if (!telemetryTokenErrors) {
+        telemetryTokenErrors = getMeter().createCounter('telemetry_token.errors', {
+            description: 'Total number of Telemetry token errors',
+            unit: '1',
+        });
+    }
+    return telemetryTokenErrors;
+}
 
 /**
  * Counter for total OTEL proxy requests

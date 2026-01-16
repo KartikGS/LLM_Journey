@@ -1,13 +1,26 @@
-// This token is not meant to authenticate users.
-// It only limits anonymous telemetry ingestion abuse.
+/**
+ * Threat model:
+ * - Prevents anonymous telemetry spam
+ * - Prevents replay beyond TTL
+ * - Does NOT authenticate users
+ * - Does NOT protect against client-side token exfiltration
+ */
+
 
 import crypto from 'crypto';
 import { timingSafeEqual } from 'crypto';
+import { getTelemetryTokenErrorsCounter } from './metrics';
+import logger from './logger';
 
-const TELEMETRY_SECRET = process.env.TELEMETRY_SECRET || 'default_secret_change_me_in_production';
+const TELEMETRY_SECRET = process.env.TELEMETRY_SECRET;
 const TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
-export function generateTelemetryToken(sessionId: string): string {
+export function generateTelemetryToken(sessionId: string): string | null {
+    if (!TELEMETRY_SECRET) {
+        getTelemetryTokenErrorsCounter().add(1, { error_type: 'Telemetry secret not set' })
+        logger.error('Telemetry secret not set')
+        return null;
+    }
     const expiresAt = Date.now() + TOKEN_TTL_MS;
     const payload = JSON.stringify({ sessionId, expiresAt });
     const signature = crypto
@@ -19,6 +32,7 @@ export function generateTelemetryToken(sessionId: string): string {
 }
 
 export function validateTelemetryToken(token: string, sessionId: string): boolean {
+    if (!TELEMETRY_SECRET) return false;
     try {
         const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
         const { payload, signature } = decoded;

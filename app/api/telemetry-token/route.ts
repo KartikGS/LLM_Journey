@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTelemetryToken } from '@/lib/otel/token';
+import { getTelemetryTokenRequestsCounter } from '@/lib/otel/metrics';
 
 export async function GET(req: NextRequest) {
+    getTelemetryTokenRequestsCounter().add(1)
     let sessionId = req.cookies.get('anon_session')?.value;
 
     if (!sessionId) {
