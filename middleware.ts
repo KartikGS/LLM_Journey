@@ -6,20 +6,25 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 const rateLimitMap = new Map<string, number[]>();
 
+import { validateContentLength } from '@/lib/validations/contentLength';
+
 const ONE_MINUTE = 60 * 1000;
-const MAX_BODY_SIZE = 1_000_000; // 1 MB
 
 /**
- * Per-route rate limit configuration
+ * Per-route api configuration
  */
-const RATE_LIMITS: Record<string, { windowMs: number; max: number }> = {
+const API_CONFIG: Record<string, { rateLimit_windowMs: number; rateLimit_max: number; contentLengthRequired: boolean; maxBodySize: number }> = {
     '/api/telemetry-token': {
-        windowMs: ONE_MINUTE,
-        max: 10, // token minting is low-frequency
+        rateLimit_windowMs: ONE_MINUTE,
+        rateLimit_max: 10, // token minting is low-frequency
+        contentLengthRequired: false, // no content passed in a get request
+        maxBodySize: 1_000_000,
     },
     '/api/otel/trace': {
-        windowMs: ONE_MINUTE,
-        max: 30, // telemetry ingestion is higher volume
+        rateLimit_windowMs: ONE_MINUTE,
+        rateLimit_max: 30, // telemetry ingestion is higher volume
+        contentLengthRequired: true, // content passed in a post request
+        maxBodySize: 1_000_000, // 1 MB
     },
 };
 
@@ -38,7 +43,7 @@ function getClientIp(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
-    const config = RATE_LIMITS[pathname];
+    const config = API_CONFIG[pathname];
 
     // Only rate limit configured routes
     if (!config) {
@@ -46,27 +51,18 @@ export function middleware(request: NextRequest) {
     }
 
     // 1. Strict Body Size Check
-    const contentLength = request.headers.get('content-length');
-    // More robust numeric validation
-    if (contentLength) {
-        const length = Number(contentLength);
-        if (!Number.isSafeInteger(length) || length > MAX_BODY_SIZE) {
-            return new NextResponse('Payload Too Large', { status: 413 });
-        }
-    }
-
-    // Requests to otel/trace MUST have a Content-Length header to be safely parsed
-    if (pathname === '/api/otel/trace' && !contentLength) {
-        return new NextResponse('Length Required', { status: 411 });
+    const validation = validateContentLength(request.headers.get('content-length'), config.contentLengthRequired, config.maxBodySize);
+    if (!validation.valid) {
+        return new NextResponse(validation.error || 'Payload Too Large', { status: validation.status });
     }
 
     const ip = getClientIp(request);
     const now = Date.now();
 
     const timestamps = rateLimitMap.get(ip) ?? [];
-    const recent = timestamps.filter(ts => now - ts < config.windowMs);
+    const recent = timestamps.filter(ts => now - ts < config.rateLimit_windowMs);
 
-    if (recent.length >= config.max) {
+    if (recent.length >= config.rateLimit_max) {
         return new NextResponse('Too Many Requests', { status: 429 });
     }
 
