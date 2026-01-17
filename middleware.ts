@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const rateLimitMap = new Map<string, number[]>();
 
 const ONE_MINUTE = 60 * 1000;
+const MAX_BODY_SIZE = 1_000_000; // 1 MB
 
 /**
  * Per-route rate limit configuration
@@ -42,6 +43,21 @@ export function middleware(request: NextRequest) {
     // Only rate limit configured routes
     if (!config) {
         return NextResponse.next();
+    }
+
+    // 1. Strict Body Size Check
+    const contentLength = request.headers.get('content-length');
+    // More robust numeric validation
+    if (contentLength) {
+        const length = Number(contentLength);
+        if (!Number.isSafeInteger(length) || length > MAX_BODY_SIZE) {
+            return new NextResponse('Payload Too Large', { status: 413 });
+        }
+    }
+
+    // Requests to otel/trace MUST have a Content-Length header to be safely parsed
+    if (pathname === '/api/otel/trace' && !contentLength) {
+        return new NextResponse('Length Required', { status: 411 });
     }
 
     const ip = getClientIp(request);

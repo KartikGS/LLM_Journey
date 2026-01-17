@@ -13,7 +13,7 @@ import {
 import { parseHeaderString } from '@/lib/utils/parseHeaderString';
 
 const MAX_BODY_SIZE = 1_000_000; // 1 MB
-const FETCH_TIMEOUT_MS = 5000;
+const UPSTREAM_TIMEOUT_MS = 5000;
 
 export async function POST(req: NextRequest) {
     const tracer = getTracer();
@@ -34,33 +34,103 @@ export async function POST(req: NextRequest) {
         async (span) => {
             const startTime = performance.now();
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+            const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
 
             try {
                 getOtelProxyRequestsCounter().add(1);
 
-                const contentLength = Number(req.headers.get('content-length') ?? 0);
+                const ct = req.headers.get('content-type') ?? '';
+                console.log(ct)
+                if (!ct.includes('application/json')) {
+                    return new NextResponse('Unsupported Media Type', { status: 415 });
+                }
+
+
+                const rawLen = req.headers.get('content-length');
+                const contentLength = rawLen ? Number(rawLen) : 0;
+
+                if (!Number.isFinite(contentLength)) {
+                    return new NextResponse('Invalid Content-Length', { status: 400 });
+                }
                 span.setAttribute('http.request.body.size', contentLength);
+
+                if (contentLength === 0) {
+                    getOtelProxyErrorsCounter().add(1, { error_type: 'empty_payload' });
+                    return new NextResponse('Empty payload', { status: 400 });
+                }
 
                 if (contentLength > MAX_BODY_SIZE) {
                     getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' });
                     span.setStatus({ code: SpanStatusCode.ERROR, message: 'Payload too large' });
-                    logger.warn({ contentLength }, 'OTEL proxy rejected oversized payload');
+                    logger.warn({ contentLength }, 'OTEL proxy rejected oversized payload (from header)');
                     return new NextResponse('Payload too large', { status: 413 });
                 }
 
                 const endpoint = `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`;
 
                 if (!process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
-                    // getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });
-                    // span.setStatus({ code: SpanStatusCode.ERROR, message: 'No endpoint configured' });
-                    // logger.error('OTEL proxy: No OTLP endpoint configured');
+                    getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' });
+                    span.setStatus({ code: SpanStatusCode.ERROR, message: 'No endpoint configured' });
+                    logger.error('OTEL proxy: No OTLP endpoint configured');
                     return new NextResponse('Service misconfigured', { status: 503 });
                 }
 
                 const extraHeaders = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
-                const body = await req.arrayBuffer();
+                let body: Uint8Array;
+                const BODY_READ_TIMEOUT_MS = 2000; // Shorter timeout for body
+                const bodyTimeout = setTimeout(() => {
+                    req.body?.cancel();
+                }, BODY_READ_TIMEOUT_MS);
+
+                try {
+                    // Strict stream reading to enforce MAX_BODY_SIZE
+                    const reader = req.body?.getReader();
+                    if (!reader) {
+                        span.setStatus({ code: SpanStatusCode.ERROR });
+                        span.addEvent('invalid_request_body');
+                        return new NextResponse('Bad Request', { status: 400 });
+                    }
+
+                    let buffer: Uint8Array | null = null;
+                    let offset = 0;
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            clearTimeout(bodyTimeout);
+                            reader.releaseLock();
+                            break;
+                        }
+                        if (offset + value.length > MAX_BODY_SIZE) {
+                            clearTimeout(bodyTimeout);
+                            reader.releaseLock();
+                            await req.body?.cancel();
+                            getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' });
+                            span.setStatus({ code: SpanStatusCode.ERROR, message: 'Payload too large' });
+                            logger.warn({ offset }, 'OTEL proxy rejected oversized payload (stream enforcement)');
+                            return new NextResponse('Payload too large', { status: 413 });
+                        }
+                        if (!buffer) {
+                            buffer = new Uint8Array(MAX_BODY_SIZE);
+                        }
+                        buffer.set(value, offset);
+                        offset += value.length;
+                    }
+
+                    if (!buffer) {
+                        span.setStatus({ code: SpanStatusCode.ERROR });
+                        span.addEvent('invalid_request_body');
+                        return new NextResponse('Bad Request', { status: 400 });
+                    }
+                    body = buffer.slice(0, offset);
+                    clearTimeout(bodyTimeout);
+                } catch {
+                    clearTimeout(bodyTimeout);
+                    span.setStatus({ code: SpanStatusCode.ERROR });
+                    span.addEvent('invalid_request_body');
+                    return new NextResponse('Bad Request', { status: 400 });
+                }
 
                 getOtelProxyRequestSizeHistogram().record(body.byteLength, {
                     route: '/api/otel/trace',
