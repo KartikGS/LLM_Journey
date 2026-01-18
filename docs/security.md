@@ -1,0 +1,1 @@
+Due to App Router limitations, Next.js-managed scripts and styles cannot be fully nonced. This CSP setup prioritizes script execution safety while allowing framework-managed styles.

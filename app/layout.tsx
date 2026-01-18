@@ -21,11 +21,16 @@ export const metadata: Metadata = {
   description: "Various LLM improvements over time",
 };
 
+// import { headers } from "next/headers";
+
+// export default async function RootLayout({
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="en" className="h-full">
       <body

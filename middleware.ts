@@ -41,49 +41,104 @@ function getClientIp(request: NextRequest): string {
     );
 }
 
+/**
+ * Generate a cryptographically strong random nonce in base64 format.
+ * Compatible with Edge Runtime (avoids Buffer).
+ */
+function generateNonce(): string {
+    const nonceArray = new Uint8Array(16); // 16 bytes is fine; 32 bytes would be extra conservative, but unnecessary.
+    crypto.getRandomValues(nonceArray);
+    return btoa(String.fromCharCode(...nonceArray));
+}
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
-    const config = API_CONFIG[pathname];
 
-    // Only rate limit configured routes
-    if (!config) {
-        return NextResponse.next();
+    // 1. Prepare Nonce and Headers
+    const nonce = generateNonce();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-nonce', nonce);
+
+    // 2. CSP Definition (using the nonce)
+    // - strict-dynamic: trust scripts loaded by nonced scripts
+    // - wasm-unsafe-eval: permit WASM (ONNX) without full eval()
+    // - unsafe-eval: REQUIRED for Next.js in development mode (HMR, Source Maps)
+    // - self: fallback for legacy browsers
+    const isDev = process.env.NODE_ENV === 'development';
+    const scriptSrc = `
+        'self' 
+        'nonce-${nonce}' 
+        'strict-dynamic' 
+        'wasm-unsafe-eval'
+        ${isDev ? "'unsafe-eval'" : ""}
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    const styleSrc = isDev
+        ? "'self' 'unsafe-inline'"
+        : `'self' 'nonce-${nonce}'`;
+
+    const cspHeader = `
+        default-src 'self';
+        script-src ${scriptSrc};
+        style-src ${styleSrc};
+        img-src 'self' blob: data: https:;
+        font-src 'self' data:;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+        connect-src 'self';
+        upgrade-insecure-requests;
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    // 3. Rate Limiting Logic
+    const apiConfig = API_CONFIG[pathname];
+    if (apiConfig) {
+        // Strict Body Size Check
+        const validation = validateContentLength(request.headers.get('content-length'), apiConfig.contentLengthRequired, apiConfig.maxBodySize);
+        if (!validation.valid) {
+            return new NextResponse(validation.error || 'Payload Too Large', { status: validation.status });
+        }
+
+        const ip = getClientIp(request);
+        const now = Date.now();
+        const timestamps = rateLimitMap.get(ip) ?? [];
+        const recent = timestamps.filter(ts => now - ts < apiConfig.rateLimit_windowMs);
+
+        if (recent.length >= apiConfig.rateLimit_max) {
+            return new NextResponse('Too Many Requests', { status: 429 });
+        }
+
+        recent.push(now);
+        if (recent.length === 0) {
+            rateLimitMap.delete(ip);
+        } else {
+            rateLimitMap.set(ip, recent);
+        }
     }
 
-    // 1. Strict Body Size Check
-    const validation = validateContentLength(request.headers.get('content-length'), config.contentLengthRequired, config.maxBodySize);
-    if (!validation.valid) {
-        return new NextResponse(validation.error || 'Payload Too Large', { status: validation.status });
+    // 4. Construct Response
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
+
+    // 5. Inject CSP for HTML requests only
+    const acceptHeader = request.headers.get('accept');
+    if (acceptHeader?.includes('text/html')) {
+        response.headers.set('Content-Security-Policy', cspHeader);
     }
 
-    const ip = getClientIp(request);
-    const now = Date.now();
-
-    const timestamps = rateLimitMap.get(ip) ?? [];
-    const recent = timestamps.filter(ts => now - ts < config.rateLimit_windowMs);
-
-    if (recent.length >= config.rateLimit_max) {
-        return new NextResponse('Too Many Requests', { status: 429 });
-    }
-
-    recent.push(now);
-
-    // Cleanup to prevent unbounded memory growth
-    if (recent.length === 0) {
-        rateLimitMap.delete(ip);
-    } else {
-        rateLimitMap.set(ip, recent);
-    }
-
-    return NextResponse.next();
+    return response;
 }
 
 /**
- * Explicitly declare which routes this middleware applies to.
+ * Match all request paths except for static assets and internal Next.js paths.
+ * If we later add .css or .js in /public, we may want to exclude those too.
  */
 export const config = {
     matcher: [
-        '/api/telemetry-token',
-        '/api/otel/trace',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };
