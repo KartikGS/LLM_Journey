@@ -7,6 +7,7 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { trace } from '@opentelemetry/api';
+import { redactUrl, SENSITIVE_HEADERS } from '../security/redaction';
 
 type OtelState = 'uninitialized' | 'initialized';
 let otelState: OtelState = 'uninitialized';
@@ -44,6 +45,35 @@ export function initOtel(token?: string) {
             new FetchInstrumentation({
                 ignoreUrls: [/api\/otel\/trace/],
                 propagateTraceHeaderCorsUrls: [/^\/api\//],
+                applyCustomAttributesOnSpan: (span, request) => {
+                    let url: string | undefined;
+                    if (typeof request === 'string') {
+                        url = request;
+                    } else if (request && 'url' in request) {
+                        url = (request as Request).url;
+                    }
+
+                    if (url) {
+                        span.setAttribute('http.url', redactUrl(url, window.location.origin));
+                    }
+
+                    // Mask sensitive headers in span attributes if they were captured
+                    // Note: FetchInstrumentation might not capture all headers by default,
+                    // but we ensure any added attributes are safe.
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const attributes = (span as any).attributes;
+                    if (attributes) {
+                        for (const key in attributes) {
+                            if (key.toLowerCase().includes('header') || key.toLowerCase().includes('cookie')) {
+                                SENSITIVE_HEADERS.forEach(sensitive => {
+                                    if (key.toLowerCase().includes(sensitive)) {
+                                        span.setAttribute(key, '[REDACTED]');
+                                    }
+                                });
+                            }
+                        }
+                    }
+                },
             }),
         ],
     });

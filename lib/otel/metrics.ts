@@ -23,7 +23,6 @@ let otelProxyRequests: Counter | null = null;
 let otelProxyRequestSize: Histogram | null = null;
 let otelProxyUpstreamLatency: Histogram | null = null;
 let otelProxyErrors: Counter | null = null;
-let otel_proxy_auth_failures_total: Counter | null = null;
 
 /**
  * Counter for total telemetry token requests

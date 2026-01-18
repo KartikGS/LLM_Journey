@@ -11,7 +11,7 @@ import {
     getOtelProxyErrorsCounter,
 } from '@/lib/otel/metrics';
 import { parseHeaderString } from '@/lib/utils/parseHeaderString';
-import { validateContentLength, readStreamWithLimit } from '@/lib/validations/contentLength';
+import { validateContentLength, readStreamWithLimit } from '@/lib/security/contentLength';
 
 const MAX_BODY_SIZE = 1_000_000; // 1 MB
 const CONTENT_LENGTH_REQUIRED = true
@@ -77,8 +77,7 @@ export async function POST(req: NextRequest) {
 
                 const extraHeaders = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
-                let body: Uint8Array;
-                const { body: streamBody, error: streamError } = await readStreamWithLimit(req, MAX_BODY_SIZE, contentLength, BODY_READ_TIMEOUT_MS);
+                const { body, error: streamError } = await readStreamWithLimit(req, MAX_BODY_SIZE, contentLength, BODY_READ_TIMEOUT_MS);
                 if (streamError) {
                     if (streamError.status === 413) {
                         getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' });
@@ -96,12 +95,11 @@ export async function POST(req: NextRequest) {
                     return new NextResponse(streamError.message, { status: streamError.status });
                 }
 
-                if (streamBody.length === 0) {
+                if (body.length === 0) {
                     span.setStatus({ code: SpanStatusCode.ERROR });
                     span.addEvent('invalid_request_body');
                     return new NextResponse('Bad Request', { status: 400 });
                 }
-                body = streamBody;
 
                 getOtelProxyRequestSizeHistogram().record(body.byteLength, {
                     route: '/api/otel/trace',
@@ -119,6 +117,7 @@ export async function POST(req: NextRequest) {
                         'Content-Type': req.headers.get('content-type') ?? 'application/x-protobuf',
                         ...extraHeaders,
                     },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     body: body as any,
                     signal: controller.signal,
                 });

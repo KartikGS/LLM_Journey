@@ -79,7 +79,7 @@ export async function readStreamWithLimit(
         }
 
         return { body: buffer?.slice(0, offset) ?? new Uint8Array(0) };
-    } catch (err) {
+    } catch {
         if (timedOut) {
             return {
                 body: new Uint8Array(0),

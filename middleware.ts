@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 const rateLimitMap = new Map<string, number[]>();
 
-import { validateContentLength } from '@/lib/validations/contentLength';
+import { validateContentLength } from '@/lib/security/contentLength';
 
 const ONE_MINUTE = 60 * 1000;
 
