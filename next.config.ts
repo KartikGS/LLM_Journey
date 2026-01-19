@@ -30,10 +30,6 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self';"
           }
         ],
       },
@@ -51,7 +47,7 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config, { isServer, dev, nextRuntime }) => {
-    // Handle onnxruntime-web for client-side only
+    // Client-only Node fallbacks
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -66,30 +62,38 @@ const nextConfig: NextConfig = {
         tls: false,
         child_process: false,
         os: false,
-        constants: false,
-        timers: false,
-        console: false,
         dns: false,
       };
     }
 
+    // Prevent server OTEL from leaking to client / edge
     if (!isServer || nextRuntime === 'edge') {
       config.resolve.alias = {
         ...config.resolve.alias,
         [path.resolve(__dirname, 'lib/otel/server.ts')]: false,
       };
     }
-    // Production optimizations
+
+    // Silence OTEL dynamic-require warning (client only)
+    if (!isServer) {
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings ?? []),
+        (warning: any) =>
+          typeof warning.message === 'string' &&
+          warning.message.includes(
+            'require function is used in a way in which dependencies cannot be statically extracted'
+          ) &&
+          warning.module?.resource?.includes('@opentelemetry'),
+      ];
+    }
+
+    // Prod client optimizations
     if (!dev && !isServer) {
       config.optimization = {
         ...config.optimization,
         minimize: true,
       };
     }
-
-    config.ignoreWarnings = [
-      { module: /node_modules\/@opentelemetry\/instrumentation/ },
-    ];
 
     return config;
   },

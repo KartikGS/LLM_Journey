@@ -1,0 +1,71 @@
+/**
+ * Threat model:
+ * - Prevents anonymous telemetry spam
+ * - Prevents replay beyond TTL
+ * - Does NOT authenticate users
+ * - Does NOT protect against client-side token exfiltration
+ */
+
+
+import crypto from 'crypto';
+import { timingSafeEqual } from 'crypto';
+import { getTelemetryTokenErrorsCounter } from './metrics';
+import logger from './logger';
+
+const TELEMETRY_SECRET = process.env.TELEMETRY_SECRET;
+const TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+export function generateTelemetryToken(sessionId: string): string | null {
+    if (!TELEMETRY_SECRET) {
+        getTelemetryTokenErrorsCounter().add(1, { error_type: 'Telemetry secret not set' })
+        logger.error('Telemetry secret not set')
+        return null;
+    }
+    const expiresAt = Date.now() + TOKEN_TTL_MS;
+    const payload = JSON.stringify({ sessionId, expiresAt });
+    const signature = crypto
+        .createHmac('sha256', TELEMETRY_SECRET)
+        .update(payload)
+        .digest('hex');
+
+    return Buffer.from(JSON.stringify({ payload, signature })).toString('base64');
+}
+
+export function validateTelemetryToken(token: string, sessionId: string): boolean {
+    if (!TELEMETRY_SECRET) return false;
+    try {
+        const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+        const { payload, signature } = decoded;
+
+        const expectedSignature = crypto
+            .createHmac('sha256', TELEMETRY_SECRET)
+            .update(payload)
+            .digest('hex');
+
+
+        const sigOk = timingSafeEqual(
+            Buffer.from(signature, 'hex'),
+            Buffer.from(expectedSignature, 'hex')
+        );
+
+        if (!sigOk) return false;
+
+        // if (signature !== expectedSignature) {
+        //     return false;
+        // }
+
+        const { sessionId: tokenSessionId, expiresAt } = JSON.parse(payload);
+
+        if (tokenSessionId !== sessionId) {
+            return false;
+        }
+
+        if (Date.now() > expiresAt) {
+            return false;
+        }
+
+        return true;
+    } catch {
+        return false;
+    }
+}

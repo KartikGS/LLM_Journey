@@ -89,6 +89,8 @@ pnpm start
 
 The project includes an observability stack using Grafana Tempo for distributed tracing and Grafana for visualization.
 
+NOTE: The observability stack is only for local testing. For production, changes in the configuration are required.
+
 1. Start the observability services:
 
 ```bash

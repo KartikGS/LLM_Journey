@@ -6,11 +6,13 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { parseHeaderString } from '../utils/parseHeaderString';
+import { redactUrl } from '../security/redaction';
 
 const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 const headers = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
+let sdkStarted = false;
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
@@ -37,13 +39,42 @@ const sdk = new NodeSDK({
     ),
 
     instrumentations: [
-        getNodeAutoInstrumentations({
-            '@opentelemetry/instrumentation-winston': { enabled: false },
+        new HttpInstrumentation({
+            headersToSpanAttributes: {
+                client: {
+                    requestHeaders: [],
+                    responseHeaders: [],
+                },
+                server: {
+                    requestHeaders: [],
+                    responseHeaders: [],
+                },
+            },
+
+            ignoreIncomingRequestHook(req) {
+                return req.url?.includes('/api/otel/trace') ?? false;
+            },
+
+            requestHook: (span, request) => {
+                if ('url' in request && typeof request.url === 'string') {
+                    span.setAttribute(
+                        'http.url',
+                        redactUrl(
+                            request.url,
+                            process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost'
+                        )
+                    );
+                }
+            },
         }),
     ],
+
 });
 
-sdk.start();
+if (!sdkStarted) {
+    sdk.start();
+    sdkStarted = true;
+}
 console.log('OpenTelemetry initialized');
 
 // Graceful shutdown

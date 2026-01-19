@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./ui/navbar";
-import { OtelProvider } from "../components/otel-provider";
+import { OtelInitializer } from "../components/otel-initializer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,22 +21,27 @@ export const metadata: Metadata = {
   description: "Various LLM improvements over time",
 };
 
+// import { headers } from "next/headers";
+
+// export default async function RootLayout({
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="en" className="h-full">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
       >
-        <OtelProvider>
+        <OtelInitializer>
           <div className="h-full flex">
             <Navbar />
             {children}
           </div>
-        </OtelProvider>
+        </OtelInitializer>
       </body>
     </html>
   );
