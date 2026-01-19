@@ -6,7 +6,7 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { parseHeaderString } from '../utils/parseHeaderString';
 import { redactUrl } from '../security/redaction';
 
@@ -39,41 +39,36 @@ const sdk = new NodeSDK({
     ),
 
     instrumentations: [
-        getNodeAutoInstrumentations({
-            '@opentelemetry/instrumentation-fs': { enabled: false }, // Reduce noise and prevent file path leaking if sensitive
-            '@opentelemetry/instrumentation-winston': { enabled: false },
-            '@opentelemetry/instrumentation-http': {
-                headersToSpanAttributes: {
-                    client: {
-                        requestHeaders: [],
-                        responseHeaders: [],
-                    },
-                    server: {
-                        requestHeaders: [],
-                        responseHeaders: [],
-                    },
+        new HttpInstrumentation({
+            headersToSpanAttributes: {
+                client: {
+                    requestHeaders: [],
+                    responseHeaders: [],
                 },
-
-                ignoreIncomingRequestHook(req: { url?: string }) {
-                    return req.url?.includes('/api/otel/trace') ?? false;
+                server: {
+                    requestHeaders: [],
+                    responseHeaders: [],
                 },
+            },
 
-                requestHook: (span, request) => {
-                    if ('url' in request && typeof request.url === 'string') {
-                        span.setAttribute(
-                            'http.url',
-                            redactUrl(
-                                request.url,
-                                process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost'
-                            )
-                        );
-                    }
-                },
-            }
+            ignoreIncomingRequestHook(req) {
+                return req.url?.includes('/api/otel/trace') ?? false;
+            },
 
-
+            requestHook: (span, request) => {
+                if ('url' in request && typeof request.url === 'string') {
+                    span.setAttribute(
+                        'http.url',
+                        redactUrl(
+                            request.url,
+                            process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost'
+                        )
+                    );
+                }
+            },
         }),
     ],
+
 });
 
 if (!sdkStarted) {
