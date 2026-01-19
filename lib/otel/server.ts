@@ -8,10 +8,11 @@ import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { parseHeaderString } from '../utils/parseHeaderString';
-import { redactUrl, SENSITIVE_HEADERS } from '../security/redaction';
+import { redactUrl } from '../security/redaction';
 
 const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 const headers = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
+let sdkStarted = false;
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
@@ -42,40 +43,43 @@ const sdk = new NodeSDK({
             '@opentelemetry/instrumentation-fs': { enabled: false }, // Reduce noise and prevent file path leaking if sensitive
             '@opentelemetry/instrumentation-winston': { enabled: false },
             '@opentelemetry/instrumentation-http': {
-                ignoreIncomingRequestHook(req: { url?: string }) {
-                    const url = req.url || '';
-                    return url.includes('/api/otel/trace');
+                headersToSpanAttributes: {
+                    client: {
+                        requestHeaders: [],
+                        responseHeaders: [],
+                    },
+                    server: {
+                        requestHeaders: [],
+                        responseHeaders: [],
+                    },
                 },
-                applyCustomAttributesOnSpan: (span) => {
 
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const attributes = (span as any).attributes;
-                    if (attributes) {
-                        if (attributes['http.url']) {
-                            span.setAttribute('http.url', redactUrl(attributes['http.url'] as string, 'http://localhost'));
-                        }
-                        if (attributes['http.target']) {
-                            span.setAttribute('http.target', redactUrl(attributes['http.target'] as string, 'http://localhost'));
-                        }
+                ignoreIncomingRequestHook(req: { url?: string }) {
+                    return req.url?.includes('/api/otel/trace') ?? false;
+                },
 
-                        // Redact sensitive headers
-                        for (const key in attributes) {
-                            if (key.toLowerCase().includes('header') || key.toLowerCase().includes('cookie')) {
-                                SENSITIVE_HEADERS.forEach(sensitive => {
-                                    if (key.toLowerCase().includes(sensitive)) {
-                                        span.setAttribute(key, '[REDACTED]');
-                                    }
-                                });
-                            }
-                        }
+                requestHook: (span, request) => {
+                    if ('url' in request && typeof request.url === 'string') {
+                        span.setAttribute(
+                            'http.url',
+                            redactUrl(
+                                request.url,
+                                process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost'
+                            )
+                        );
                     }
-                }
+                },
             }
+
+
         }),
     ],
 });
 
-sdk.start();
+if (!sdkStarted) {
+    sdk.start();
+    sdkStarted = true;
+}
 console.log('OpenTelemetry initialized');
 
 // Graceful shutdown
