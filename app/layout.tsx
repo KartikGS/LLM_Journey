@@ -23,6 +23,8 @@ export const metadata: Metadata = {
 
 // import { headers } from "next/headers";
 
+export const dynamic = 'force-dynamic'
+
 // export default async function RootLayout({
 export default function RootLayout({
   children,

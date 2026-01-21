@@ -67,7 +67,7 @@ export function middleware(request: NextRequest) {
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = `
         'self' 
-        'nonce-${nonce}'  
+        'nonce-${nonce}'
         'wasm-unsafe-eval'
         ${isDev ? "'unsafe-eval'" : ""}
     `.replace(/\s{2,}/g, ' ').trim();
