@@ -60,15 +60,14 @@ export function middleware(request: NextRequest) {
     requestHeaders.set('x-nonce', nonce);
 
     // 2. CSP Definition (using the nonce)
-    // - strict-dynamic: trust scripts loaded by nonced scripts
+    // - strict-dynamic: trust scripts loaded by nonced scripts. Removed as it is not supported by nextjs yet
     // - wasm-unsafe-eval: permit WASM (ONNX) without full eval()
     // - unsafe-eval: REQUIRED for Next.js in development mode (HMR, Source Maps)
     // - self: fallback for legacy browsers
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = `
         'self' 
-        'nonce-${nonce}' 
-        'strict-dynamic' 
+        'nonce-${nonce}'  
         'wasm-unsafe-eval'
         ${isDev ? "'unsafe-eval'" : ""}
     `.replace(/\s{2,}/g, ' ').trim();
@@ -87,7 +86,7 @@ export function middleware(request: NextRequest) {
         base-uri 'self';
         form-action 'self';
         frame-ancestors 'none';
-        connect-src 'self';
+        connect-src 'self' https:;
         upgrade-insecure-requests;
     `.replace(/\s{2,}/g, ' ').trim();
 
@@ -135,10 +134,9 @@ export function middleware(request: NextRequest) {
 
 /**
  * Match all request paths except for static assets and internal Next.js paths.
- * If we later add .css or .js in /public, we may want to exclude those too.
  */
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:css|js|svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };
