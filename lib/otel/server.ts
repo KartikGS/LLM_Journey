@@ -10,28 +10,28 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { parseHeaderString } from '../utils/parseHeaderString';
 import { redactUrl } from '../security/redaction';
 
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || null
+const BASE_URL = process.env.BASE_URL || null
 const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 const headers = parseHeaderString(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 let sdkStarted = false;
 
 const errors = [];
 
-if (!PUBLIC_BASE_URL) {
+if (!BASE_URL) {
     errors.push(
-        'PUBLIC_BASE_URL is missing. Span will have http://localhost set as Base URL.'
+        'BASE_URL is missing.'
     );
 }
 
 if (!OTEL_EXPORTER_OTLP_ENDPOINT) {
     errors.push(
-        'OTEL_EXPORTER_OTLP_ENDPOINT is missing. Telemetry disabled.'
+        'OTEL_EXPORTER_OTLP_ENDPOINT is missing.'
     );
 }
 
 if (Object.keys(headers).length === 0 && process.env.NODE_ENV === 'production') {
     errors.push(
-        'Authorization header not set. Tracing will fail.'
+        'Authorization header not set.'
     )
 }
 
@@ -86,7 +86,7 @@ const sdk = new NodeSDK({
                         'http.url',
                         redactUrl(
                             request.url,
-                            PUBLIC_BASE_URL ?? 'http://localhost'
+                            BASE_URL ?? 'http://localhost'
                         )
                     );
                 }
