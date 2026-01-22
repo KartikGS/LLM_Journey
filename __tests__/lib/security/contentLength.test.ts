@@ -20,6 +20,14 @@ describe('validateContentLength', () => {
         });
     });
 
+    it('should allow zero content-length', () => {
+        const result = validateContentLength('0', true, MAX_SIZE);
+        expect(result).toEqual({
+            valid: true,
+            length: 0,
+        });
+    });
+
     it('should return valid for valid content-length', () => {
         const result = validateContentLength('500', true, MAX_SIZE);
         expect(result).toEqual({
@@ -36,6 +44,24 @@ describe('validateContentLength', () => {
             error: 'Invalid Content-Length',
         });
     });
+
+    it('should return error for fractional content-length', () => {
+        const result = validateContentLength('10.5', true, MAX_SIZE);
+        expect(result).toEqual({
+            valid: false,
+            status: 400,
+            error: 'Invalid Content-Length',
+        });
+    });
+
+    it('should handle content-length with whitespace', () => {
+        const result = validateContentLength(' 500 ', true, MAX_SIZE);
+        expect(result).toEqual({
+            valid: true,
+            length: 500,
+        });
+    });
+
 
     it('should return error if content-length exceeds max size', () => {
         const result = validateContentLength('1001', true, MAX_SIZE);
@@ -56,13 +82,13 @@ describe('validateContentLength', () => {
     });
 
     it('should return error for unsafe integer', () => {
-         const unsafe = Number.MAX_SAFE_INTEGER + 1;
-         const result = validateContentLength(unsafe.toString(), true, MAX_SIZE);
-         // Even though it is larger than MAX_SIZE, it checks isSafeInteger first
-         expect(result).toEqual({
-             valid: false,
-             status: 400,
-             error: 'Invalid Content-Length',
-         });
+        const unsafe = Number.MAX_SAFE_INTEGER + 1;
+        const result = validateContentLength(unsafe.toString(), true, MAX_SIZE);
+        // Even though it is larger than MAX_SIZE, it checks isSafeInteger first
+        expect(result).toEqual({
+            valid: false,
+            status: 400,
+            error: 'Invalid Content-Length',
+        });
     });
 });

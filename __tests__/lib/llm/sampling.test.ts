@@ -41,8 +41,8 @@ describe('sampling', () => {
     });
 
     describe('sampleMultinomial', () => {
-        beforeEach(() => {
-            jest.spyOn(Math, 'random').mockRestore();
+        afterEach(() => {
+            jest.restoreAllMocks();
         });
 
         it('should return -1 for empty probabilities', () => {
@@ -51,29 +51,40 @@ describe('sampling', () => {
 
         it('should sample correctly based on random value', () => {
             const probs = [0.1, 0.3, 0.6];
+            const randomSpy = jest.spyOn(Math, 'random');
 
             // cumulative: [0.1, 0.4, 1.0]
 
             // Mock random to 0.05 -> should return 0 (0.05 < 0.1)
-            jest.spyOn(Math, 'random').mockReturnValue(0.05);
+            randomSpy.mockReturnValue(0.05);
             expect(sampleMultinomial(probs)).toBe(0);
 
             // Mock random to 0.2 -> should return 1 (0.2 < 0.4)
-            jest.spyOn(Math, 'random').mockReturnValue(0.2);
+            randomSpy.mockReturnValue(0.2);
             expect(sampleMultinomial(probs)).toBe(1);
 
             // Mock random to 0.5 -> should return 2 (0.5 < 1.0)
-            jest.spyOn(Math, 'random').mockReturnValue(0.5);
+            randomSpy.mockReturnValue(0.5);
             expect(sampleMultinomial(probs)).toBe(2);
         });
 
         it('should return last index if random value is high (floating point issues)', () => {
-             const probs = [0.5, 0.5];
-             // cumulative: 0.5, 1.0
+            const probs = [0.5, 0.5];
+            // cumulative: 0.5, 1.0
 
-             // If random is exactly 0.99999
-             jest.spyOn(Math, 'random').mockReturnValue(0.99999);
-             expect(sampleMultinomial(probs)).toBe(1);
+            // If random is exactly 0.99999
+            jest.spyOn(Math, 'random').mockReturnValue(0.99999);
+            expect(sampleMultinomial(probs)).toBe(1);
         });
+
+        it('should still return an index if probabilities do not sum to 1', () => {
+            jest.spyOn(Math, 'random').mockReturnValue(0.9);
+            expect(sampleMultinomial([0.2, 0.2])).toBe(1);
+        });
+
+        it('should return last index if probabilities are zero', () => {
+            jest.spyOn(Math, 'random').mockReturnValue(0.2);
+            expect(sampleMultinomial([0, 0, 0])).toBe(2);
+        })
     });
 });

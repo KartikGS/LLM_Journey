@@ -10,8 +10,8 @@ export interface ContentLengthValidation {
 /**
  * Validates Content-Length header against MAX_BODY_SIZE.
  */
-export function validateContentLength(contentLength: string | null, require: boolean, maxBodySize: number): ContentLengthValidation {
-    if (!contentLength && require) {
+export function validateContentLength(contentLength: string | null, required: boolean, maxBodySize: number): ContentLengthValidation {
+    if (!contentLength && required) {
         return { valid: false, status: 411, error: 'Content-Length required' };
     }
 
@@ -21,6 +21,7 @@ export function validateContentLength(contentLength: string | null, require: boo
 
     const length = Number(contentLength);
 
+    // A very large but finite integer will return 400, not 413
     if (!Number.isFinite(length) || !Number.isSafeInteger(length)) {
         return { valid: false, status: 400, error: 'Invalid Content-Length' };
     }

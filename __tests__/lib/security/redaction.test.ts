@@ -41,7 +41,7 @@ describe('redactUrl', () => {
         expect(result).toBe(invalidUrl);
     });
 
-    it('should handle partial matches in keys', () => {
+    it('should redact keys containing sensitive substrings', () => {
         // SENSITIVE_KEYS = ['prompt', 'input', 'api_key', 'token', 'password', 'secret', 'credential'];
         // logic: key.toLowerCase().includes(k)
 
@@ -49,4 +49,54 @@ describe('redactUrl', () => {
         const redacted = redactUrl(url, BASE_URL);
         expect(redacted).toContain('my_secret_value=%5BREDACTED%5D');
     });
+
+    it('should redact multiple values for the same sensitive key (collapses to single value)', () => {
+        const url = '/api?token=a&token=b';
+        const redacted = redactUrl(url, BASE_URL);
+
+        const parsed = new URL(redacted);
+
+        expect(parsed.searchParams.getAll('token')).toEqual(['[REDACTED]']);
+    });
+
+
+    it('should keep already redacted values redacted', () => {
+        const url = '/api?token=[REDACTED]';
+        const redacted = redactUrl(url, BASE_URL);
+
+        expect(redacted).toContain('token=%5BREDACTED%5D');
+    });
+
+    it('should preserve URL fragments while redacting query params', () => {
+        const url = '/api?token=abc#section1';
+        const redacted = redactUrl(url, BASE_URL);
+
+        expect(redacted).toContain('token=%5BREDACTED%5D');
+        expect(redacted).toContain('#section1');
+    });
+
+    it('should redact sensitive params in absolute URLs', () => {
+        const url = 'https://example.com/api?api_key=secret';
+        const redacted = redactUrl(url, BASE_URL);
+
+        expect(redacted).toContain('https://example.com/api');
+        expect(redacted).toContain('api_key=%5BREDACTED%5D');
+    });
+
+    it('should only redact sensitive params and leave others unchanged', () => {
+        const url = '/api?query=hello&password=123&limit=10';
+        const redacted = redactUrl(url, BASE_URL);
+
+        expect(redacted).toContain('password=%5BREDACTED%5D');
+        expect(redacted).toContain('query=hello');
+        expect(redacted).toContain('limit=10');
+    });
+
+    it('should return original url for empty query string', () => {
+        const url = '/api';
+        const redacted = redactUrl(url, BASE_URL);
+
+        expect(redacted).toBe(url);
+    });
+
 });

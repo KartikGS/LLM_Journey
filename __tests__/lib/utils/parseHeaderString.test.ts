@@ -6,6 +6,11 @@ describe('parseHeaderString', () => {
         expect(parseHeaderString(undefined)).toEqual({});
     });
 
+    it('should treat empty quoted value as empty and ignore by default', () => {
+        expect(parseHeaderString('key=""')).toEqual({});
+    });
+
+
     it('should parse simple key-value pairs', () => {
         const input = 'key1=value1, key2=value2';
         const expected = {
@@ -57,7 +62,7 @@ describe('parseHeaderString', () => {
 
         it('should throw error for empty key', () => {
             expect(() => parseHeaderString('=value', { strict: true })).toThrow(
-                'Invalid header format: "=value"'
+                'Header key is empty in "=value"'
             );
         });
 
