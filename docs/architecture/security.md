@@ -8,3 +8,14 @@ In route api/otel/trace content lenght check by reading stream using functionali
 Redacting Sensitive information configure in otel initialization.
 
 Due to App Router limitations, Next.js-managed scripts and styles cannot be fully nonced. This CSP setup prioritizes script execution safety while allowing framework-managed styles.
+
+## Threat Model (High Level)
+
+Out of Scope:
+- Distributed denial-of-service attacks
+- Advanced bot detection
+
+In Scope:
+- Excessive request payloads
+- Client-side telemetry abuse
+- Script injection via CSP violations

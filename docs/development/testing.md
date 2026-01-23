@@ -1,3 +1,14 @@
+## Testing Philosophy
+
+- Unit tests validate isolated logic and components
+- Integration tests validate component interaction
+- E2E tests validate user-critical flows
+
+The project currently prioritizes:
+- Correct rendering
+- Basic user interaction
+- Stability of critical paths
+
 # Testing
 
 This project uses **Jest** and **React Testing Library** for unit and integration testing.

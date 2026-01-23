@@ -5,3 +5,11 @@ Observability is implemented in this project using Traces, metrics and logs whic
 For local testing, docker is used to mock the telemetry setup. Grafana cloud is used for production use case.
 
 NOTE: The docker setup is only meant for local testing and not for production deployment.
+
+## Telemetry Flow
+
+Client → Next.js App → OTEL Proxy → OTEL Collector → Backend
+
+- Traces → Grafana Tempo
+- Metrics → Prometheus
+- Logs → Grafana Loki
