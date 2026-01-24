@@ -57,7 +57,7 @@ function emitLog(
 /**
  * Parse arguments to support both Pino-style (object, message) and simple (message) signatures.
  */
-function parseArgs(
+export function parseArgs(
     attrsOrMessage: LogAttributes | string,
     maybeMessage?: string
 ): { message: string; attributes?: LogAttributes } {

@@ -13,7 +13,7 @@ as the codebase grows.
 - Prefer **clarity over cleverness**
 - Treat **observability and security as first-class concerns**
 - Keep implementations **predictable and explicit**
-- Optimize for **readability and debuggability**, not premature performance
+- Optimize for **testability, readability and debuggability**, not premature performance
 
 ---
 
@@ -87,7 +87,7 @@ All frontend pages must:
 Test pages at:
 - Small mobile viewport
 - Standard desktop viewport
-
+- Dark mode and Light mode
 ---
 
 ### UI Consistency

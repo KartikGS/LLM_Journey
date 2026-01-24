@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getClientIp, generateNonce } from '@/lib/middleware/utils';
 
 /**
  * In-memory rate limiting (resets on redeploy).
@@ -27,29 +28,6 @@ const API_CONFIG: Record<string, { rateLimit_windowMs: number; rateLimit_max: nu
         maxBodySize: 1_000_000, // 1 MB
     },
 };
-
-/**
- * Extract a stable client IP.
- * Used only for coarse abuse protection (not identity or auth).
- */
-function getClientIp(request: NextRequest): string {
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    return (
-        (request as any).ip ??
-        forwardedFor?.split(',')[0]?.trim() ??
-        'unknown'
-    );
-}
-
-/**
- * Generate a cryptographically strong random nonce in base64 format.
- * Compatible with Edge Runtime (avoids Buffer).
- */
-function generateNonce(): string {
-    const nonceArray = new Uint8Array(16); // 16 bytes is fine; 32 bytes would be extra conservative, but unnecessary.
-    crypto.getRandomValues(nonceArray);
-    return btoa(String.fromCharCode(...nonceArray));
-}
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
