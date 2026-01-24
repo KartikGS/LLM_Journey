@@ -14,6 +14,18 @@ export function getMeter(): Meter {
     return meter;
 }
 
+/**
+ * Helper to safely record metrics without crashing the request.
+ */
+export function safeMetric(fn: () => void) {
+    try {
+        fn();
+    } catch (err) {
+        console.error('Metric failure', err);
+    }
+}
+
+
 // Pre-defined metrics for telemetry token
 let telemetryTokenRequests: Counter | null = null;
 let telemetryTokenErrors: Counter | null = null;
