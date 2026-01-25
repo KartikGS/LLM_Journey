@@ -10,8 +10,8 @@ export interface ContentLengthValidation {
 /**
  * Validates Content-Length header against MAX_BODY_SIZE.
  */
-export function validateContentLength(contentLength: string | null, require: boolean, maxBodySize: number): ContentLengthValidation {
-    if (!contentLength && require) {
+export function validateContentLength(contentLength: string | null, required: boolean, maxBodySize: number): ContentLengthValidation {
+    if (!contentLength && required) {
         return { valid: false, status: 411, error: 'Content-Length required' };
     }
 
@@ -21,6 +21,7 @@ export function validateContentLength(contentLength: string | null, require: boo
 
     const length = Number(contentLength);
 
+    // A very large but finite integer will return 400, not 413
     if (!Number.isFinite(length) || !Number.isSafeInteger(length)) {
         return { valid: false, status: 400, error: 'Invalid Content-Length' };
     }
@@ -37,6 +38,27 @@ export function validateContentLength(contentLength: string | null, require: boo
 }
 
 /**
+ * races read against a timer
+ * @param promise 
+ * @param timeoutMs 
+ * @returns promise
+ */
+function readWithTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs?: number
+): Promise<T> {
+    if (!timeoutMs) return promise;
+
+    return Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('READ_TIMEOUT')), timeoutMs)
+        ),
+    ]);
+}
+
+
+/**
  * Reads a NextRequest stream with a byte limit to check content length.
  */
 export async function readStreamWithLimit(
@@ -50,21 +72,22 @@ export async function readStreamWithLimit(
         return { body: new Uint8Array(0), error: { status: 400, message: 'Bad Request' } };
     }
 
-    let timeoutId: NodeJS.Timeout | undefined;
-    let timedOut = false;
-    if (timeoutMs) {
-        timeoutId = setTimeout(() => {
-            timedOut = true;
-            req.body?.cancel();
-        }, timeoutMs);
-    }
+    // let timeoutId: NodeJS.Timeout | undefined;
+    // let timedOut = false;
+    // if (timeoutMs) {
+    //     timeoutId = setTimeout(() => {
+    //         timedOut = true;
+    //         req.body?.cancel();
+    //     }, timeoutMs);
+    // }
 
     let buffer: Uint8Array | null = null;
     let offset = 0;
 
     try {
         while (true) {
-            const { done, value } = await reader.read();
+            // const { done, value } = await reader.read();
+            const { done, value } = await readWithTimeout(reader.read(), timeoutMs);
             if (done) break;
 
             if (offset + value.length > limit || offset + value.length > contentLength) {
@@ -79,8 +102,14 @@ export async function readStreamWithLimit(
         }
 
         return { body: buffer?.slice(0, offset) ?? new Uint8Array(0) };
-    } catch {
-        if (timedOut) {
+    } catch (err) {
+        // if (timedOut) {
+        //     return {
+        //         body: new Uint8Array(0),
+        //         error: { status: 408, message: 'Request body read timeout', timeout: true },
+        //     };
+        // }
+        if ((err as Error).message === 'READ_TIMEOUT') {
             return {
                 body: new Uint8Array(0),
                 error: { status: 408, message: 'Request body read timeout', timeout: true },
@@ -89,7 +118,7 @@ export async function readStreamWithLimit(
 
         return { body: new Uint8Array(0), error: { status: 400, message: 'Bad Request' } };
     } finally {
-        if (timeoutId) clearTimeout(timeoutId);
+        // if (timeoutId) clearTimeout(timeoutId);
         reader.releaseLock();
     }
 }

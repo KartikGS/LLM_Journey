@@ -83,7 +83,7 @@ export function parseHeaderString(
     for (const pair of pairs) {
         const [rawKey, ...rawValueParts] = pair.split("=");
 
-        if (!rawKey || rawValueParts.length === 0) {
+        if (rawValueParts.length === 0) {
             if (strict) {
                 throw new Error(`Invalid header format: "${pair}"`);
             }
