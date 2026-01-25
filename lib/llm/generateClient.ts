@@ -1,6 +1,8 @@
 import { ModelMeta } from "@/types/llm";
 import { softmax, sampleMultinomial } from "./sampling";
 import type * as OrtType from "onnxruntime-web";
+import { getTracer } from "../otel/client";
+import { SpanStatusCode, Span, SpanKind } from "@opentelemetry/api";
 
 let session: OrtType.InferenceSession | null = null;
 let ort: typeof OrtType | null = null;
@@ -25,9 +27,6 @@ async function getSession(): Promise<OrtType.InferenceSession> {
   }
   return session;
 }
-
-import { getTracer } from "../otel/client";
-import { SpanStatusCode, Span, SpanKind } from "@opentelemetry/api";
 
 export async function generate({
   meta,
