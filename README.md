@@ -176,9 +176,21 @@ TypeScript is configured for strict type checking. The project uses ESLint with 
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+## Documentation
 
-Temp.
+The project documentation has been continuously evolved to support both human contributors and AI agents.
+
+### [For Agents & Contributors](docs/AGENTS.md)
+**[Read this first.](docs/AGENTS.md)**
+
+The documentation is organized by role and stability:
+
+-   **[docs/AGENTS.md](docs/AGENTS.md)**: The canonical entry point.
+-   **[docs/roles/](docs/roles/)**: Role-specific guides (Frontend, Backend, Infra, etc.).
+-   **[docs/development/](docs/development/)**: Coding standards and style guides.
+-   **[docs/api/](docs/api/)**: System contracts.
+
+## License
 
 ## Resources
 
