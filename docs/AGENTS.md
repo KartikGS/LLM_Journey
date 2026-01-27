@@ -16,6 +16,7 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 4. [Project Log](./project-log.md)
 
 **Then, based on your role:**
+- Business Analyst → [roles/ba.md](./roles/ba.md)
 - Frontend → [roles/frontend.md](./roles/frontend.md)
 - Backend → [roles/backend.md](./roles/backend.md)
 - Infra → [roles/infra.md](./roles/infra.md)
@@ -54,10 +55,54 @@ Failed coordination kills projects. Stick to these contracts:
 - If a rule is not written in `docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
 
+## Execution Modes
+
+Not all Change Requirements require full agent orchestration.
+
+### Fast Path
+Used when:
+- Docs-only changes
+- Trivial UI tweaks
+- Test fixes
+- No architectural impact
+
+Flow:
+Human → Senior Developer Agent → (Optional) Sub Agent
+
+---
+
+### Standard Path
+Used when:
+- New features
+- API changes
+- Non-trivial UI or backend work
+
+Flow:
+Human → BA Agent → Senior Developer Agent → Sub Agents
+
+---
+
+### Heavy Path
+Used when:
+- Architectural changes
+- Cross-cutting concerns
+- Multi-phase or long-running work
+
+Flow:
+Human → BA Agent → Senior Developer Agent  
+→ BA Agent (scope split if required)  
+→ Senior Developer Agent → Sub Agents
+
+BA ↔ Senior feedback must follow docs/prompts/ba-to-senior-feedback.md
+
 
 ## 5. Authority & Conflict Resolution
 
 When sources of truth conflict, resolve in this order:
+
+**Scope & Intent Conflicts**
+- BA Agent owns requirement clarity and scope
+- Senior Developer Agent owns technical feasibility and execution
 
 1. Tests (define expected behavior)
 2. Code (current implementation)
