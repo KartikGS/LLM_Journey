@@ -1,0 +1,4 @@
+Role definition
+Required reading order
+Communication protocols
+Boundaries and constraints

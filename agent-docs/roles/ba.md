@@ -48,15 +48,15 @@ If a new architectural constraint is required:
 
 ---
 
-## Required Reads
+## Required Readings
 
 Before working on any CR:
-1. `docs/AGENTS.md`
-2. `docs/project-vision.md`
-3. `docs/project-log.md`
-4. `docs/architecture.md`
-5. `docs/prompts/`
-
+1. Check [Project Vision](../project-vision.md) for high-level goals
+2. Check [Project Log](../project-log.md) for recent changes
+3. Check [Architecture](../architecture.md) for system design
+4. Check [Project Log](../project-log.md) for current state
+5. Check [Keep in Mind](../keep-in-mind.md) for recent gotchas
+6. Check [Decisions](../decisions/) for context
 ---
 
 ## Required Outputs
@@ -68,14 +68,14 @@ Every BA task **must** produce:
    - S (single session)
    - M (multi-step, single phase)
    - L (multi-phase / long-running)
-   - Scope tags for project-log.md entries
+   - Scope tags for ./project-log.md entries
 3. **Assumptions & Risks**
 4. **Recommended Execution Mode**
    - Fast Path
    - Standard Path
    - Heavy Path
 5. **Senior Developer Prompt**
-   - Copy-paste ready
+   - Put in a file in `agent-docs/conversations/ba-to-senior.md`
    - Fully contextualized
    - No ambiguity
 

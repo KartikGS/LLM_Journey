@@ -17,13 +17,8 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Active Development.
--   **Recent Focus**: Restructuring documentation for Agentic workflows.
--   **Recent Focus**: [M][DOC] Restructuring documentation for Agentic workflows.
+-   **Recent Focus**: [S][DOC] Defined requirements for E2E testing suite (CR-001).
 
 ## Next Priorities
--   [ ] Complete docs migration.
--   [ ] Implement E2E tests with Playwright.
--   [ ] Add LLM evaluation framework.
--   [ ] [M][DOC] Complete docs migration.
--   [ ] [L][TEST] Implement E2E tests with Playwright.
+-   [ ] [L][TEST] Implement E2E testing suite with Playwright.
 -   [ ] [L] Add LLM evaluation framework.
