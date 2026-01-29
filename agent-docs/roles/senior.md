@@ -95,7 +95,12 @@ Before any code is modified or any terminal command is run that modifies the sys
 
 1.  **Create the Plan**: You MUST create `agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
 2.  **Review the Constraints**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
-3.  **Wait for Approval**: Present the plan to the User. Do not proceed with execution until the User acknowledges the plan.
+3.  **Operational Checklist**: Your plan MUST address:
+    -   **Environment**: Are there hardcoded values (URLs, ports)? Use Env vars.
+    -   **Observability**: How will we know if this fails in the wild?
+    -   **Artifacts**: Does this implementation generate files that need `.gitignore`?
+    -   **Retries/Timeouts**: Are async operations bounded?
+4.  **Wait for Approval**: Present the plan to the User. Do not proceed with execution until the User acknowledges the plan.
 
 **Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
 

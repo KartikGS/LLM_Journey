@@ -24,6 +24,7 @@
 
 ### Phase 3: Implementation (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in [/agent-docs/conversations/senior-to-<role>.md](/agent-docs/conversations/senior-to-<role>.md)
+   - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. Sub-agent executes within role boundaries
 3. Sub-agent requests clarification if needed
 4. Sub-agent completes and verifies work

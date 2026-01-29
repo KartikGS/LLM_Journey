@@ -21,6 +21,9 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 - Testing → [roles/sub-agents/testing.md](./roles/sub-agents/testing.md)
 - Observability → [roles/sub-agents/observability.md](./roles/sub-agents/observability.md)
 
+**Shared Context:**
+- **Technical Map**: [Technical Context Cheat Sheet](./technical-context.md)
+
 ## 3. Interfaces & Contracts
 Failed coordination kills projects. Stick to these contracts:
 ### Process & Workflow

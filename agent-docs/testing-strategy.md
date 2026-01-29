@@ -37,6 +37,10 @@ The test suite prioritizes:
 - Validate real user flows in a browser environment
 - Implemented using Playwright
 - Focus on critical paths: landing page, transformer interaction, and navigation
+- **Production Readiness Requirement**: 
+    - [ ] Configurable URLs via environment variables.
+    - [ ] Artifact retention (screenshots/videos) for debugging.
+    - [ ] Tagging for smoke and critical regression runs.
 
 ---
 
