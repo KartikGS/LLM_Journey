@@ -45,6 +45,15 @@ LLM Journey is an educational platform built with Next.js that walks through the
 - Node.js 20 or higher
 - pnpm (or npm/yarn/bun)
 
+### Browser Support
+
+This project uses WebAssembly (WASM) for client-side inference. For security, we implement a strict Content Security Policy (CSP) that requires support for the `wasm-unsafe-eval` directive.
+
+Supported browsers:
+- **Chrome / Edge**: 95+
+- **Firefox**: 102+
+- **Safari**: 17.4+
+
 ### Installation
 
 1. Clone the repository:
@@ -180,15 +189,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 The project documentation has been continuously evolved to support both human contributors and AI agents.
 
-### [For Agents & Contributors](docs/AGENTS.md)
-**[Read this first.](docs/AGENTS.md)**
+### [For Agents & Contributors](agent-docs/AGENTS.md)
+**[Read this first.](agent-docs/AGENTS.md)**
 
 The documentation is organized by role and stability:
 
--   **[docs/AGENTS.md](docs/AGENTS.md)**: The canonical entry point.
--   **[docs/roles/](docs/roles/)**: Role-specific guides (Frontend, Backend, Infra, etc.).
--   **[docs/development/](docs/development/)**: Coding standards and style guides.
--   **[docs/api/](docs/api/)**: System contracts.
+-   **[agent-docs/AGENTS.md](agent-docs/AGENTS.md)**: The canonical entry point.
+-   **[agent-docs/roles/](agent-docs/roles/)**: Role-specific guides (Frontend, Backend, Infra, etc.).
+-   **[agent-docs/development/](agent-docs/development/)**: Coding standards and style guides.
+-   **[agent-docs/api/](agent-docs/api/)**: System contracts.
 
 ## License
 

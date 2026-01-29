@@ -1,39 +1,27 @@
-# Handoff: Implement E2E Testing Suite
+# BA to Senior Developer: Verify Browser Support and Documentation Fixes (CR-003)
 
-**From**: BA Agent
-**To**: Senior Developer Agent
-**Context**: [CR-001-E2E-Testing](../requirements/CR-001-e2e-testing.md)
+## 1. Clarified Requirement Summary
+**Context**: We identified that Webkit E2E test failures in older versions are due to the CSP `wasm-unsafe-eval` directive required for the ONNX Runtime (WASM).
+**Goal**: Verify the documentation changes made to clarify browser support and fix broken links in the README.
 
-## Task Overview
-Implement a Playwright-based E2E testing suite for the LLM Journey project. The goal is to provide a safety net for core user flows, including landing page navigation and the interactive Transformer demo.
+## 2. Scope Classification
+- **Scope**: [S] (Single session)
+- **Execution Mode**: Fast Path
 
-## Key Requirements
-1. **Tooling**: Use Playwright (`@playwright/test`).
-2. **Infrastructure**:
-   - Add a `playwright.config.ts` that handles the Next.js dev server.
-   - Use `pnpm test:e2e` as the entry point.
-3. **Test Cases**:
-   - **Landing Page**: Check title, check 10 stage cards, check CTA link.
-   - **Transformer Page**: Select sample input, click send, verify "Generating..." state, verify final text output.
-   - **Observability**: Intercept network requests to `/api/otel/trace` and assert that at least one trace is sent during inference.
-4. **Resilience**: Handle potential slowness of ONNX WASM loading by using appropriate `expect(...).toBeVisible({ timeout: ... })`.
+## 3. Assumptions & Risks
+- **Assumption**: The browser support versions (Chrome 95+, FF 102+, Safari 17.4+) are accurate based on `wasm-unsafe-eval` standardization.
+- **Risk**: None identified for documentation-only changes.
 
-## Technical Constraints (from Architecture/Strategy)
-- Tests should live in `__tests__/e2e/`.
-- Use `data-testid` where necessary if existing CSS classes are too unstable (though preference is for accessible selectors).
-- Do not mock the ONNX runtime for E2E tests; we want to test the real integration.
+## 4. Senior Developer Task
+Please verify the following changes implemented by the BA agent:
+1. **`agent-docs/AGENTS.md`**: New "Browser & Environment Support" section.
+2. **`README.md`**: Added "Browser Support" section and updated `docs/` paths to `agent-docs/`.
+3. **`agent-docs/technical-context.md`**: Added "Browser Support" to Key Constraints.
+4. **`agent-docs/tooling-standard.md`**: Added "Browser Support" to Section 2.
 
-## Success Criteria
-- `pnpm test:e2e` passes locally.
-- Test report shows clear failure reasons.
-- Documentation updated in `testing-strategy.md` to reflect how to run E2E tests.
+Ensure technical accuracy and that all links in the main README are now functional.
 
-## Recommended Execution
-1. Install dependencies.
-2. Initialize Playwright config.
-3. Implement landing page test.
-4. Implement transformer interactivity test (handle async state).
-5. Implement trace interception test.
-6. Verify everything with `pnpm test:e2e`.
-
-Please review the full CR in `agent-docs/requirements/CR-001-e2e-testing.md` before starting.
+## 5. Acceptance Criteria
+- [ ] Documentation accurately reflects browser support limitations.
+- [ ] No broken `docs/` links remain in the main README.
+- [ ] Technical context and standard files are consistent.

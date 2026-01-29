@@ -17,7 +17,8 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Active Development.
--   **Recent Focus**: [S][TEST] Refining E2E testing suite (CR-002).
+-   **Recent Focus**: [S][DOC] Formalizing browser support and documentation fixes (CR-003) - **Completed**.
+-   **Previous**: [S][TEST] Refining E2E testing suite (CR-002).
 
 ## Next Priorities
 -   [ ] [M] Implement LLM Stage page content.
