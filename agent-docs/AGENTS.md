@@ -8,6 +8,10 @@ This file helps gather the necessary context for a role-specific agent to perfor
 LLM Journey is an educational platform built with Next.js that demonstrates the evolution of Large Language Models. It is a reference implementation for advanced agentic patterns, RAG, and model fine-tuning.
 
 ## 2. Required Reading
+**General Standards:**
+- **Tooling & Environment:** [tooling-standard.md](./tooling-standard.md)
+- **Workflow:** [Workflow](./workflow.md)
+
 **Based on your role:**
 - Business Analyst → [roles/ba.md](./roles/ba.md)
 - Senior Developer → [roles/senior.md](./roles/senior.md)

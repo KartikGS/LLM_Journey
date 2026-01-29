@@ -147,7 +147,7 @@ ADRs live in:
 ### 5. Verification & Closure
 
 Before marking work complete:
-- Review the work reports written by the sub-agents
+- Review the work reports written by the sub-agents in the [agent-docs/conversation/<role-of-sub-agent>-to-senior.md](../conversations/<role-of-sub-agent>-to-senior.md)
 - Ensure all tests pass (`pnpm test`)
 - Confirm acceptance criteria are met
 - Verify documentation updates

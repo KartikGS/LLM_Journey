@@ -12,7 +12,7 @@ This project follows a layered testing approach:
 
 - **Unit tests** validate isolated logic and pure functions
 - **Integration tests** validate interaction between subsystems
-- **E2E tests** validate user-critical flows (planned)
+- **E2E tests** validate user-critical flows using Playwright
 
 The test suite prioritizes:
 - Correct rendering and responses
@@ -33,9 +33,10 @@ The test suite prioritizes:
 - Assert **behavioral outcomes**, not implementation details
 - Enforce system-level guarantees (auth, observability, error handling)
 
-### E2E Tests (Planned)
+### E2E Tests
 - Validate real user flows in a browser environment
 - Implemented using Playwright
+- Focus on critical paths: landing page, transformer interaction, and navigation
 
 ---
 
@@ -45,6 +46,7 @@ This project uses:
 
 - **Jest** — test runner and mocking
 - **React Testing Library** — UI and interaction testing
+- **Playwright** — End-to-end browser testing
 
 Configuration lives in:
 - `jest.config.ts`
@@ -52,10 +54,34 @@ Configuration lives in:
 ### Running Tests
 - Run all tests: `pnpm test`
 - Watch mode: `pnpm test:watch`
+- Run all E2E tests: `pnpm test:e2e`
+- Run critical E2E tests: `pnpm playwright test --grep @critical`
+- Run smoke E2E tests: `pnpm playwright test --grep @smoke`
 
 ---
 
-## 4. Test Organization
+## 4. E2E Refinement & Artifacts
+
+To support CI/CD and debugging, the E2E suite follows these policies:
+
+### Artifact Retention
+- **Screenshots**: Captured on failure (`only-on-failure`).
+- **Videos**: Retained on failure (`retain-on-failure`).
+- **Traces**: Collected on the first retry of a failed test (`on-first-retry`).
+
+### Tagging System
+- `@critical`: Tests that must pass for any deployment (e.g., model generation).
+- `@smoke`: Quick navigation and rendering tests.
+
+### Observability Testing Policy
+E2E tests that assert on observability signals (e.g., intercepting `/api/otel/trace`) should be:
+1. **Rare**: Only implemented for high-value integration boundaries.
+2. **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
+3. **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
+
+---
+
+## 5. Test Organization
 
 Tests live in the `__tests__` directory and mirror the source structure where possible.
 
@@ -65,6 +91,7 @@ __tests__/
 ├── integration/ # Cross-system integration tests
 ├── lib/ # Unit + integration tests for libraries
 ├── components/ # UI component tests
+└── e2e/ # Playwright E2E tests
 ```
 
 ---
@@ -156,11 +183,10 @@ The following are intentionally out of scope:
 - Numerical correctness of LLM outputs
 - LLM performance benchmarking
 - OpenTelemetry SDK internals
-- Browser-based E2E testing (planned)
 
 ---
 
 ## 10. Future Plans
 
-- End-to-end testing with Playwright
 - LLM evaluations and quality metrics
+- Visual regression testing

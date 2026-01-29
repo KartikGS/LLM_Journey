@@ -17,8 +17,8 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Active Development.
--   **Recent Focus**: [S][DOC] Defined requirements for E2E testing suite (CR-001).
+-   **Recent Focus**: [S][TEST] Refining E2E testing suite (CR-002).
 
 ## Next Priorities
--   [ ] [L][TEST] Implement E2E testing suite with Playwright.
+-   [ ] [M] Implement LLM Stage page content.
 -   [ ] [L] Add LLM evaluation framework.
