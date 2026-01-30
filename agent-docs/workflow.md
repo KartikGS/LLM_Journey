@@ -1,5 +1,7 @@
 # Workflow (The Agent Loop)
 
+**Core Guidance**: Before starting any task, review the [Reasoning Principles](./coordination/reasoning-principles.md).
+
 ## Multi-Agent Workflow
 
 ### Phase 1: Requirement Analysis (BA Agent)

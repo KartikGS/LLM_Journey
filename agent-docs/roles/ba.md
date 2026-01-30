@@ -57,6 +57,7 @@ Before working on any CR:
 4. Check [Project Log](../project-log.md) for current state
 5. Check [Keep in Mind](../keep-in-mind.md) for recent gotchas
 6. Check [Decisions](../decisions/) for context
+7. Read [Reasoning Principles](../coordination/reasoning-principles.md) for cognitive framework
 ---
 
 ## Required Outputs
@@ -64,17 +65,20 @@ Before working on any CR:
 Every BA task **must** produce:
 
 1. **Clarified Requirement Summary**
-2. **Scope Classification**
+2. **Change Requirement (CR) Document**
+   - Create a new file in `agent-docs/requirements/CR-XXX.md`
+   - Must include Business Value, Acceptance Criteria, and Constraints.
+3. **Scope Classification**
    - S (single session)
    - M (multi-step, single phase)
    - L (multi-phase / long-running)
    - Scope tags for ./project-log.md entries
-3. **Assumptions & Risks**
-4. **Recommended Execution Mode**
+4. **Assumptions & Risks**
+5. **Recommended Execution Mode**
    - Fast Path
    - Standard Path
    - Heavy Path
-5. **Senior Developer Prompt**
+6. **Senior Developer Prompt**
    - Put in a file in `agent-docs/conversations/ba-to-senior.md`
    - Fully contextualized
    - No ambiguity

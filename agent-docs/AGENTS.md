@@ -9,6 +9,7 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 
 ## 2. Required Reading
 **General Standards:**
+- **Reasoning Principles:** [Reasoning Principles](./coordination/reasoning-principles.md)
 - **Tooling & Environment:** [tooling-standard.md](./tooling-standard.md)
 - **Workflow:** [Workflow](./workflow.md)
 

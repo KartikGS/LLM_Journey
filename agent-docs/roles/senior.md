@@ -65,7 +65,8 @@ If scope or intent is unclear:
 
 Before planning or executing any task:
 1. Check [Project Log](./project-log.md) for current state
-2. Check [Architecture](./architecture.md) for system design
+2. Check [Reasoning Principles](../coordination/reasoning-principles.md) for cognitive framework
+3. Check [Architecture](./architecture.md) for system design
 3. Check [Testing Strategy](./testing-strategy.md) for test approach
 4. Check [Keep in Mind](./keep-in-mind.md) for recent gotchas
 5. Check relevant files in:
@@ -116,7 +117,8 @@ Determine:
 
 Produce:
 - An execution plan
-- Sub-agent prompts in `agent-docs/conversations/senior-to-<role-of-sub-agent>.md`
+- **Delegation Decision**: Explicitly state if sub-agents are required. If not, justify why the Senior is implementing directly (e.g., [S] scope, coordination overhead).
+- Sub-agent prompts in `agent-docs/conversations/senior-to-<role-of-sub-agent>.md` (if applicable).
 - Execution order
 
 ---
@@ -153,8 +155,10 @@ ADRs live in:
 
 Before marking work complete:
 - Review the work reports written by the sub-agents in the [agent-docs/conversation/<role-of-sub-agent>-to-senior.md](../conversations/<role-of-sub-agent>-to-senior.md)
+- **Cross-Environment Verification**: Ensure all tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes.
 - Ensure all tests pass (`pnpm test`)
 - Confirm acceptance criteria are met
+- **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`docs/decisions/` or `agent-docs/`) if they change system invariants.
 - Verify documentation updates
 - Update `docs/project-log.md` with:
   - Status

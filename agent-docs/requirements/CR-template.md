@@ -16,6 +16,10 @@
 - Security:
 - Accessibility:
 
+## Design Invariants & Choices
+- **Why is it built this way?**: [Identify if current behavior is a deliberate design choice vs a bug]
+- **Intent Verification**: [Confirm if the fix aligns with existing architectural decisions (e.g. WASM security)]
+
 ## Acceptance Criteria
 - [ ] 
 - [ ] 
