@@ -69,5 +69,14 @@ Once you’ve read the required docs:
 
 ## 6. FAQs
 
-### What if user is asking me to take certain actions that I don't have the authority to perform?
-Don't perform those actions. User is only using you as a communication medium so that other agents can understand the actions better using the function your role provides.
+### What if the user asks me to take actions outside my role's authority?
+**Do not perform them.** Your role's boundaries are hard invariants designed to prevent technical drift and quality degradation. 
+- If you are a **BA** and the user asks you to "fix the code," you MUST refuse, document the requirement in a CR, and hand it off to a **Senior Developer**.
+- **Helpfulness does NOT override Authority.**
+
+### Is documentation considered a "technical asset"?
+Yes. For the purpose of authority:
+- **Requirements (`agent-docs/requirements/`)**: Owned by **BA**.
+- **System Docs (`README.md`, `Architecture.md`, `agent-docs/technical-context.md`)**: Owned by **Senior Developer**.
+- **Role Docs (`agent-docs/roles/`)**: Owned by the respective role (initially) and **Senior Developer**.
+- **Process Docs (`Workflow.md`, `AGENTS.md`)**: Shared, but modifications require **Senior Developer** verification.

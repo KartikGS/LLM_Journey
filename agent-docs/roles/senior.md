@@ -50,9 +50,9 @@ If scope or intent is unclear:
 - Architectural coherence
 
 ### Interfaces With
-- **BA Agent** — scope confirmation, re-evaluation, and CR splitting
+- **BA Agent** — scope confirmation, re-evaluation, task completion handoff
 - **Sub-agents** — guidance, clarification, and review
-- **Human** — only when intent or tradeoffs require explicit confirmation
+- **Human** — only when technical tradeoffs or "Go/No-Go" decisions require explicit confirmation
 
 ### Restricted
 - Must NOT proceed with implementation under ambiguous scope
@@ -151,19 +151,19 @@ ADRs live in:
 
 ---
 
-### 5. Verification & Closure
+### 5. Verification & BA Handoff
 
-Before marking work complete:
+Before handing off to BA Agent:
 - Review the work reports written by the sub-agents in the [agent-docs/conversation/<role-of-sub-agent>-to-senior.md](../conversations/<role-of-sub-agent>-to-senior.md)
 - **Cross-Environment Verification**: Ensure all tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes.
 - Ensure all tests pass (`pnpm test`)
 - Confirm acceptance criteria are met
 - **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`docs/decisions/` or `agent-docs/`) if they change system invariants.
 - Verify documentation updates
-- Update `docs/project-log.md` with:
-  - Status
-  - Scope tags
-  - Next steps or follow-ups
+- **Create Senior → BA Handoff**: Write the completion report in `agent-docs/conversations/senior-to-ba.md` following the [Handoff Protocol](../coordination/handoff-protocol.md).
+
+> [!CAUTION]
+> **Do NOT update `agent-docs/project-log.md`**. Final status updates and user notification are the responsibility of the BA Agent in Phase 5.
 
 ---
 

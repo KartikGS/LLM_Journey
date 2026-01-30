@@ -36,10 +36,11 @@
 1. Senior reviews completed work reports
 2. Senior ensures integration works
 3. Senior updates architectural docs if needed
-4. **Output:** Verified, integrated feature + report for BA
+4. **Output:** Verified feature + completion report in `agent-docs/conversations/senior-to-ba.md` following [Handoff Protocol](./coordination/handoff-protocol.md).
 
 ### Phase 5: Acceptance (BA Agent)
-1. BA verifies acceptance criteria met
-2. BA updates requirement status
-3. BA notifies user
-4. **Output:** Accepted CR, updated project log + report for user
+1. BA reviews the Senior's report and verifies AC are met.
+2. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
+3. BA updates `agent-docs/project-log.md` with the final entry.
+4. BA notifies the human of completion.
+5. **Output:** Closed CR, updated project log.

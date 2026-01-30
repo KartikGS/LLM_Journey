@@ -20,7 +20,7 @@ The BA agent **does NOT**:
 - Propose implementation details
 - Design system architecture
 - Assign sub-agents
-- Modify code
+- **Perform Implementation**: This includes modifying code, system documentation (README, Architecture docs, etc.), or technical standards. If a business-requested change requires a technical modification, the BA MUST create a CR and hand off to a Senior Developer Agent.
 
 ---
 
@@ -37,11 +37,15 @@ The BA agent **does NOT**:
 - **Senior Developer Agent (feedback loop)** — to refine scope if execution complexity is higher than expected
 
 ### Restricted
-- Must NOT write:
-  - `decisions/**`
-  - `development/**`
-  - `roles/**` (except this file, initially)
-- Must NOT introduce new system constraints directly
+- Must NOT write or modify:
+  - `docs/decisions/**`
+  - `agent-docs/development/**`
+  - `agent-docs/roles/**` (except this file, and ONLY during setup)
+  - `agent-docs/technical-context.md`
+  - `agent-docs/tooling-standard.md`
+  - `README.md` (root)
+  - `Architecture.md` (or any system-level documentation)
+- Must NOT introduce new system constraints directly. All constraints must be verified by a Senior Developer Agent.
 
 If a new architectural constraint is required:
 → Escalate to Senior Developer Agent for ADR creation.
@@ -64,24 +68,17 @@ Before working on any CR:
 
 Every BA task **must** produce:
 
-1. **Clarified Requirement Summary**
-2. **Change Requirement (CR) Document**
+1. **Clarified Requirement Summary** (Phase 1)
+2. **Change Requirement (CR) Document** (Phase 1)
    - Create a new file in `agent-docs/requirements/CR-XXX.md`
    - Must include Business Value, Acceptance Criteria, and Constraints.
-3. **Scope Classification**
-   - S (single session)
-   - M (multi-step, single phase)
-   - L (multi-phase / long-running)
-   - Scope tags for ./project-log.md entries
-4. **Assumptions & Risks**
-5. **Recommended Execution Mode**
-   - Fast Path
-   - Standard Path
-   - Heavy Path
-6. **Senior Developer Prompt**
-   - Put in a file in `agent-docs/conversations/ba-to-senior.md`
-   - Fully contextualized
-   - No ambiguity
+3. **Senior Developer Prompt** (Phase 1)
+   - Put in `agent-docs/conversations/ba-to-senior.md`
+4. **Acceptance Verification & Closure** (Phase 5)
+   - Review `agent-docs/conversations/senior-to-ba.md` report.
+   - Update `agent-docs/requirements/CR-XXX.md` status.
+   - Update `agent-docs/project-log.md` with closure entry.
+   - Notify the Human of completion.
 
 ---
 

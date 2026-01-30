@@ -1,32 +1,51 @@
 # Handoff Protocol
 
-Effective communication between agents is critical to project success. Use these standardized templates for all handoffs.
+This protocol defines the mandatory communication and documentation flow between agents to ensure process integrity and role accountability.
 
-## 1. BA → Senior Developer (Problem to Plan)
-**File**: `agent-docs/conversations/ba-to-senior.md`
+## 1. BA → Senior Developer (Requirement Handoff)
+- **File**: `agent-docs/conversations/ba-to-senior.md`
+- **Trigger**: CR is "Clarified" and approved by User.
+- **Content**:
+    - [Objective]
+    - [Linked CR] (e.g., `agent-docs/requirements/CR-XXX.md`)
+    - [Acceptance Criteria]
+    - [Constraints]
+    - [Risk Analysis]
+- **Protocol**: Senior Dev MUST acknowledge the handoff and confirm the task is well-defined before planning.
 
-- **CR ID**: Link to `agent-docs/requirements/CR-XXX.md`
-- **Clarified Goal**: What are we actually trying to achieve?
-- **Constraints**: Security (CSP), Performance, Architectural Invariants.
-- **Evidence**: Links to logs, terminal output, or code snippets that confirm the problem.
-- **Reasoning Checklist**: Confirm that Design Invariants were considered (see [Reasoning Principles](./reasoning-principles.md)).
+## 2. Senior Developer → Sub-Agent (Task Delegation)
+- **File**: `agent-docs/conversations/senior-to-<role>.md`
+- **Trigger**: Planning Gate is complete and User has given "Go".
+- **Content**:
+    - [Objective]
+    - [Constraints]
+    - [Definition of Done]
+    - [Reference Files]
+- **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.
 
-## 2. Senior Developer → Sub-Agent (Plan to Task)
-**File**: `agent-docs/conversations/senior-to-<role>.md`
+## 3. Sub-Agent → Senior Developer (Execution Report)
+- **File**: `agent-docs/conversations/<role>-to-senior.md`
+- **Trigger**: Implementation and local verification are complete.
+- **Content**:
+    - [Changes Made]
+    - [Verification Results] (Tests passed)
+    - [New Artifacts]
+    - [Follow-up Recommendations]
+- **Protocol**: Senior Dev MUST review this report and verify integration before Phase 4 completion.
 
-- **Objective**: Focused, single-purpose goal.
-- **Context Blocks**: Specific lines of code or files to modify.
-- **Constraints**: No-go zones (e.g., "Do not modify layout.tsx").
-- **Definition of Done (DoD)**: Measurable criteria (e.g., "Test passes in WebKit").
-- **Required Artifacts**: Which docs need updating (e.g., ADR, technical-context).
+## 4. Senior Developer → BA Agent (Verification Completion)
+- **File**: `agent-docs/conversations/senior-to-ba.md`
+- **Trigger**: Integration and verification (all tests pass) complete.
+- **Content**:
+    - [Technical Summary]
+    - [Evidence of AC Fulfillment]
+    - [Deployment Notes]
+    - [Link to Updated Docs]
+- **Protocol**: Senior Dev MUST NOT update `project-log.md`. This is reserved for the BA Agent in Phase 5.
 
-## 3. Sub-Agent/Senior → Completion (Verification)
-- **What was changed?**: List of files.
-- **Verification Results**: Terminal output of passing tests.
-- **Residual Risks**: Any known issues or "to-do" items left behind.
-- **Updated Docs**: Links to changed documentation.
-
-## 4. Operational Guardrails
-- **No Invisible Context**: If a piece of information is critical, it MUST be in the handoff document, not just in the chat history.
-- **Explicit Ownership**: State clearly who owns the next step.
-- **Verification Loop**: The receiver must start by confirming they understand the handoff.
+## 5. BA Agent → User (Acceptance Notification)
+- **Trigger**: Phase 5 (Acceptance) complete.
+- **Protocol**:
+    1. Update `agent-docs/requirements/CR-XXX.md` status to `Completed`.
+    2. Update `agent-docs/project-log.md` with the closure entry.
+    3. Notify User of completion with a summary of the value delivered.
