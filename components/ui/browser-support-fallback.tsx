@@ -31,7 +31,7 @@ export const BrowserGuard: React.FC<BrowserGuardProps> = ({ children }) => {
 
     if (isSupported === null) {
         // Initializing check - show nothing or a minimal loader to avoid flicker
-        return <div className="min-h-screen bg-[#0a0a0a]" />;
+        return <div className="min-h-screen bg-white dark:bg-[#0a0a0a]" />;
     }
 
     if (isSupported) {
@@ -39,12 +39,12 @@ export const BrowserGuard: React.FC<BrowserGuardProps> = ({ children }) => {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center p-6 font-sans transition-colors duration-500">
             <div className="max-w-md w-full relative">
                 {/* Decorative background glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-10 dark:opacity-20" />
 
-                <div className="relative bg-[#111111] border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
+                <div className="relative bg-[#fcfcfc] dark:bg-[#111111] border border-black/5 dark:border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
                     <div className="flex flex-col items-center text-center space-y-6">
                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20">
                             <svg
@@ -64,28 +64,26 @@ export const BrowserGuard: React.FC<BrowserGuardProps> = ({ children }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Unsupported Browser</h1>
-                            <p className="text-gray-400 text-sm leading-relaxed">
+                            <h1 className="text-2xl font-bold text-black dark:text-white tracking-tight">Unsupported Browser</h1>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                                 LLM Journey requires WebAssembly and specific security features to run high-performance models directly in your browser.
                             </p>
                         </div>
 
                         <div className="w-full space-y-4">
-                            <div className="p-4 bg-white/5 rounded-xl border border-white/5 text-left">
-                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Required Browsers</span>
-                                <ul className="mt-2 space-y-2 text-sm text-gray-300">
-                                    <li className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                        Chrome 95+
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                        Firefox 102+
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                                        Safari 17.4+
-                                    </li>
+                            <div className="p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 text-left">
+                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">Required Browsers</span>
+                                <ul className="mt-2 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                    {[
+                                        { name: 'Chrome 95+', color: 'bg-blue-500' },
+                                        { name: 'Firefox 102+', color: 'bg-orange-500' },
+                                        { name: 'Safari 17.4+', color: 'bg-blue-400' },
+                                    ].map((browser) => (
+                                        <li key={browser.name} className="flex items-center gap-2">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${browser.color}`} />
+                                            {browser.name}
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
 
@@ -96,7 +94,7 @@ export const BrowserGuard: React.FC<BrowserGuardProps> = ({ children }) => {
 
                         <button
                             onClick={() => window.location.reload()}
-                            className="w-full py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors duration-200"
+                            className="w-full py-3 px-4 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:bg-black/90 dark:hover:bg-gray-200 transition-colors duration-200 shadow-lg"
                         >
                             Retry Detection
                         </button>

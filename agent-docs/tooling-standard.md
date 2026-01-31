@@ -11,6 +11,7 @@ This document defines the mandatory tools and environment configurations for thi
 - **Node.js**: >= 20.x
 - **Framework**: Next.js 15 (App Router)
 - **Port**: The development server runs on port `3001`.
+- **Theme Support**: Dual-theme (Light and Dark mode) mandatory.
 - **Browser Support**: Modern browsers with `wasm-unsafe-eval` support (Chrome 95+, FF 102+, Safari 17.4+).
 
 ## 3. Testing Stack

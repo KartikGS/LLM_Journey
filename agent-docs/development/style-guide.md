@@ -13,6 +13,7 @@ as the codebase grows.
 - Prefer **clarity over cleverness**
 - Treat **observability and security as first-class concerns**
 - Keep implementations **predictable and explicit**
+- **Maintainability First**: Design UI components for future extensibility. Use loops/mapping for repeated elements to ensure a single source of truth for data and styles.
 - Optimize for **testability, readability and debuggability**, not premature performance
 
 ---
@@ -99,6 +100,14 @@ Test pages at:
 If a new pattern is required:
 - Abstract it into a reusable component
 - Document its intended usage
+
+### Visual Language & "Wow" Factor
+- **Theme Support**: **Dual-theme support is mandatory**. Use Tailwind's `dark:` utility classes for all UI components.
+- **Surface (Dark)**: Glassmorphism (`bg-[#111111]/80`, `backdrop-blur-xl`, `border-white/10`).
+- **Surface (Light)**: High-clarity surfaces (`bg-[#fcfcfc]`, `border-black/5`, `shadow-md`).
+- **Accentuation**: Subtle gradients (`from-blue-600 to-purple-600`) and glow effects. Limit glow opacity to `10%` in light mode to maintain readability.
+- **Iconography**: Follow the project standard (e.g., Lucide). If not available, use clean, balanced SVGs with `stroke-width="2"`.
+- **Interactivity**: Always provide hover states and transitions for buttons (`transition-colors duration-200`).
 
 ---
 
