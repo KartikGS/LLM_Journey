@@ -39,6 +39,7 @@ This protocol defines the mandatory communication and documentation flow between
 - **Content**:
     - [Technical Summary]
     - [Evidence of AC Fulfillment]
+    - [Technical Retrospective] (Key trade-offs, lessons learned, or new debt)
     - [Deployment Notes]
     - [Link to Updated Docs]
 - **Protocol**: Senior Dev MUST NOT update `project-log.md`. This is reserved for the BA Agent in Phase 5.

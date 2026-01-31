@@ -1,27 +1,29 @@
 # Handoff: Senior Developer to Testing Agent (CR-004)
 
 ## Objective
-Update E2E tests to handle the new Browser Support Fallback UI.
+Update E2E tests to handle the Browser Support Fallback UI and verify it in the `webkit` project.
 
 ## Context
-A `BrowserGuard` is being added to `app/layout.tsx`. On `webkit` (Safari), this guard is expected to show a fallback UI because it lacks the necessary WASM support for our application. We need to update our tests to verify this behavior rather than failing on the main app load.
+The `Frontend Agent` is refining the `BrowserGuard` in `components/ui/browser-support-fallback.tsx`. This guard shows a fallback UI when WASM execution is blocked (as happens in our Playwright `webkit` environment). We need to align our tests to expect this behavior.
 
 ## Tasks
-1. **Playwright Alignment**:
-   - Verify `playwright.config.ts` projects include `chromium`, `firefox`, and `webkit`.
-2. **Test Updates**:
+1. **Verfication Logic**:
    - In `__tests__/e2e/navigation.spec.ts` and `__tests__/e2e/transformer.spec.ts`:
-     - Detect the `browserName`.
+     - Access `browserName` from the test context.
      - If `browserName === 'webkit'`:
-       - Assert that the "Browser Support" fallback UI is visible.
-       - Use `test.skip()` or conditional logic to skip standard "happy path" tests that require full app functionality (like interacting with the transformer).
-     - For other browsers (`chromium`, `firefox`), ensure happy path tests still pass.
+       - Assert that `page.locator('#browser-support-fallback')` is visible.
+       - Assert that the text "Unsupported Browser" (or similar from the component) is present.
+       - Use `test.skip()` or conditional logic to skip the standard "happy path" interactions that would fail due to missing app logic.
+     - For other browsers (`chromium`, `firefox`), ensure the standard tests run and pass.
+2. **Execution**:
+   - Run `pnpm test:e2e` and ensure all projects (`chromium`, `firefox`, `webkit`) pass according to their respective logic (supported vs fallback).
 
 ## Constraints
-- Do not remove the `webkit` project; use it to verify the fallback.
-- Ensure tests use proper locators for the fallback UI (e.g., `#browser-support-fallback`).
+- **Project Structure**: Do NOT remove the `webkit` project from `playwright.config.ts`. It is now our "Fallback verification" platform.
+- **Locators**: Use the ID `#browser-support-fallback` which the Frontend Agent is adding.
 
 ## Definition of Done
-- `pnpm test:e2e` passes with 100% success.
+- `pnpm test:e2e` completes with 100% success.
 - `webkit` tests specifically verify the fallback UI.
 - `chromium` and `firefox` continue to verify main app functionality.
+- No flaky tests introduced.

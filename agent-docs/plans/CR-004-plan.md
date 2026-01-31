@@ -1,44 +1,39 @@
 # Technical Plan - CR-004: Browser Support Fallback and E2E Alignment
 
 ## 1. Technical Analysis
-- **Current State**: The application requires WASM and strict CSP (`wasm-unsafe-eval`). Older browsers or browsers with restricted WASM (like Safari in certain modes or older versions) fail to initialize the model, leading to a broken experience and failing E2E tests.
-- **Key Challenges**: 
-    - Detecting WASM support accurately (simple feature detection vs. execution check).
-    - Ensuring the guard runs early enough to prevent subsequent errors but late enough to be client-side.
-    - Aligning E2E tests to expect the fallback on specific environments (Webkit) while maintaining the happy path on others (Chromium, Firefox).
+The project uses ONNX Web which requires WASM and strict CSP (`wasm-unsafe-eval`). Older browsers or browsers with restrictive security settings (like some Safari versions or "Lockdown Mode") fail to initialize WASM. Currently, E2E tests in Safari (`webkit`) are failing because they expect the full application to load.
+
+A `BrowserGuard` component and integration in `layout.tsx` already exist, but they need refinement to ensure robust detection and a premium UI. The E2E tests haven't been updated to handle the `webkit` project as a "Fallback" testing project.
 
 ## 2. Proposed Changes
-### Frontend
-- **`components/ui/browser-support-fallback.tsx`**: 
-    - Create a client-side component `BrowserGuard`.
-    - Logic: Use a `useEffect` to try initializing a minimal WASM instance or check `WebAssembly.validate`.
-    - UI: A full-screen overlay or redirect-like view with dark mode aesthetics, explaining the requirements.
-- **`app/layout.tsx`**:
-    - Import and use `BrowserGuard` to wrap the main application content or conditionally render based on support.
+### Component: `components/ui/browser-support-fallback.tsx`
+- **Detection Refinement**: Verify and refine the `checkWasmSupport` logic. The current implementation attempts to create a `WebAssembly.Module` which is correct for catching `wasm-unsafe-eval` issues.
+- **UI Polish**: Ensure the fallback UI meets the project's high aesthetic standards (gradients, micro-animations, modern typography).
 
-### Testing
-- **`playwright.config.ts`**:
-    - Ensure `webkit` is clearly marked or handled as a legacy/fallback target if necessary, or just keep it as is but update tests.
-- **`tests/navigation.spec.ts` & `tests/transformer.spec.ts`**:
-    - Implement conditional logic based on `browserName`.
-    - If `webkit`, assert that the fallback message/component is visible.
-    - If `chromium` or `firefox`, proceed with standard happy path tests.
+### E2E Tests: `__tests__/e2e/navigation.spec.ts` & `__tests__/e2e/transformer.spec.ts`
+- **Conditional Logic**: Update tests to skip functional flows when `project.name === 'webkit'`.
+- **Fallback Verification**: Add test cases to verify that the "Unsupported Browser" message is visible in `webkit`.
+
+### Configuration: `playwright.config.ts`
+- No changes needed to the config itself, but the project `webkit` will now be treated as the environment to test the fallback.
 
 ## 3. Delegation & Execution Order
+
 | Step | Agent | Task Description |
 | :--- | :--- | :--- |
-| 1 | Frontend | Create `BrowserGuard` component and UI in `components/ui/browser-support-fallback.tsx`. |
-| 2 | Frontend | Integrate `BrowserGuard` into `app/layout.tsx`. |
-| 3 | Testing | Update Playwright config and spec files to handle the fallback UI in `webkit`. |
+| 1 | **Frontend Agent** | Refine `components/ui/browser-support-fallback.tsx`. Ensure detection logic is robust and UI is premium/dynamic. |
+| 2 | **Testing Agent** | Update `navigation.spec.ts` and `transformer.spec.ts` to skip functional tests in `webkit` and add fallback verification. |
+| 3 | **Senior Developer** | Verify all Green across Chromium, Firefox, and Webkit (Fallback). |
 
 ## 4. Operational Checklist
-- [ ] **Environment**: No hardcoded values for version numbers (use constants).
-- [ ] **Observability**: Log if the browser is detected as unsupported for telemetry.
-- [ ] **Artifacts**: No new artifacts requiring `.gitignore` updates expected.
-- [ ] **Rollback**: Revert changes to `layout.tsx` and `playwright.config.ts`.
+- [x] **Environment**: No hardcoded values.
+- [ ] **Observability**: Ensure fallback page doesn't break OTel initialization.
+- [ ] **Artifacts**: No new artifacts requiring `.gitignore`.
+- [ ] **Rollback**: Revert changes in `layout.tsx` and E2E specs.
 
 ## 5. Definition of Done (Technical)
-- [ ] `BrowserGuard` successfully detects lack of WASM support.
-- [ ] Fallback UI appears on Safari/Webkit in E2E tests.
-- [ ] Happy path tests still pass on Chrome and Firefox.
+- [ ] `BrowserGuard` correctly identifies WASM-incapable environments.
+- [ ] Fallback UI is displayed on Webkit/Safari in E2E tests.
+- [ ] Functional tests pass on Chromium and Firefox.
+- [ ] Fallback tests pass on Webkit.
 - [ ] `pnpm test:e2e` passes 100%.

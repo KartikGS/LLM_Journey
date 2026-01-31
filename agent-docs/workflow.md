@@ -18,9 +18,10 @@
 ### Phase 2: Technical Planning & Delegation (Senior Developer Agent)
 1. Senior reads CR from BA. Read [../conversations/ba-to-senior.md](../conversations/ba-to-senior.md) for more details.
 2. Senior assesses technical complexity and identifies required sub-agents.
-3. **MANDATORY OUTPUT:** Senior creates `agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template (defined in `senior.md`).
-4. **MANDATORY CHECK:** Senior submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
-5. **Execution Start:** Senior formalizes task specifications + prompts for sub-agents in `agent-docs/conversations/senior-to-<role>.md`.
+3. **Execution Audit**: Senior audits existing `agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
+4. **MANDATORY OUTPUT:** Senior creates `agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template (defined in `senior.md`).
+5. **MANDATORY CHECK:** Senior submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
+6. **Execution Start:** Senior formalizes task specifications + prompts for sub-agents in `agent-docs/conversations/senior-to-<role>.md`.
 
 
 ### Phase 3: Implementation (Sub-Agents)

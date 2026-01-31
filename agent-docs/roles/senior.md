@@ -114,7 +114,10 @@ Before any code is modified or any terminal command is run (except for discovery
 4.  **Determine Delegation**: 
     - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `agent-docs/roles/sub-agents/`).
     - Define the order of execution.
-    - **Note**: Implementation by the Senior Agent is only permitted for single-file configuration changes or simple documentation updates. For all other tasks, delegation is MANDATORY.
+    - **MANDATORY**: Specify the Testing Sequence. 
+      - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
+      - Deciding between Test-Driven Development (TDD) or Implementation-First is a Senior technical decision.
+    - **Note**: Implementation by the Senior Agent is only permitted for project-wide configuration changes (e.g. `tsconfig`, `.env` templates) or simple documentation updates. For all other tasks, delegation is MANDATORY. Do not "shift" into sub-agent roles.
 
 ---
 

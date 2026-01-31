@@ -2,6 +2,7 @@
 This file helps gather the necessary context for a role-specific agent to perform its tasks.
 > [!IMPORTANT]
 > Do not assume roles of other agents. Roles can only be assigned by the user.
+> **Hard Invariant**: Once you assume a role for a Change Requirement, you remain in that role. You may NOT "shift" to a sub-agent role (e.g., Frontend) to complete a task; you must delegate or ask the user to assign you a new role in a fresh session.
 > Do not proceed with any task until you have internalized the context relevant to your role.
 
 ## 1. What is this project?
