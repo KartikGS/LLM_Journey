@@ -11,9 +11,13 @@ The goal of the test suite is **system stability and correctness**, not model qu
 This project follows a layered testing approach. **Critically, tests are not just written to be passed; they are tools for identifying flaws in the system, validating architectural assumptions, and highlighting documentation gaps.** 
 
 - **Truth over Conformity**: If a test fails because of a false premise in the requirements or a missing dependency in another component, the testing agent MUST report the discrepancy rather than "forcing" the test to pass.
-- **Unit tests** validate isolated logic and pure functions
-- **Integration tests** validate interaction between subsystems
-- **E2E tests** validate user-critical flows using Playwright
+- **Reporting > Completion**: Identifying a flaw in the system or a false environmental assumption is a more valuable outcome than a passing test. If a discrepancy is found, **STOP implementation** and report it. Clearing the blocker is the primary task.
+- **Unit tests** validate isolated logic and pure functions.
+- **Integration tests** validate interaction between subsystems.
+- **E2E tests** validate user-critical flows using Playwright.
+
+### 1.1 Testability as a Requirement
+A feature is not "Done" unless it is testable. If a component lacks unique selectors (`data-testid`, `id`) or accessibility attributes required for robust testing, it is considered a **bug** in the implementation, not a missing feature in the test suite.
 
 The test suite prioritizes:
 - Correct rendering and responses
@@ -101,7 +105,7 @@ __tests__/
 
 ---
 
-## 5. Mocking & Boundary Philosophy
+## 6. Mocking & Boundary Philosophy
 
 Mocks are applied **only at external or non-deterministic boundaries**.
 
@@ -125,7 +129,7 @@ Helpers such as `safeMetric` are mocked to preserve **semantic behavior**:
 
 ---
 
-## 6. Coverage Guarantees (Integration Invariants)
+## 7. Coverage Guarantees (Integration Invariants)
 
 Integration tests enforce the following system-level guarantees:
 
@@ -137,13 +141,14 @@ Integration tests enforce the following system-level guarantees:
 - Tokenization, inference loop, sampling, and telemetry are validated together
 - Numerical correctness and model quality are intentionally out of scope
 
-### Behavior-First Validation
-- Tests assert observable behavior (responses, UI state, side effects)
-- Internal method calls are not asserted unless crossing a subsystem boundary
+### Resilience & Edge Cases
+- Failures in non-critical paths (e.g., metrics, tracing, fallback UI) must be handled gracefully.
+- Tests should verify that the system fails safely and provides informative feedback (like the `BrowserGuard`).
+- **Policy**: If an edge case is identified but not yet implemented (e.g., "What if WASM fails mid-session?"), the Testing Agent should document it as a potential risk in the `testing-to-senior.md` report.
 
 ---
 
-## 7. Key Coverage Areas
+## 8. Key Coverage Areas
 
 - **API Routes**: `__tests__/api`  
   Example: telemetry-token route integration tests
@@ -156,7 +161,7 @@ Integration tests enforce the following system-level guarantees:
 
 ---
 
-## 8. Integration Tests: OpenTelemetry Proxy
+## 9. Integration Tests: OpenTelemetry Proxy
 
 The OpenTelemetry trace proxy (`app/api/otel/trace/route.ts`) is treated as a **network and security boundary**.
 
@@ -181,7 +186,7 @@ Integration tests live at:
 
 ---
 
-## 9. Non-goals
+## 10. Non-goals
 
 The following are intentionally out of scope:
 
@@ -191,7 +196,7 @@ The following are intentionally out of scope:
 
 ---
 
-## 10. Future Plans
+## 11. Future Plans
 
 - LLM evaluations and quality metrics
 - Visual regression testing

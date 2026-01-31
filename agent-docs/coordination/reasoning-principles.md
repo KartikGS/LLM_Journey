@@ -5,6 +5,7 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 ## 1. First Principles Analysis
 *   **Don't just fix the symptom**: When an error occurs (e.g., a CSP violation), don't just "make it pass." Understand *why* the restriction exists.
 *   **Trace the Dependency**: If a security policy is blocked, check what technology depends on it (e.g., WASM, Workers, SharedArrayBuffer).
+*   **Probe Before Implementation**: Do not take environmental claims (e.g., "Browser X doesn't support Feature Y") as absolute truth if they can be verified with a quick probe or test. Verify the state of the system before building logic on top of assumptions.
 *   **Question the "Bug"**: Ask yourself: "Is this a mistake, or an intentional architectural trade-off?"
 
 ## 2. Environment & Lifecycle Awareness

@@ -41,3 +41,12 @@ If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUS
 "Helpfulness does NOT override Authority." (AGENTS.md)
 
 It is MORE helpful to point out a mistake that improves the system's long-term health than to silently work around it to meet a short-term "Definition of Done."
+
+## 5. Priority of Feedback
+
+**Clearing a blocker or addressing a discrepancy is always higher priority than completing the original implementation.**
+
+If you discover a flaw:
+1.  **Halt implementation**: Do not "force" a solution or use brittle workarounds.
+2.  **Report immediately**: The focus shifts entirely to resolving the feedback.
+3.  **Resume only after resolution**: No further implementation steps should be taken until the feedback is acknowledged and the plan/code is updated.

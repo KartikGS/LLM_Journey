@@ -26,10 +26,15 @@
 ### Phase 3: Implementation (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in [/agent-docs/conversations/senior-to-<role>.md](/agent-docs/conversations/senior-to-<role>.md)
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
-2. Sub-agent executes within role boundaries
-3. Sub-agent requests clarification or reports flaws using the [Feedback Protocol](./coordination/feedback-protocol.md) if needed
-4. Sub-agent completes and verifies work
-5. **Output:** Implementation + tests + updated docs + report for senior dev
+2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
+3. **Halt on Blocker**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
+   - **STOP** implementation of the affected part immediately.
+   - Do NOT proceed with writing code or tests that work around the blocker.
+   - Report the issue immediately via the [Feedback Protocol](./coordination/feedback-protocol.md).
+   - Clearing the blocker is a higher priority than completing the original task.
+4. Sub-agent executes within role boundaries.
+5. Sub-agent completes and verifies work.
+6. **Output:** Implementation + tests + updated docs + report for senior dev.
 
 ### Phase 4: Verification (Senior Developer Agent)
 1. Senior reviews completed work reports
