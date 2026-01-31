@@ -1,6 +1,6 @@
 # Handoff Protocol
 
-This protocol defines the mandatory communication and documentation flow between agents to ensure process integrity and role accountability.
+This protocol defines the mandatory communication and documentation flow between agents to ensure process integrity and role accountability. For handling discrepancies and errors in handoffs, see the [Feedback Protocol](./feedback-protocol.md).
 
 ## 1. BA → Senior Developer (Requirement Handoff)
 - **File**: `agent-docs/conversations/ba-to-senior.md`

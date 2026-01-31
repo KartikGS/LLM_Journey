@@ -26,6 +26,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 // export default async function RootLayout({
+import { BrowserGuard } from "../components/ui/browser-support-fallback";
+
 export default function RootLayout({
   children,
 }: {
@@ -39,10 +41,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
       >
         <OtelInitializer>
-          <div className="h-full flex">
-            <Navbar />
-            {children}
-          </div>
+          <BrowserGuard>
+            <div className="h-full flex">
+              <Navbar />
+              {children}
+            </div>
+          </BrowserGuard>
         </OtelInitializer>
       </body>
     </html>

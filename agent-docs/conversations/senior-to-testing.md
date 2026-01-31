@@ -1,39 +1,27 @@
-# Handoff: Stabilize E2E Suite & Mock Infrastructure
-
-**From**: Senior Developer Agent
-**To**: Testing Sub-Agent
-**Status**: Pending
+# Handoff: Senior Developer to Testing Agent (CR-004)
 
 ## Objective
-The E2E suite is currently failing due to two main reasons:
-1.  **OTel collector dependency**: The proxy `/api/otel/trace` is failing because the local Docker stack (in `/observability`) isn't running.
-2.  **WebKit flakiness**: WebKit is failing assertions because it's too fast for the application hydration/metadata loading.
+Update E2E tests to handle the new Browser Support Fallback UI.
+
+## Context
+A `BrowserGuard` is being added to `app/layout.tsx`. On `webkit` (Safari), this guard is expected to show a fallback UI because it lacks the necessary WASM support for our application. We need to update our tests to verify this behavior rather than failing on the main app load.
 
 ## Tasks
+1. **Playwright Alignment**:
+   - Verify `playwright.config.ts` projects include `chromium`, `firefox`, and `webkit`.
+2. **Test Updates**:
+   - In `__tests__/e2e/navigation.spec.ts` and `__tests__/e2e/transformer.spec.ts`:
+     - Detect the `browserName`.
+     - If `browserName === 'webkit'`:
+       - Assert that the "Browser Support" fallback UI is visible.
+       - Use `test.skip()` or conditional logic to skip standard "happy path" tests that require full app functionality (like interacting with the transformer).
+     - For other browsers (`chromium`, `firefox`), ensure happy path tests still pass.
 
-### 1. Mock OTel in Tests
-Modify `__tests__/e2e/transformer.spec.ts` to mock the OTel trace endpoint.
-- Use `page.route('**/api/otel/trace', route => route.fulfill({ status: 202 }))`.
-- This removes the dependency on the local Docker observability stack during tests.
-
-### 2. Stabilize WebKit Interactions
-Update `__tests__/e2e/navigation.spec.ts` and `__tests__/e2e/transformer.spec.ts`:
-- **Wait for readiness**: Before interacting with the transformer input, ensure it is NOT disabled: `await expect(page.locator('textarea#chat')).toBeEnabled({ timeout: 10000 })`.
-- **Defensive Clicks**: In WebKit, navigation links might be flaky. Ensure we wait for the page to be ready:
-  ```typescript
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
-  const startLink = page.getByRole('link', { name: 'Start Your Journey →' });
-  await startLink.click();
-  await page.waitForURL('**/transformer', { timeout: 10000 });
-  ```
-
-### 3. Verify
-- Run `pnpm test:e2e --project=chromium`
-- Run `pnpm test:e2e --project=firefox`
-- Run `pnpm test:e2e --project=webkit`
+## Constraints
+- Do not remove the `webkit` project; use it to verify the fallback.
+- Ensure tests use proper locators for the fallback UI (e.g., `#browser-support-fallback`).
 
 ## Definition of Done
-- All E2E tests pass across all browsers.
-- No dependency on live `/api/otel/trace` upstream.
-- A final report in `agent-docs/conversations/testing-to-senior.md`.
+- `pnpm test:e2e` passes with 100% success.
+- `webkit` tests specifically verify the fallback UI.
+- `chromium` and `firefox` continue to verify main app functionality.

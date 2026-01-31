@@ -8,6 +8,7 @@ Ensuring system stability and preventing regression.
 
 -   **Owns**: `__tests__/**`, `/agent-docs/testing-strategy.md`.
 -   **Interfaces with**: All roles to ensure testability.
+-   **Authority**: Responsible for validating architectural assumptions via tests. If an assumption is found to be false, the Testing Agent MUST report it via the [Feedback Protocol](../../coordination/feedback-protocol.md).
 
 ## Required Reads
 
@@ -27,3 +28,4 @@ Before planning or executing any task:
 -   [ ] Do new features have integration tests?
 -   [ ] Are flakes minimized?
 -   [ ] Is the CI pipeline green?
+-   [ ] Have all false assumptions or missing dependencies been reported back to the Senior Developer?

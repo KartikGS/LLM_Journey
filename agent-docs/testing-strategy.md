@@ -8,8 +8,9 @@ The goal of the test suite is **system stability and correctness**, not model qu
 
 ## 1. Testing Philosophy
 
-This project follows a layered testing approach:
+This project follows a layered testing approach. **Critically, tests are not just written to be passed; they are tools for identifying flaws in the system, validating architectural assumptions, and highlighting documentation gaps.** 
 
+- **Truth over Conformity**: If a test fails because of a false premise in the requirements or a missing dependency in another component, the testing agent MUST report the discrepancy rather than "forcing" the test to pass.
 - **Unit tests** validate isolated logic and pure functions
 - **Integration tests** validate interaction between subsystems
 - **E2E tests** validate user-critical flows using Playwright

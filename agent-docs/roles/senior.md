@@ -90,36 +90,86 @@ If not → stop and invoke BA feedback.
 
 ---
 
-## 🛑 REQUIRED: The Planning Gate
+## 🛑 REQUIRED: Step-by-Step Technical Execution
 
-Before any code is modified or any terminal command is run that modifies the system (except for discovery/read-only):
+You must follow these steps in sequence for every Change Requirement (CR).
 
-1.  **Create the Plan**: You MUST create `agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
-2.  **Review the Constraints**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
-3.  **Operational Checklist**: Your plan MUST address:
-    -   **Environment**: Are there hardcoded values (URLs, ports)? Use Env vars.
-    -   **Observability**: How will we know if this fails in the wild?
-    -   **Artifacts**: Does this implementation generate files that need `.gitignore`?
-    -   **Retries/Timeouts**: Are async operations bounded?
-4.  **Wait for Approval**: Present the plan to the User. Do not proceed with execution until the User acknowledges the plan.
+### Phase 1: Validate & Internalize
+Before any planning, explicitly verify the handoff from BA in [../conversations/ba-to-senior.md](../conversations/ba-to-senior.md).
+- [ ] **Acceptance Criteria**: Are they testable?
+- [ ] **Constraints**: Are they compatible with current architecture?
+- [ ] **Scope**: Is the boundary clearly defined (what is NOT included)?
+- [ ] **Technical Debt**: Will this change introduce or resolve debt?
+
+If any check fails → **Stop** and invoke the **BA Feedack Protocol**.
+
+---
+
+### Phase 2: Technical Planning & Delegation
+Before any code is modified or any terminal command is run (except for discovery):
+
+1.  **Create the Technical Plan**: Create `agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
+2.  **Use the Standard Plan Template** (see below).
+3.  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
+4.  **Determine Delegation**: 
+    - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `agent-docs/roles/sub-agents/`).
+    - Define the order of execution.
+    - **Note**: Implementation by the Senior Agent is only permitted for single-file configuration changes or simple documentation updates. For all other tasks, delegation is MANDATORY.
+
+---
+
+### Phase 3: The Approval Gate
+Present the **complete plan** to the USER, including:
+- **Technical Approach**: How you intend to solve the problem.
+- **Delegation Strategy**: Which sub-agents will do what.
+- **Risks**: Potential side effects.
+
+**DO NOT proceed with execution until the USER provides a "Go" decision.**
+
 
 **Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
 
 ---
 
-### 2. Plan the Execution
+### Phase 4: Execution & Coordination
+Once approved:
+1.  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/senior-to-<role>.md`.
+2.  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
+3.  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
-Determine:
-- Can this be executed in a single coordinated flow?
-- Does it require multiple sub-agents?
-- Is test-first or contract-first execution required?
-- Does this introduce or modify architectural constraints?
+---
 
-Produce:
-- An execution plan
-- **Delegation Decision**: Explicitly state if sub-agents are required. If not, justify why the Senior is implementing directly (e.g., [S] scope, coordination overhead).
-- Sub-agent prompts in `agent-docs/conversations/senior-to-<role-of-sub-agent>.md` (if applicable).
-- Execution order
+### Standard Technical Plan Template
+Your `CR-XXX-plan.md` MUST follow this structure:
+
+```markdown
+# Technical Plan - [CR-ID]: [Title]
+
+## 1. Technical Analysis
+- [Analysis of the current state]
+- [Key technical challenges]
+
+## 2. Proposed Changes
+- [File-by-file or component-level changes]
+- [Architectural impacts]
+
+## 3. Delegation & Execution Order
+| Step | Agent | Task Description |
+| :--- | :--- | :--- |
+| 1 | [e.g. Frontend] | [Description] |
+| 2 | [e.g. Testing] | [Description] |
+
+## 4. Operational Checklist
+- [ ] **Environment**: No hardcoded values.
+- [ ] **Observability**: Tracing/Logging included.
+- [ ] **Artifacts**: `.gitignore` updated if needed.
+- [ ] **Rollback**: How to revert this change.
+
+## 5. Definition of Done (Technical)
+- [ ] [Technical AC 1]
+- [ ] [Integration Test passes]
+```
+
 
 ---
 
