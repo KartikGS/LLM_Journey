@@ -7,7 +7,7 @@ Ensuring system stability and preventing regression.
 ## Boundaries
 
 -   **Owns**: `__tests__/**`, `/agent-docs/testing-strategy.md`.
--   **READ-ONLY**: All application source code (e.g., `app/**`, `components/**`, `lib/**`).
+-   **READ-ONLY**: All application source code (e.g., `app/**`, `components/**`, `lib/**`) and system configurations (e.g., `next.config.ts`, `playwright.config.ts`, `package.json`, `tailwind.config.js`).
 -   **Interfaces with**: All roles to ensure testability.
 -   **Authority**: Responsible for validating architectural assumptions via tests. 
     - **CRITICAL**: If an application component lacks necessary testing hooks (e.g., missing `id`, `data-testid`, or accessibility labels), or if an environmental assumption is found to be false, you **MUST STOP** immediately. 
@@ -31,7 +31,7 @@ Before planning or executing any task:
 If the codebase prevents you from writing a required test OR you discover an assumption in the task is false:
 1. **Identify the gap/discrepancy**: e.g., "The Submit button has no unique selector" or "WebKit actually supports WASM."
 2. **HALT IMMEDIATELY**: Do not modify the component file, and **do not continue with test implementation** for that feature.
-3. **Use Feedback Protocol**: File a report in `testing-to-senior.md` under `## BLOCKER / FEEDBACK`.
+3. **Use Feedback Protocol**: File a report in `testing-to-senior.md` under `## BLOCKER / FEEDBACK`. Note: This includes environmental configs like `next.config.ts`. If a test fails due to a system-wide setting, you MUST NOT modify that setting yourself.
 4. **Wait for Resolution**: The Senior Developer must either update the environment/code or revise the requirement before you proceed.
 
 ### Environmental & Tooling Quirks

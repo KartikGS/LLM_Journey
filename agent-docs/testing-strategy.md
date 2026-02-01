@@ -24,6 +24,11 @@ The test suite prioritizes:
 - Stability of critical paths
 - Resilience to observability and infrastructure failures
 
+### 1.2 Hydration & Lifecycle Awareness
+In React/Next.js environments, a test failing to find a selector may be a symptom of **hydration failure** rather than a missing element. 
+- If a component appears "empty" or stuck in a loading state in specific browsers (like WebKit), check the browser console for TLS errors, CSP violations, or HSTS redirects.
+- If the environment forces HTTPS while the dev server is HTTP, hydration will fail as JS chunks are blocked. This must be reported as an environmental blocker.
+
 ---
 
 ## 2. Test Strategy Overview
@@ -105,7 +110,28 @@ __tests__/
 
 ---
 
-## 6. Mocking & Boundary Philosophy
+## 6. Ephemeral Debugging Tools
+
+To avoid polluting the permanent test suite and codebase:
+
+- **Naming Convention**: Temporary tests created for environmental debugging MUST use the `.debug.spec.ts` or `.debug.ts` suffix.
+- **Cleanup Requirement**: All `.debug.*` files MUST be deleted before the task is marked as "Done". 
+- **Log Management**: Use temporary `console.log` statements in debug tests only; do not merge them into permanent spec files.
+
+---
+
+## 7. Environmental Escalation Protocol
+
+If the test environment (network, ports, global headers, browser quirks) prevents execution:
+
+1. **Document the Evidence**: Capture logs, screenshots, or minimal reproduction cases.
+2. **Consult Tooling Standard**: Check if the issue violates a fixed constraint (e.g., standard Port 3001).
+3. **Escalate, Don't Fix**: The Testing Agent is NOT authorized to modify `next.config.ts`, `package.json`, or server-side infrastructure.
+4. **Report**: Use `testing-to-senior.md` to request environment level changes.
+
+---
+
+## 8. Mocking & Boundary Philosophy
 
 Mocks are applied **only at external or non-deterministic boundaries**.
 
@@ -129,7 +155,7 @@ Helpers such as `safeMetric` are mocked to preserve **semantic behavior**:
 
 ---
 
-## 7. Coverage Guarantees (Integration Invariants)
+## 9. Coverage Guarantees (Integration Invariants)
 
 Integration tests enforce the following system-level guarantees:
 
@@ -148,7 +174,7 @@ Integration tests enforce the following system-level guarantees:
 
 ---
 
-## 8. Key Coverage Areas
+## 10. Key Coverage Areas
 
 - **API Routes**: `__tests__/api`  
   Example: telemetry-token route integration tests
@@ -161,7 +187,7 @@ Integration tests enforce the following system-level guarantees:
 
 ---
 
-## 9. Integration Tests: OpenTelemetry Proxy
+## 11. Integration Tests: OpenTelemetry Proxy
 
 The OpenTelemetry trace proxy (`app/api/otel/trace/route.ts`) is treated as a **network and security boundary**.
 
@@ -186,7 +212,7 @@ Integration tests live at:
 
 ---
 
-## 10. Non-goals
+## 12. Non-goals
 
 The following are intentionally out of scope:
 
@@ -196,7 +222,7 @@ The following are intentionally out of scope:
 
 ---
 
-## 11. Future Plans
+## 13. Future Plans
 
 - LLM evaluations and quality metrics
 - Visual regression testing
