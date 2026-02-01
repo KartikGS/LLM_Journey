@@ -1,32 +1,29 @@
-# Handoff: Senior Developer to Testing Agent (CR-004)
+# Handoff: Senior Developer to Testing Agent (CR-004 - REVISED STRATEGY)
 
 ## Objective
-Update E2E tests to handle the Browser Support Fallback UI and verify it in the `webkit` project.
+Restore Webkit happy-path tests and implement a **Synthetic Fallback Test** using CSP mocking.
 
 ## Context
-The Frontend Agent has completed the refinement of the `BrowserGuard` in `components/ui/browser-support-fallback.tsx`. 
-- The guard uses the ID `#browser-support-fallback`.
-- The primary heading is "High-Performance Environment Required".
-- The background involves dynamic animations.
+Initial reports indicate that Webkit (Safari) *does* support WASM in our current environment. We should no longer skip functional tests for Webkit. However, we still need to verify the `BrowserGuard` works. We will do this by synthetically creating an "Unsupported" environment in a dedicated test.
 
 ## Tasks
-1. **Verification Logic**:
-   - In `__tests__/e2e/navigation.spec.ts` and `__tests__/e2e/transformer.spec.ts`:
-     - Access `browserName` from the test context.
-     - If `browserName === 'webkit'`:
-       - Assert that `page.locator('#browser-support-fallback')` is visible.
-       - Assert that the text "High-Performance Environment Required" is present.
-       - Use `test.skip()` to skip the standard "happy path" interactions that require WASM.
-     - For other browsers (`chromium`, `firefox`), ensure the standard tests run and pass.
-2. **Execution**:
-   - Run `pnpm test:e2e` and ensure all projects (`chromium`, `firefox`, `webkit`) pass. Note: `webkit` is expected to show the fallback, while others show the app.
+1. **Restore Happy Path**:
+   - Ensure `navigation.spec.ts` and `transformer.spec.ts` run for all projects (`chromium`, `firefox`, `webkit`). No more `test.skip` based on `browserName`.
+2. **Implement Synthetic Fallback Test**:
+   - Create `__tests__/e2e/fallback-detection.spec.ts`.
+   - In a `beforeEach` or within a specific test case, use `page.route('**/*', (route) => { ... })` to intercept requests.
+   - For the main application navigation (the initial HTML), get the response and **modify the headers**.
+   - **Crucial**: Remove `'wasm-unsafe-eval'` from the `Content-Security-Policy` header.
+   - Assert that `page.locator('#browser-support-fallback')` becomes visible.
+   - Assert the heading text: "High-Performance Environment Required".
+3. **Execution**:
+   - Run `pnpm test:e2e` and ensure 100% pass across all browser projects.
 
 ## Constraints
-- **Project Structure**: Do NOT remove the `webkit` project from `playwright.config.ts`.
+- **Isolation**: Ensure the `page.route` mocking only applies to the specific fallback detection test and doesn't leak into others.
 - **Locators**: Use the ID `#browser-support-fallback`.
 
 ## Definition of Done
-- `pnpm test:e2e` completes with 100% success.
-- `webkit` tests specifically verify the fallback UI.
-- `chromium` and `firefox` continue to verify main app functionality.
-- No flaky tests introduced.
+- All standard functional tests pass on `chromium`, `firefox`, and `webkit`.
+- The new `fallback-detection.spec.ts` passes by successfully mocking a restrictive CSP.
+- 100% success rate in `pnpm test:e2e`.

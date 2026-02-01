@@ -21,18 +21,19 @@
 3. **Execution Audit**: Senior audits existing `agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
 4. **MANDATORY OUTPUT:** Senior creates `agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template (defined in `senior.md`).
 5. **MANDATORY CHECK:** Senior submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
-6. **Execution Start:** Senior formalizes task specifications + prompts for sub-agents in `agent-docs/conversations/senior-to-<role>.md`.
+6. **Execution Start:** Senior formalizes task specifications + prompts for sub-agents in `agent-docs/conversations/senior-to-<role>.md`. 
+   - **Requirement**: Senior MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
 
 
 ### Phase 3: Implementation (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in [/agent-docs/conversations/senior-to-<role>.md](/agent-docs/conversations/senior-to-<role>.md)
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
-3. **Halt on Blocker**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
+3. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
    - **STOP** implementation of the affected part immediately.
-   - Do NOT proceed with writing code or tests that work around the blocker.
+   - **DO NOT** attempt to "fix" or "work around" an architectural or environmental assumption without consulting the Senior Agent.
    - Report the issue immediately via the [Feedback Protocol](./coordination/feedback-protocol.md).
-   - Clearing the blocker is a higher priority than completing the original task.
+   - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
 4. Sub-agent executes within role boundaries.
 5. Sub-agent completes and verifies work.
 6. **Output:** Implementation + tests + updated docs + report for senior dev.

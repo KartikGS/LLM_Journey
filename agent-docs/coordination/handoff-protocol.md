@@ -10,6 +10,7 @@ This protocol defines the mandatory communication and documentation flow between
     - [Linked CR] (e.g., `agent-docs/requirements/CR-XXX.md`)
     - [Acceptance Criteria]
     - [Constraints]
+    - [Rationale / Rationale (The 'Why')]
     - [Risk Analysis]
 - **Protocol**: Senior Dev MUST acknowledge the handoff and confirm the task is well-defined before planning.
 
@@ -19,6 +20,7 @@ This protocol defines the mandatory communication and documentation flow between
 - **Content**:
     - [Objective]
     - [Constraints]
+    - [Rationale / Rationale (The 'Why')]
     - [Definition of Done]
     - [Reference Files]
 - **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.

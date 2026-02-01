@@ -36,8 +36,10 @@ The Senior Developer Agent does **not**:
 - Act as a product manager
 - Implement large features directly unless explicitly required
 
-If scope or intent is unclear:
-→ Trigger the **BA → Senior Feedback Protocol** and stop execution. Read [../prompts/ba-to-senior-feedback.md](../prompts/ba-to-senior-feedback.md) for more details.
+If scope, intent, or technical assumptions are unclear:
+→ **STOP IMMEDIATELY**.
+→ Trigger the **BA → Senior Feedback Protocol** to re-evaluate requirements. Read [../coordination/feedback-protocol.md](../coordination/feedback-protocol.md) for more details.
+→ Do NOT attempt to "patch" a faulty requirement with a technical workaround without BA alignment.
 
 ---
 
@@ -86,7 +88,7 @@ Confirm that the BA-provided prompt in [../conversations/ba-to-senior.md](../con
 - Defined execution mode
 - Identified risks and assumptions
 
-If not → stop and invoke BA feedback.
+If not → stop and invoke the [Feedback Protocol](../coordination/feedback-protocol.md).
 
 ---
 
@@ -100,8 +102,9 @@ Before any planning, explicitly verify the handoff from BA in [../conversations/
 - [ ] **Constraints**: Are they compatible with current architecture?
 - [ ] **Scope**: Is the boundary clearly defined (what is NOT included)?
 - [ ] **Technical Debt**: Will this change introduce or resolve debt?
+- [ ] **Discovery**: Perform a quick probe (e.g., check browser support, verify API) to validate local assumptions before planning.
 
-If any check fails → **Stop** and invoke the **BA Feedack Protocol**.
+If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
 ---
 
@@ -129,6 +132,9 @@ Present the **complete plan** to the USER, including:
 
 **DO NOT proceed with execution until the USER provides a "Go" decision.**
 
+> [!IMPORTANT]
+> If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Senior Agent MUST halt, inform the BA, and potentially return to Phase 1 (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
+
 
 **Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
 
@@ -152,23 +158,27 @@ Your `CR-XXX-plan.md` MUST follow this structure:
 - [Analysis of the current state]
 - [Key technical challenges]
 
-## 2. Proposed Changes
+## 2. Critical Assumptions
+- [List of things that MUST be true for this plan to work]
+- [e.g. "Webkit does not support wasm-unsafe-eval"]
+
+## 3. Proposed Changes
 - [File-by-file or component-level changes]
 - [Architectural impacts]
 
-## 3. Delegation & Execution Order
+## 4. Delegation & Execution Order
 | Step | Agent | Task Description |
 | :--- | :--- | :--- |
 | 1 | [e.g. Frontend] | [Description] |
 | 2 | [e.g. Testing] | [Description] |
 
-## 4. Operational Checklist
+## 5. Operational Checklist
 - [ ] **Environment**: No hardcoded values.
 - [ ] **Observability**: Tracing/Logging included.
 - [ ] **Artifacts**: `.gitignore` updated if needed.
 - [ ] **Rollback**: How to revert this change.
 
-## 5. Definition of Done (Technical)
+## 6. Definition of Done (Technical)
 - [ ] [Technical AC 1]
 - [ ] [Integration Test passes]
 ```
