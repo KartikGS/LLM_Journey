@@ -183,6 +183,16 @@ Your `CR-XXX-plan.md` MUST follow this structure:
 - [ ] [Integration Test passes]
 ```
 
+### 🛑 MANDATORY: Production-Grade Planning Standards
+When designing infrastructure or security changes (Middleware, CSP, Rate-Limiting), your plan MUST:
+1. **Use Granular Flags**: Never rely solely on `NODE_ENV === 'development'`. Explicitly use/propose:
+   - `isProd`: For strict security hardening.
+   - `isE2E`: For automated testing relaxations.
+   - `isLocalhost`: For development convenience.
+2. **Observability First**: Any change that affects the boot/loading sequence (like `BrowserGuard`) MUST include an explicit UI feedback state to aid E2E root-cause analysis (screenshots/videos).
+3. **Guardrails**: Every "relaxation" (e.g., rate-limit bypass) must have an accompanying security guardrail in the plan to prevent accidental production leakage.
+4. **Discovery Probes**: Before finalizing a plan, run discovery commands (`grep`, `find`) to identify existing environment patterns and flags to ensure the new plan is compatible with the current ecosystem.
+
 
 ---
 

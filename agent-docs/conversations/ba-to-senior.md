@@ -1,32 +1,32 @@
-# Handoff: CR-004 - Browser Support Fallback and E2E Alignment
+# Handoff: BA → Senior Developer
 
 ## Objective
-Implement a "Browser Support" fallback page and align the Playwright E2E configuration to match our architectural decision of supporting only modern browsers (Chrome 95+, FF 102+, Safari 17.4+).
+Stabilize the E2E test suite by addressing resource contention and Webkit compatibility issues identified during manual E2E runs.
 
-## Context
-Our use of WASM (via `onnxruntime-web`) and strict CSP (`wasm-unsafe-eval`) causes failures on older browsers. Currently, E2E tests in Safari are failing because they expect the full app to load. We need to detect this incompatibility and show a fallback page, then update our tests to verify this behavior.
+## Linked CR
+- [CR-004: E2E Suite Stabilization and Browser Compatibility Fix](../requirements/CR-004.md)
 
-## Requirements
+## Rationale
+Current flakiness prevents reliable CI signals. Webkit is completely broken due to a CSP/HTTP conflict, which hides potential Safari-specific regressions.
 
-### 1. Implementation
-- **Detection Logic**: Create a component that checks for WebAssembly support in the current environment. Note that the CSP `wasm-unsafe-eval` is the primary blocker; a simple `typeof WebAssembly !== "undefined"` might pass, but actual initialization might fail. A small trier-block for WASM init is recommended.
-- **Fallback UI**: Create a "Browser Support" page found in `components/ui/browser-support-fallback.tsx`. It should:
-    - Match the project's dark/premium aesthetic.
-    - Explain the requirement for WASM-capable modern browsers.
-    - Explicitly list supported versions.
-- **Integration**: Wrap or inject this guard in `app/layout.tsx`.
+## Suggested Technical Fixes (derived from [Analysis Report](../reports/E2E-issue-analysis.md))
+1.  **Middleware**:
+    - Wrap `upgrade-insecure-requests;` and `Strict-Transport-Security` in a dev-environment check.
+    - Exempt `127.0.0.1` and `::1` from the telemetry rate limiter to prevent test interruption.
+2.  **Playwright Config**:
+    - Reduce workers for local runs (e.g., `workers: process.env.CI ? 2 : 1`).
+    - Audit `fullyParallel` settings for heavy spec files.
+3.  **BrowserGuard**:
+    - Improve the "loading" state visibility to help differentiate between "hanging" and "slow load."
 
-### 2. Testing Alignment
-- **Playwright Config**: 
-    - Keep `chromium` and `firefox` as functional testing projects.
-    - Use `webkit` (Safari) as the "Fallback" testing project.
-- **Test Logic**:
-    - In `navigation.spec.ts` and `transformer.spec.ts`:
-        - `test.skip()` happy path tests if the project is `webkit`.
-        - Add a specific test case for `webkit` that asserts the visibility of the "Browser Support" fallback message.
+## Verification Mapping
+- **AC 1 (Passes consistently)**: Run `pnpm test:e2e` three times consecutively; all must pass.
+- **AC 2 (Webkit load)**: Verify Webkit screenshot in `playwright-report` shows the Landing Page hero section.
+- **AC 3 (Rate limit)**: Verify no 429 errors appear in `pnpm dev` console during a full test run.
 
-## Definition of Done
-- [ ] Users on unsupported browsers see the fallback UI.
-- [ ] Users on supported browsers see the full LLM Journey experience.
-- [ ] `pnpm test:e2e` completes with 100% success (Verifying happy path on Chrome/FF and Fallback on Safari).
-- [ ] Updated `agent-docs/plans/CR-004-plan.md` created by Senior Dev.
+## Constraints
+- Do NOT disable CSP in production.
+- Do NOT remove `wasm-unsafe-eval` as it is required for transformer features.
+
+## Risks
+- Minor drift between dev/prod configurations for security headers.

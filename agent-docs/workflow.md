@@ -24,6 +24,14 @@
 6. **Execution Start:** Senior formalizes task specifications + prompts for sub-agents in `agent-docs/conversations/senior-to-<role>.md`. 
    - **Requirement**: Senior MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
 
+### 🛑 The Delegation Invariant (Anti-Loop Measures)
+- **The Senior Developer writes the Handoff**: This is the final action of the Senior Agent for a specific sub-task.
+- **The "Wait" State**: Once `agent-docs/conversations/senior-to-<role>.md` is created, the Senior Agent MUST stop and report back to the User.
+- **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Senior Agent. 
+- **The "Shift" Refusal**: If you feel the urge to "just do it" to be efficient, you are violating the Senior role. Stop. Wait for the User to either:
+  1. Approve the handoff for a sub-agent execution.
+  2. Explicitly ask you to switch roles.
+
 
 ### Phase 3: Implementation (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in [/agent-docs/conversations/senior-to-<role>.md](/agent-docs/conversations/senior-to-<role>.md)

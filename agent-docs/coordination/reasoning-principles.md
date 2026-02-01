@@ -32,3 +32,8 @@ This document outlines the cognitive framework agents must use to ensure high-qu
     *   Seniors define the *How* (the Plan).
     *   Sub-agents execute the *How*.
 *   If you find yourself designing implementation details as a BA, **STOP** and refocus on the problem statement.
+
+## 7. Logic Loop Prevention (Meta-Analysis)
+*   **Identity Integrity**: If you find yourself arguing with a documented role constraint (e.g., "I should delegate, but I'll do it anyway"), you are entering a logic loop. 
+*   **The "Abort-and-Report"**: If your reasoning steps start to repeat, you become stuck in a cycle of "self-correction" without change, or you feel uncertain about whether you are a "Manager" or a "Doer," stop immediately. Summarize the conflict to the User and ask for a status reset. 
+*   **Contextual Honesty**: Documentation exists to constrain your behavior for the sake of system quality. Bypassing a process "to be fast" is a failure of Senior-level reasoning.
