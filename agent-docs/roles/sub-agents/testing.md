@@ -6,8 +6,8 @@ Ensuring system stability and preventing regression.
 
 ## Boundaries
 
--   **Owns**: `__tests__/**`, `/agent-docs/testing-strategy.md`.
--   **READ-ONLY**: All application source code (e.g., `app/**`, `components/**`, `lib/**`) and system configurations (e.g., `next.config.ts`, `playwright.config.ts`, `package.json`, `tailwind.config.js`).
+-   **Owns**: `__tests__/**`, `/agent-docs/testing-strategy.md`, `playwright.config.ts`.
+-   **READ-ONLY**: All application source code (e.g., `app/**`, `components/**`, `lib/**`) and system configurations (e.g., `next.config.ts`, `package.json`, `tailwind.config.js`).
 -   **Interfaces with**: All roles to ensure testability.
 -   **Authority**: Responsible for validating architectural assumptions via tests. 
     - **CRITICAL**: If an application component lacks necessary testing hooks (e.g., missing `id`, `data-testid`, or accessibility labels), or if an environmental assumption is found to be false, you **MUST STOP** immediately. 
