@@ -5,15 +5,15 @@
 ## Multi-Agent Workflow
 
 ### Phase 1: Requirement Analysis (BA Agent)
-1. User provides rough CR
-2. BA clarifies through Q&A
-3. BA creates structured requirement document
-4. BA assesses business complexity
-5. BA decides whether to split into multiple CRs
-6. **Output:** `docs/requirements/CR-XXX.md` + prompt for Senior Dev
-7. BA reports back to user for review and approval
-8. User approves or requests changes
-9. If user requests changes, go back to step 2
+1. User provides rough CR.
+2. BA clarifies through Q&A.
+3. **Technical Sanity Check**: BA consults `Architecture.md`, `technical-context.md`, and `ADRs` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
+4. BA creates structured requirement document.
+5. BA assesses business complexity.
+6. **Output:** `docs/requirements/CR-XXX.md` + prompt for Senior Dev.
+7. BA reports back to user for review and approval.
+8. User approves or requests changes.
+9. **Pivot Loop**: If during Phase 2 the Senior Developer identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
 
 ### Phase 2: Technical Planning & Delegation (Senior Developer Agent)
 1. Senior reads CR from BA. Read [../conversations/ba-to-senior.md](../conversations/ba-to-senior.md) for more details.

@@ -16,13 +16,17 @@
 - Security:
 - Accessibility:
 
-## Design Invariants & Choices
-- **Why is it built this way?**: [Identify if current behavior is a deliberate design choice vs a bug]
-- **Intent Verification**: [Confirm if the fix aligns with existing architectural decisions (e.g. WASM security)]
+## System Constraints & Invariants
+- **Constraint Mapping**: [List specific ADRs, technical-context, or tooling-standard rules that apply]
+- **Design Intent**: [Is this change a core pivot or a standard feature extension? Why is it built this way?]
 
 ## Acceptance Criteria
 - [ ] 
 - [ ] 
+
+## Verification Mapping
+- **Development Proof**: [How should the developer prove the AC are met? e.g., 'Passes E2E test X', 'Manual verification of fallback UI']
+- **User Validation**: [How will the human verify this? e.g., 'Navigation link takes me to /new-page']
 
 ## Dependencies
 - Blocks: 

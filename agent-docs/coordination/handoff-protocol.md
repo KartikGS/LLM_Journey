@@ -9,8 +9,9 @@ This protocol defines the mandatory communication and documentation flow between
     - [Objective]
     - [Linked CR] (e.g., `agent-docs/requirements/CR-XXX.md`)
     - [Acceptance Criteria]
+    - [Verification Mapping] (Explicit proof required for each AC)
     - [Constraints]
-    - [Rationale / Rationale (The 'Why')]
+    - [Rationale (The 'Why')]
     - [Risk Analysis]
 - **Protocol**: Senior Dev MUST acknowledge the handoff and confirm the task is well-defined before planning.
 
