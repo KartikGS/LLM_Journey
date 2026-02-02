@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:e2e": "playwright test"
+    "test:e2e": "E2E=true playwright test"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

@@ -17,7 +17,7 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Active Development.
--   **Recent Focus**: [S][TEST] Investigating E2E flakiness and Webkit issues (CR-004) - **Analysis Completed**.
+-   **Recent Focus**: [S][TEST] Investigating E2E flakiness and Webkit issues (CR-004) - **Completed**.
 -   **Previous**: [S][DOC] Formalizing browser support and documentation fixes (CR-003) - **Completed**.
 
 ## Next Priorities
