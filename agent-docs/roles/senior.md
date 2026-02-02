@@ -112,7 +112,7 @@ If any check fails or an assumption is invalidated → **Stop** and invoke the *
 Before any code is modified or any terminal command is run (except for discovery):
 
 1.  **Create the Technical Plan**: Create `agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
-2.  **Use the Standard Plan Template** (see below).
+2.  **Use the Standard Plan Template**: [CR Plan Template](/agent-docs/plans/TEMPLATE.md).
 3.  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
 4.  **Determine Delegation**: 
     - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `agent-docs/roles/sub-agents/`).
@@ -148,41 +148,6 @@ Once approved:
 
 ---
 
-### Standard Technical Plan Template
-Your `CR-XXX-plan.md` MUST follow this structure:
-
-```markdown
-# Technical Plan - [CR-ID]: [Title]
-
-## 1. Technical Analysis
-- [Analysis of the current state]
-- [Key technical challenges]
-
-## 2. Critical Assumptions
-- [List of things that MUST be true for this plan to work]
-- [e.g. "Webkit does not support wasm-unsafe-eval"]
-
-## 3. Proposed Changes
-- [File-by-file or component-level changes]
-- [Architectural impacts]
-
-## 4. Delegation & Execution Order
-| Step | Agent | Task Description |
-| :--- | :--- | :--- |
-| 1 | [e.g. Frontend] | [Description] |
-| 2 | [e.g. Testing] | [Description] |
-
-## 5. Operational Checklist
-- [ ] **Environment**: No hardcoded values.
-- [ ] **Observability**: Tracing/Logging included.
-- [ ] **Artifacts**: `.gitignore` updated if needed.
-- [ ] **Rollback**: How to revert this change.
-
-## 6. Definition of Done (Technical)
-- [ ] [Technical AC 1]
-- [ ] [Integration Test passes]
-```
-
 ### 🛑 MANDATORY: Production-Grade Planning Standards
 When designing infrastructure or security changes (Middleware, CSP, Rate-Limiting), your plan MUST:
 1. **Use Granular Flags**: Never rely solely on `NODE_ENV === 'development'`. Explicitly use/propose:
@@ -192,7 +157,6 @@ When designing infrastructure or security changes (Middleware, CSP, Rate-Limitin
 2. **Observability First**: Any change that affects the boot/loading sequence (like `BrowserGuard`) MUST include an explicit UI feedback state to aid E2E root-cause analysis (screenshots/videos).
 3. **Guardrails**: Every "relaxation" (e.g., rate-limit bypass) must have an accompanying security guardrail in the plan to prevent accidental production leakage.
 4. **Discovery Probes**: Before finalizing a plan, run discovery commands (`grep`, `find`) to identify existing environment patterns and flags to ensure the new plan is compatible with the current ecosystem.
-
 
 ---
 

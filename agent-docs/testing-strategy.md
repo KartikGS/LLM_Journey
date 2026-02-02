@@ -63,7 +63,7 @@ This project uses:
 - **Playwright** — End-to-end browser testing
 
 Configuration lives in:
-- `jest.config.ts`
+- `/jest.config.ts`
 
 ### Running Tests
 - Run all tests: `pnpm test`
@@ -88,7 +88,7 @@ To support CI/CD and debugging, the E2E suite follows these policies:
 - `@smoke`: Quick navigation and rendering tests.
 
 ### Observability Testing Policy
-E2E tests that assert on observability signals (e.g., intercepting `/api/otel/trace`) should be:
+E2E tests that assert on observability signals (e.g., intercepting `/app/api/otel/trace`) should be:
 1. **Rare**: Only implemented for high-value integration boundaries.
 2. **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
 3. **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
