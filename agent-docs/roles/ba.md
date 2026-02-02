@@ -71,12 +71,16 @@ Before working on any CR:
 Every BA task **must** produce:
 
 1. **Clarified Requirement Summary** (Phase 1)
-2. **Change Requirement (CR) Document** (Phase 1)
+2. **Investigation Report / Technical Discovery** (Phase 1, Optional but Recommended)
+   - For bugs, performance issues, or environmental conflicts.
+   - Document "Symptoms", "Potential Causes", and "Suggested Strategies".
+   - Put in `agent-docs/reports/INVESTIGATION-XXX.md`.
+3. **Change Requirement (CR) Document** (Phase 1)
    - Create a new file in `agent-docs/requirements/CR-XXX.md`
    - Must include Business Value, Acceptance Criteria, and Constraints.
-3. **Senior Developer Prompt** (Phase 1)
+4. **Senior Developer Prompt** (Phase 1)
    - Put in `agent-docs/conversations/ba-to-senior.md`
-4. **Acceptance Verification & Closure** (Phase 5)
+5. **Acceptance Verification & Closure** (Phase 5)
    - Review `agent-docs/conversations/senior-to-ba.md` report.
    - Update `agent-docs/requirements/CR-XXX.md` status.
    - Update `agent-docs/project-log.md` with closure entry.

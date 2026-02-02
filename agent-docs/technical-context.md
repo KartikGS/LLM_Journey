@@ -20,9 +20,16 @@ This document provide quick access to key technical configurations and endpoints
 - **Model Loading**: Can take up to 60s. Use bounded timeouts in tests.
 - **Context Window**: 32 characters for the base Transformer model.
 - **Framework**: Next.js 15 (App Router).
-- **Environment Flags**: `E2E=true` disables HSTS, `upgrade-insecure-requests`, and rate-limiting for tests.
 - **Browser Support**: Modern browsers with `wasm-unsafe-eval` support (Chrome 95+, FF 102+, Safari 17.4+).
 
-## 4. Operational Invariants
+## 4. Security & Privacy Context
+| Feature | Policy | Rationale |
+| :--- | :--- | :--- |
+| **CSP: upgrade-insecure-requests** | Blocked in Dev/E2E | Prevents connection failure to localhost (HTTP). |
+| **CSP: wasm-unsafe-eval** | **Mandatory** | Required for ONNX Runtime (WASM) execution. |
+| **HSTS** | Production only | Prevents browser from forcing HTTPS on localhost. |
+| **Rate Limiting** | 30 req/min (OTel) | Protection against telemetry spam. Disabled in E2E. |
+
+## 5. Operational Invariants
 - **Telemetry failure boundary**: Tracing failures must never crash the UI.
 - **Git Hygiene**: Add all tool-generated artifacts to `.gitignore`.

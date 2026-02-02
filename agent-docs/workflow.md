@@ -58,3 +58,10 @@
 3. BA updates `agent-docs/project-log.md` with the final entry.
 4. BA notifies the human of completion.
 5. **Output:** Closed CR, updated project log.
+
+---
+
+## General Invariants
+
+### 1. Traceability Invariant
+Every ID mentioned in the `agent-docs/project-log.md` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
