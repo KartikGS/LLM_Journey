@@ -53,6 +53,9 @@ If intent is unclear, stop and ask the user.
 
 ## After Reading - What Now?
 
+> [!CAUTION]
+> **Mandatory Reading Check**: Before you take your first action in this session, you MUST list the files you have read from the "Required Reading" section. If you proceed without naming these files, you are in violation of protocol.
+
 Once you’ve read the required docs:
 
 - **Verify your task is clear**

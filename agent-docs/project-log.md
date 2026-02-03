@@ -17,8 +17,8 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
--   **Recent Focus**: [S][DOC] **Vision Finalization**: Added explicit audience targeting, non-goals, and introduced canonical roadmap URIs - **Completed**.
--   **Previous**: [S][DOC] Vision Reset: Pivoted to "Mental Model" and "Learner Transformation" - **Completed**.
+-   **Recent Focus**: [S][DOC] **Agent Meta-Refinement**: Codified "Permission to Disagree," "Mandatory Reading Check," and "BA-Senior Consultation" in agent docs - **Completed**.
+-   **Previous**: [S][DOC] Vision Finalization: Added explicit audience targeting and canonical roadmap URIs - **Completed**.
 
 ## Next Priorities
 -   [ ] [S] Audit existing/needed pages against the 10-point Learning Narrative.
