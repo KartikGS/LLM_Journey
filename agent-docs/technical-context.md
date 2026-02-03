@@ -16,6 +16,16 @@ This document provide quick access to key technical configurations and endpoints
 | **Playwright** | E2E Testing | Use tags: `@critical`, `@smoke`. |
 | **WASM Path** | `/onnx-runtime/` | Location of ONNX Web binaries. |
 
+## Framework & Orchestration
+| Layer | Tool/Pattern | Notes |
+| :--- | :--- | :--- |
+| **Agent Orchestration** | Single-agent loop | Main orchestration pattern. |
+| **Stateful Agents** | LangGraph | For complex multi-agent flows. |
+| **Conceptual Demos** | LangChain | Used for educational references. |
+| **Evaluation** | Custom + Framework-inspired | RAG evaluation patterns. |
+| **Observability** | OpenTelemetry | Traces, metrics, logs. |
+| **E2E Testing** | Playwright | For visual and functional confidence. |
+
 ## Key Constraints
 - **Model Loading**: Can take up to 60s. Use bounded timeouts in tests.
 - **Context Window**: 32 characters for the base Transformer model.

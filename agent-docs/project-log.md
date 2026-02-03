@@ -16,10 +16,13 @@ to help agents understand **expected complexity and coordination cost**.
 Tags may be combined when appropriate.
 
 ## Current State
--   **Status**: Active Development.
--   **Recent Focus**: [S][TEST] Investigating E2E flakiness and Webkit issues (CR-004) - **Completed**.
--   **Previous**: [S][DOC] Formalizing browser support and documentation fixes (CR-003) - **Completed**.
+-   **Status**: Vision & Roadmap Finalized.
+-   **Recent Focus**: [S][DOC] **Vision Finalization**: Added explicit audience targeting, non-goals, and introduced canonical roadmap URIs - **Completed**.
+-   **Previous**: [S][DOC] Vision Reset: Pivoted to "Mental Model" and "Learner Transformation" - **Completed**.
 
 ## Next Priorities
--   [ ] [M] Implement LLM Stage page content.
--   [ ] [L] Add LLM evaluation framework.
+-   [ ] [S] Audit existing/needed pages against the 10-point Learning Narrative.
+-   [ ] [M] Implement/Refine Transformers (Foundations) page.
+-   [ ] [M] Implement Model Training & Adaptation (LLM + Fine-Tuning) page.
+-   [ ] [L] Implement RAG pipeline (Retrieval-Augmented Generation).
+-   [ ] [L] Setup Evaluation & Observability framework.
