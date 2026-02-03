@@ -26,5 +26,11 @@ Read @AGENTS.md and @senior-to-{sub-agent-role}.md
 
 Once the Sub Developer agent has completed the task, it will ask for clarification if needed. The Sub Developer agent will then complete the task and make a report for the Senior Developer agent.
 
-Finally, the Senior Developer agent will review the report. For that use the prompt below:
+The Senior Developer agent will review the report. For that use the prompt below:
 "A {role} agent executed the task described by you. Report is in agent-docs/conversation/role-to-senior.md."
+
+The Senior developer will this generate the report which should be reviewed in the BA agent window using the below prompt
+"
+Read @senior-to-ba.md
+"
+The BA agent will then close the CR
