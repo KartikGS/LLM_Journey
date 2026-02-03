@@ -35,7 +35,7 @@ Avoid tightly coupling:
 
 When creating or modifying an API route, ensure the following:
 
-### 1. Observability
+### Observability
 
 Every API route **must**:
 - Create or participate in a trace
@@ -53,7 +53,7 @@ Example considerations:
 
 ---
 
-### 2. Security
+### Security
 
 Each API route should explicitly consider:
 - Request body size limits
@@ -68,7 +68,7 @@ Rules:
 
 ---
 
-### 3. Error Handling
+### Error Handling
 
 - Prefer explicit error responses
 - Do not leak internal error details to clients

@@ -1,33 +1,33 @@
 # Technical Plan - [CR-ID]: [Title]
 
-## 1. Technical Analysis
+## Technical Analysis
 - [Analysis of the current state]
 - [Key technical challenges]
 
-## 2. Critical Assumptions
+## Critical Assumptions
 - [List of things that MUST be true for this plan to work]
 - [e.g. "Webkit does not support wasm-unsafe-eval"]
 
-## 3. Proposed Changes
+## Proposed Changes
 - [File-by-file or component-level changes]
 - [Architectural impacts]
 
-## 4. Architectural Invariants Check
+## Architectural Invariants Check
 - [] Invariant 1 (Description)
 - [] Invariant 2 (Description)
 
-## 5. Delegation & Execution Order
+## Delegation & Execution Order
 | Step | Agent | Task Description |
 | :--- | :--- | :--- |
 | 1 | [e.g. Frontend] | [Description] |
 | 2 | [e.g. Testing] | [Description] |
 
-## 6. Operational Checklist
+## Operational Checklist
 - [ ] **Environment**: No hardcoded values.
-- [ ] **Observability**: Tracing/Logging included.
+- [ ] **Observability**: Tracing/Logging/Metrics included.
 - [ ] **Artifacts**: `.gitignore` updated if needed.
 - [ ] **Rollback**: How to revert this change.
 
-## 7. Definition of Done (Technical)
+## Definition of Done (Technical)
 - [ ] [Technical AC 1]
 - [ ] [Integration Test passes]

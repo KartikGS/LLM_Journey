@@ -4,14 +4,14 @@
 LLM Journey is a Next.js application (App Router) integrating client-side inference (ONNX Runtime) and server-side orchestration.
 
 ## High-Level Components
-1.  **Frontend**: React 19, Tailwind CSS. Responsible for Chat UI, visualizations, and user interaction.
-2.  **Inference Engine**: ONNX Runtime Web. Runs small models entirely in the browser.
-3.  **Server API**: Next.js API Routes. Handles heavier orchestration, external tool calls, and telemetry.
-4.  **Observability**: OpenTelemetry-based tracing pipeline (Client -> Proxy -> Collector -> Backend).
+-  **Frontend**: React 19, Tailwind CSS. Responsible for Chat UI, visualizations, and user interaction.
+-  **Inference Engine**: ONNX Runtime Web. Runs small models entirely in the browser.
+-  **Server API**: Next.js API Routes. Handles heavier orchestration, external tool calls, and telemetry.
+-  **Observability**: OpenTelemetry-based tracing pipeline (Client -> Proxy -> Collector -> Backend) for client observability and OpenTelemetry Traces, Logs and Metrics setup for server.
 
 ## Data Flow
 -   **Chat**: User Input -> `ChatInput` -> `useLLM` Hook -> Web Worker -> ONNX Runtime -> Response.
--   **Telemetry**: App -> OTel SDK -> `/api/otel/trace` (Proxy) -> OTel Collector.
+-   **Telemetry**: App -> OTel SDK -> `/app/api/otel/trace` (Proxy) -> OTel Collector.
 
 ## Architectural Invariants
 

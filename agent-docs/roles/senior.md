@@ -38,7 +38,7 @@ The Senior Developer Agent does **not**:
 
 If scope, intent, or technical assumptions are unclear:
 → **STOP IMMEDIATELY**.
-→ Trigger the **BA → Senior Feedback Protocol** to re-evaluate requirements. Read [../coordination/feedback-protocol.md](../coordination/feedback-protocol.md) for more details.
+→ Trigger the **BA → Senior Feedback Protocol** to re-evaluate requirements. Read [Feedback Protocol](/agent-docs/coordination/feedback-protocol.md) for more details.
 → Do NOT attempt to "patch" a faulty requirement with a technical workaround without BA alignment.
 
 ---
@@ -66,38 +66,25 @@ If scope, intent, or technical assumptions are unclear:
 ## Required Reads
 
 Before planning or executing any task:
-1. Check [Project Log](./project-log.md) for current state
-2. Check [Reasoning Principles](../coordination/reasoning-principles.md) for cognitive framework
-3. Check [Architecture](./architecture.md) for system design
-3. Check [Testing Strategy](./testing-strategy.md) for test approach
-4. Check [Keep in Mind](./keep-in-mind.md) for recent gotchas
-5. Check relevant files in:
-   - `docs/roles/sub-agents` for sub-agent roles
-   - `docs/development/` for development best practices
-   - `docs/api/` for API contracts
-   - `docs/decisions/` for architectural decisions
+- **Current State:** [Project Log](/agent-docs/project-log.md)
+- **Cognitive Framework:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
+- **System Design:** [Architecture](/agent-docs/architecture.md)
+- **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
+- Check relevant files in:
+   - `agent-docs/roles/sub-agents` for sub-agent roles
+   - `agent-docs/development/` for development best practices
+   - `agent-docs/api/` for API contracts
+   - `agent-docs/decisions/` for architectural decisions
 
 ---
 
-## Execution Responsibilities
-
-### 1. Validate the Handoff
-Confirm that the BA-provided prompt in [../conversations/ba-to-senior.md](../conversations/ba-to-senior.md) includes:
-- Clear acceptance criteria
-- Explicit scope boundaries
-- Defined execution mode
-- Identified risks and assumptions
-
-If not → stop and invoke the [Feedback Protocol](../coordination/feedback-protocol.md).
-
----
-
-## 🛑 REQUIRED: Step-by-Step Technical Execution
+## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)
 
 You must follow these steps in sequence for every Change Requirement (CR).
 
-### Phase 1: Validate & Internalize
-Before any planning, explicitly verify the handoff from BA in [../conversations/ba-to-senior.md](../conversations/ba-to-senior.md).
+### Validate & Internalize
+Before any planning, explicitly verify the handoff from BA in [BA To Senior Handoff](/agent-docs/conversations/ba-to-senior.md).
 - [ ] **Acceptance Criteria**: Are they testable?
 - [ ] **Constraints**: Are they compatible with current architecture?
 - [ ] **Scope**: Is the boundary clearly defined (what is NOT included)?
@@ -108,23 +95,33 @@ If any check fails or an assumption is invalidated → **Stop** and invoke the *
 
 ---
 
-### Phase 2: Technical Planning & Delegation
+### Technical Planning & Delegation
 Before any code is modified or any terminal command is run (except for discovery):
 
-1.  **Create the Technical Plan**: Create `agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
-2.  **Use the Standard Plan Template**: [CR Plan Template](/agent-docs/plans/TEMPLATE.md).
-3.  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
-4.  **Determine Delegation**: 
-    - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `agent-docs/roles/sub-agents/`).
+-  **Create the Technical Plan**: Create `/agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
+-  **Use the Standard Plan Template**: [CR Plan Template](/agent-docs/plans/TEMPLATE.md).
+-  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
+-  **Determine Delegation**: 
+    - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/roles/sub-agents/`).
     - Define the order of execution.
     - **MANDATORY**: Specify the Testing Sequence. 
       - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
       - Deciding between Test-Driven Development (TDD) or Implementation-First is a Senior technical decision.
     - **Note**: Implementation by the Senior Agent is only permitted for project-wide configuration changes (e.g. `tsconfig`, `.env` templates) or simple documentation updates. For all other tasks, delegation is MANDATORY. Do not "shift" into sub-agent roles.
 
+#### 🛑 MANDATORY: Production-Grade Planning Standards
+When designing infrastructure or security changes (Middleware, CSP, Rate-Limiting), your plan MUST:
+- **Use Granular Flags**: Never rely solely on `NODE_ENV === 'development'`. Explicitly use/propose:
+   - `isProd`: For strict security hardening.
+   - `isE2E`: For automated testing relaxations.
+   - `isLocalhost`: For development convenience.
+- **Observability First**: Any change that affects the boot/loading sequence (like `BrowserGuard`) MUST include an explicit UI feedback state to aid E2E root-cause analysis (screenshots/videos).
+- **Guardrails**: Every "relaxation" (e.g., rate-limit bypass) must have an accompanying security guardrail in the plan to prevent accidental production leakage.
+- **Discovery Probes**: Before finalizing a plan, run discovery commands (`grep`, `find`) to identify existing environment patterns and flags to ensure the new plan is compatible with the current ecosystem.
+
 ---
 
-### Phase 3: The Approval Gate
+### The Approval Gate
 Present the **complete plan** to the USER, including:
 - **Technical Approach**: How you intend to solve the problem.
 - **Delegation Strategy**: Which sub-agents will do what.
@@ -133,34 +130,22 @@ Present the **complete plan** to the USER, including:
 **DO NOT proceed with execution until the USER provides a "Go" decision.**
 
 > [!IMPORTANT]
-> If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Senior Agent MUST halt, inform the BA, and potentially return to Phase 1 (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
+> If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Senior Agent MUST halt, inform the BA, and potentially return to **Validate & Internalize Phase** (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
 
 
 **Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
 
 ---
 
-### Phase 4: Execution & Coordination
+### Execution & Coordination
 Once approved:
-1.  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/senior-to-<role>.md`.
-2.  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
-3.  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
+-  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/senior-to-<role>.md`.
+-  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
+-  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
 ---
 
-### 🛑 MANDATORY: Production-Grade Planning Standards
-When designing infrastructure or security changes (Middleware, CSP, Rate-Limiting), your plan MUST:
-1. **Use Granular Flags**: Never rely solely on `NODE_ENV === 'development'`. Explicitly use/propose:
-   - `isProd`: For strict security hardening.
-   - `isE2E`: For automated testing relaxations.
-   - `isLocalhost`: For development convenience.
-2. **Observability First**: Any change that affects the boot/loading sequence (like `BrowserGuard`) MUST include an explicit UI feedback state to aid E2E root-cause analysis (screenshots/videos).
-3. **Guardrails**: Every "relaxation" (e.g., rate-limit bypass) must have an accompanying security guardrail in the plan to prevent accidental production leakage.
-4. **Discovery Probes**: Before finalizing a plan, run discovery commands (`grep`, `find`) to identify existing environment patterns and flags to ensure the new plan is compatible with the current ecosystem.
-
----
-
-### 3. Sub-Agent Coordination
+### Sub-Agent Coordination
 
 The Senior Developer Agent:
 - Assigns roles and boundaries
@@ -175,7 +160,7 @@ Sub-agents may request:
 
 ---
 
-### 4. Architecture & ADRs
+### Architecture & ADRs
 
 An ADR **must** be created when:
 - Introducing new architectural constraints
@@ -184,23 +169,23 @@ An ADR **must** be created when:
 - Changing security or observability boundaries
 
 ADRs live in:
-`docs/decisions/`
+`agent-docs/decisions/`
 
 ---
 
-### 5. Verification & BA Handoff
+### Verification & BA Handoff
 
 Before handing off to BA Agent:
-- Review the work reports written by the sub-agents in the [agent-docs/conversation/<role-of-sub-agent>-to-senior.md](../conversations/<role-of-sub-agent>-to-senior.md)
+- Review the work reports written by the sub-agents in the [Sub Agent to Senior Handoff](/agent-docs/conversations/<role-of-sub-agent>-to-senior.md)
 - **Cross-Environment Verification**: Ensure all tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes.
 - Ensure all tests pass (`pnpm test`)
 - Confirm acceptance criteria are met
-- **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`docs/decisions/` or `agent-docs/`) if they change system invariants.
+- **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants.
 - Verify documentation updates
-- **Create Senior → BA Handoff**: Write the completion report in `agent-docs/conversations/senior-to-ba.md` following the [Handoff Protocol](../coordination/handoff-protocol.md).
+- **Create Senior → BA Handoff**: Write the completion report in `/agent-docs/conversations/senior-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md).
 
 > [!CAUTION]
-> **Do NOT update `agent-docs/project-log.md`**. Final status updates and user notification are the responsibility of the BA Agent in Phase 5.
+> **Do NOT update `agent-docs/project-log.md`**. Final status updates and user notification are the responsibility of the BA Agent.
 
 ---
 
@@ -208,10 +193,10 @@ Before handing off to BA Agent:
 
 When conflicts arise:
 
-1. Tests define expected behavior
-2. Code defines current reality
-3. Architecture & ADRs define intent
-4. Workflow and style docs define process
+- Tests define expected behavior
+- Code defines current reality
+- Architecture & ADRs define intent
+- Workflow and style docs define process
 
 If conflict involves **scope or intent**:
 → BA Agent decides.
@@ -234,10 +219,3 @@ Before declaring success:
 - [ ] Does this align with the Project Vision?
 
 If any answer is “no” → the task is not done.
-
-### Code Quality
-- **Code standards:** [Style Guide](./development/style-guide.md)
-- **Testing approach:** [Testing Strategy](./testing-strategy.md)
-
-### System Contracts
-- **API contracts:** [API Contracts](./api/)

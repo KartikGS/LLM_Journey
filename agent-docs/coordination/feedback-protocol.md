@@ -2,7 +2,7 @@
 
 This protocol defines how agents should handle discrepancies, logical flaws, and missing dependencies discovered during execution. It complements the [Handoff Protocol](./handoff-protocol.md) by providing a return path for information.
 
-## 1. Discovery of Discrepancies
+## Discovery of Discrepancies
 
 If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUST NOT silently fix it if it belongs to another role's authority:
 
@@ -10,7 +10,7 @@ If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUS
 - **False Assumption**: A requirement or plan is based on a technical premise that is found to be incorrect (e.g., claiming a browser doesn't support a feature when it does).
 - **Logical Flaw**: A proposed solution contradicts project principles or will cause regression.
 
-## 2. Reporting Path
+## Reporting Path
 
 ### Sub-Agent → Senior Developer
 - **When**: A sub-agent finds a flaw in the plan or a missing dependency in the codebase.
@@ -29,20 +29,20 @@ If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUS
     1. Update `agent-docs/conversations/senior-to-ba.md` with a `## REQUIREMENT FEEDBACK` section.
     2. Propose a technical alternative or request requirement clarification.
 
-## 3. Resolution Protocol
+## Resolution Protocol
 
 1. **Acknowledge**: The receiving agent must acknowledge the feedback.
 2. **Re-delegate or Refine**:
     - If it's a missing dependency: The Senior Developer may delegate a quick fix to the responsible sub-agent (e.g., Frontend) OR ask the current agent to fix it ONLY IF they update the documentation to reflect the fix.
     - If it's a false assumption: The plan must be revised and re-approved by the USER.
 
-## 4. Helpful Refusals
+## Helpful Refusals
 
 "Helpfulness does NOT override Authority." (AGENTS.md)
 
 It is MORE helpful to point out a mistake that improves the system's long-term health than to silently work around it to meet a short-term "Definition of Done."
 
-## 5. Priority of Feedback
+## Priority of Feedback
 
 **Clearing a blocker or addressing a discrepancy is always higher priority than completing the original implementation.**
 

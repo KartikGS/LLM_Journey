@@ -4,7 +4,7 @@
 
 ## Multi-Agent Workflow
 
-### Phase 1: Requirement Analysis (BA Agent)
+### Requirement Analysis Phase (BA Agent)
 1. User provides rough CR.
 2. BA clarifies through Q&A.
 3. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
@@ -15,7 +15,7 @@
 8. User approves or requests changes.
 9. **Pivot Loop**: If during Phase 2 the Senior Developer identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
 
-### Phase 2: Technical Planning & Delegation (Senior Developer Agent)
+### Technical Planning & Delegation Phase (Senior Developer Agent)
 1. Senior reads CR from BA. Read `/agent-docs/conversations/ba-to-senior.md` for more details.
 2. Senior assesses technical complexity and identifies required sub-agents.
 3. **Execution Audit**: Senior audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
@@ -33,7 +33,7 @@
   2. Explicitly ask you to switch roles.
 
 
-### Phase 3: Implementation (Sub-Agents)
+### Implementation Phase (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in `/agent-docs/conversations/senior-to-<role>.md`
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
@@ -46,13 +46,13 @@
 5. Sub-agent completes and verifies work.
 6. **Output:** Implementation + tests + updated docs + report for senior dev.
 
-### Phase 4: Verification (Senior Developer Agent)
+### Verification Phase (Senior Developer Agent)
 1. Senior reviews completed work reports
 2. Senior ensures integration works
 3. Senior updates architectural docs if needed
 4. **Output:** Verified feature + completion report in `agent-docs/conversations/senior-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 
-### Phase 5: Acceptance (BA Agent)
+### Acceptance Phase (BA Agent)
 1. BA reviews the Senior's report and verifies AC are met.
 2. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
 3. BA updates `agent-docs/project-log.md` with the final entry.

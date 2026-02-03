@@ -6,7 +6,7 @@ The goal of the test suite is **system stability and correctness**, not model qu
 
 ---
 
-## 1. Testing Philosophy
+## Testing Philosophy
 
 This project follows a layered testing approach. **Critically, tests are not just written to be passed; they are tools for identifying flaws in the system, validating architectural assumptions, and highlighting documentation gaps.** 
 
@@ -16,7 +16,7 @@ This project follows a layered testing approach. **Critically, tests are not jus
 - **Integration tests** validate interaction between subsystems.
 - **E2E tests** validate user-critical flows using Playwright.
 
-### 1.1 Testability as a Requirement
+### Testability as a Requirement
 A feature is not "Done" unless it is testable. If a component lacks unique selectors (`data-testid`, `id`) or accessibility attributes required for robust testing, it is considered a **bug** in the implementation, not a missing feature in the test suite.
 
 The test suite prioritizes:
@@ -24,14 +24,14 @@ The test suite prioritizes:
 - Stability of critical paths
 - Resilience to observability and infrastructure failures
 
-### 1.2 Hydration & Lifecycle Awareness
+### Hydration & Lifecycle Awareness
 In React/Next.js environments, a test failing to find a selector may be a symptom of **hydration failure** rather than a missing element. 
 - If a component appears "empty" or stuck in a loading state in specific browsers (like WebKit), check the browser console for TLS errors, CSP violations, or HSTS redirects.
 - If the environment forces HTTPS while the dev server is HTTP, hydration will fail as JS chunks are blocked. This must be reported as an environmental blocker.
 
 ---
 
-## 2. Test Strategy Overview
+## Test Strategy Overview
 
 ### Unit Tests
 - Focus on deterministic, isolated logic
@@ -54,7 +54,7 @@ In React/Next.js environments, a test failing to find a selector may be a sympto
 
 ---
 
-## 3. Tooling
+## Tooling
 
 This project uses:
 
@@ -74,7 +74,7 @@ Configuration lives in:
 
 ---
 
-## 4. E2E Refinement & Artifacts
+## E2E Refinement & Artifacts
 
 To support CI/CD and debugging, the E2E suite follows these policies:
 
@@ -88,14 +88,15 @@ To support CI/CD and debugging, the E2E suite follows these policies:
 - `@smoke`: Quick navigation and rendering tests.
 
 ### Observability Testing Policy
+
 E2E tests that assert on observability signals (e.g., intercepting `/app/api/otel/trace`) should be:
-1. **Rare**: Only implemented for high-value integration boundaries.
-2. **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
-3. **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
+- **Rare**: Only implemented for high-value integration boundaries.
+- **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
+- **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
 
 ---
 
-## 5. Test Organization
+## Test Organization
 
 Tests live in the `__tests__` directory and mirror the source structure where possible.
 
@@ -110,7 +111,7 @@ __tests__/
 
 ---
 
-## 6. Ephemeral Debugging Tools
+## Ephemeral Debugging Tools
 
 To avoid polluting the permanent test suite and codebase:
 
@@ -120,18 +121,18 @@ To avoid polluting the permanent test suite and codebase:
 
 ---
 
-## 7. Environmental Escalation Protocol
+## Environmental Escalation Protocol
 
 If the test environment (network, ports, global headers, browser quirks) prevents execution:
 
-1. **Document the Evidence**: Capture logs, screenshots, or minimal reproduction cases.
-2. **Consult Tooling Standard**: Check if the issue violates a fixed constraint (e.g., standard Port 3001).
-3. **Escalate, Don't Fix**: The Testing Agent is NOT authorized to modify `next.config.ts`, `package.json`, or server-side infrastructure.
-4. **Report**: Use `testing-to-senior.md` to request environment level changes.
+- **Document the Evidence**: Capture logs, screenshots, or minimal reproduction cases.
+- **Consult Tooling Standard**: Check if the issue violates a fixed constraint (e.g., standard Port 3001).
+- **Escalate, Don't Fix**: The Testing Agent is NOT authorized to modify `/next.config.ts`, `/package.json`, or server-side infrastructure.
+- **Report**: Use `/agent-docs/conversations/testing-to-senior.md` to request environment level changes.
 
 ---
 
-## 8. Mocking & Boundary Philosophy
+## Mocking & Boundary Philosophy
 
 Mocks are applied **only at external or non-deterministic boundaries**.
 
@@ -155,7 +156,7 @@ Helpers such as `safeMetric` are mocked to preserve **semantic behavior**:
 
 ---
 
-## 9. Coverage Guarantees (Integration Invariants)
+## Coverage Guarantees (Integration Invariants)
 
 Integration tests enforce the following system-level guarantees:
 
@@ -174,7 +175,7 @@ Integration tests enforce the following system-level guarantees:
 
 ---
 
-## 10. Key Coverage Areas
+## Key Coverage Areas
 
 - **API Routes**: `__tests__/api`  
   Example: telemetry-token route integration tests
@@ -187,7 +188,7 @@ Integration tests enforce the following system-level guarantees:
 
 ---
 
-## 11. Integration Tests: OpenTelemetry Proxy
+## Integration Tests: OpenTelemetry Proxy
 
 The OpenTelemetry trace proxy (`app/api/otel/trace/route.ts`) is treated as a **network and security boundary**.
 
@@ -212,7 +213,7 @@ Integration tests live at:
 
 ---
 
-## 12. Non-goals
+## Non-goals
 
 The following are intentionally out of scope:
 
@@ -222,7 +223,7 @@ The following are intentionally out of scope:
 
 ---
 
-## 13. Future Plans
+## Future Plans
 
 - LLM evaluations and quality metrics
 - Visual regression testing

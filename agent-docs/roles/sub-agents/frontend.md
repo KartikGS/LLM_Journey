@@ -6,23 +6,23 @@ Delivering a "wow" user experience, checking responsiveness, and handling client
 
 ## Boundaries
 
--   **Owns**: `app/ui/**` (shared components), `app/[feature]/**` (feature pages), `lib/hooks/**`.
--   **Interfaces with**: Backend via `/api/**` contracts defined in `docs/api/`.
+-   **Owns**: `/app/ui/**` (shared components), `/app/[feature]/**` (feature pages), `/lib/hooks/**`.
+-   **Interfaces with**: Backend via `/api/**` contracts defined in `/agent-docs/api/`.
 -   **Restricted**: 
     - Do not modify database schemas or infrastructure configuration without consulting Infra role.
-    - **Folder Precedence**: Use `app/ui/**` for shared UI. Only use `components/` if the project layout explicitly dictates it over App Router patterns.
+    - **Folder Precedence**: Use `/app/ui/**` for shared UI. Only use `/components/` if the project layout explicitly dictates it over App Router patterns.
 
 ## Required Reads
 
 Before planning or executing any task:
-- Check [/agent-docs/tooling-standard.md](/agent-docs/tooling-standard.md) for environment and tool constraints
-- Check [/agent-docs/development/frontend.md](/agent-docs/development/frontend.md) for frontend standards
-- Check [/agent-docs/folder-structure.md](/agent-docs/folder-structure.md) for folder structure
+- **Environment and Tool Constraints:** [Tooling Standard](/agent-docs/tooling-standard.md)
+- **Frontend Standards:** [Frontend Guide](/agent-docs/development/frontend.md)
+- **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Senior Developer agent in the [/agent-docs/conversations/senior-to-frontend.md](/agent-docs/conversations/senior-to-frontend.md)
-- Make a report for the Senior Developer agent in the [/agent-docs/conversations/frontend-to-senior.md](/agent-docs/conversations/frontend-to-senior.md)
+- Follow the instructions provided by the Senior Developer agent in the [Senior To Frontend Instructions](/agent-docs/conversations/senior-to-frontend.md)
+- Make a report for the Senior Developer agent in the [Frontend To Senior Report](/agent-docs/conversations/frontend-to-senior.md)
 
 ## Checklist
 
