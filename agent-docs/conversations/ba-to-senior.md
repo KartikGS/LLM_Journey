@@ -1,32 +1,27 @@
-# Handoff: BA → Senior Developer
+# BA to Senior Developer Handoff
 
-## Objective
-Stabilize the E2E test suite by addressing resource contention and Webkit compatibility issues identified during manual E2E runs.
+**Date**: 2026-02-04
+**From**: Business Analyst Agent
+**To**: Senior Developer Agent
 
-## Linked CR
-- [CR-004: E2E Suite Stabilization and Browser Compatibility Fix](../requirements/CR-004.md)
+## Priority Task: CR-001 Standard Kit Implementation
 
-## Rationale
-Current flakiness prevents reliable CI signals. Webkit is completely broken due to a CSP/HTTP conflict, which hides potential Safari-specific regressions.
+I have finalized the requirements for our foundational library stack. We are moving from "figure it out" to a "Strict Standard Kit" model.
 
-## Suggested Technical Fixes (derived from [Analysis Report](../reports/E2E-issue-analysis.md))
-1.  **Middleware**:
-    - Wrap `upgrade-insecure-requests;` and `Strict-Transport-Security` in a dev-environment check.
-    - Exempt `127.0.0.1` and `::1` from the telemetry rate limiter to prevent test interruption.
-2.  **Playwright Config**:
-    - Reduce workers for local runs (e.g., `workers: process.env.CI ? 2 : 1`).
-    - Audit `fullyParallel` settings for heavy spec files.
-3.  **BrowserGuard**:
-    - Improve the "loading" state visibility to help differentiate between "hanging" and "slow load."
+### 1. Goal
+Establish **Standard Kit v1.0** by installing the core libraries and documenting the governance process.
 
-## Verification Mapping
-- **AC 1 (Passes consistently)**: Run `pnpm test:e2e` three times consecutively; all must pass.
-- **AC 2 (Webkit load)**: Verify Webkit screenshot in `playwright-report` shows the Landing Page hero section.
-- **AC 3 (Rate limit)**: Verify no 429 errors appear in `pnpm dev` console during a full test run.
+### 2. Source of Truth
+Please execute the requirements defined in:
+`agent-docs/requirements/CR-001-standard-kit.md`
 
-## Constraints
-- Do NOT disable CSP in production.
-- Do NOT remove `wasm-unsafe-eval` as it is required for transformer features.
+### 3. Key Actions Required
+1.  **Install** the libraries listed in the CR (Zod, Zustand, Radix, Framer, etc.).
+2.  **Update** `agent-docs/technical-context.md` to list these as the official "Standard Kit".
+3.  **Refactor** `lib/utils` if necessary (e.g. creating the `cn` utility) to verify the new styling stack.
 
-## Risks
-- Minor drift between dev/prod configurations for security headers.
+### 4. Constraints
+- **Do not** add libraries outside this list without raising a counter-proposal.
+- Ensure all versions are compatible with Next.js 15 / React 19.
+
+Please notify me once the dependencies are installed and the documentation is updated.

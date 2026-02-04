@@ -16,6 +16,22 @@ This document provide quick access to key technical configurations and endpoints
 | **Playwright** | E2E Testing | Use tags: `@critical`, `@smoke`. |
 | **WASM Path** | `/onnx-runtime/` | Location of ONNX Web binaries. |
 
+## Standard Kit (Version 1.0)
+> [!WARNING]
+> **Governance Invariant**: Sub-agents are FORBIDDEN from installing packages. Only the Senior Developer may approve and run install commands.
+
+| Category | Library | Purpose |
+| :--- | :--- | :--- |
+| **Logic & Validation** | `zod` | Runtime schema validation and type safety. |
+| **State Management** | `zustand` | Global client-state management. |
+| **UI Primitives** | `@radix-ui/react-*` | Unstyled, accessible component primitives. |
+| **Styling Utils** | `clsx`, `tailwind-merge` | Conditional class merging. |
+| **Animations** | `framer-motion` | Complex, premium UI animations. |
+| **Icons** | `lucide-react` | Standard icon set. |
+| **Content** | `react-markdown`, `remark-gfm` | Rendering educational markdown content. |
+| **Syntax Highlighting** | `shiki` | Code block highlighting (server-side preferred). |
+
+
 ## Framework & Orchestration
 | Layer | Tool/Pattern | Notes |
 | :--- | :--- | :--- |

@@ -28,10 +28,21 @@
     "@opentelemetry/sdk-node": "^0.209.0",
     "@opentelemetry/sdk-trace-web": "^2.3.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.4",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.31.0",
+    "lucide-react": "^0.563.0",
     "next": "15.5.7",
     "onnxruntime-web": "^1.23.0",
     "react": "19.0.1",
-    "react-dom": "19.0.1"
+    "react-dom": "19.0.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^3.22.0",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
