@@ -4,6 +4,12 @@
 - [Analysis of the current state]
 - [Key technical challenges]
 
+## Discovery Findings
+- [Results of pre-plan probes (grep/find)]
+- [Resolved Wildcards (e.g., "UI Lib" -> "Radix UI v1.0")]
+- [Validated Assumptions]
+
+
 ## Critical Assumptions
 - [List of things that MUST be true for this plan to work]
 - [e.g. "Webkit does not support wasm-unsafe-eval"]

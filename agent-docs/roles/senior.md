@@ -65,17 +65,17 @@ If scope, intent, or technical assumptions are unclear:
 
 ## Required Reads
 
-Before planning or executing any task:
-- **Current State:** [Project Log](/agent-docs/project-log.md)
+### First Time (Onboarding)
+- **Role Context:** [Role Definition](/agent-docs/roles/senior.md)
 - **Cognitive Framework:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
-- **System Design:** [Architecture](/agent-docs/architecture.md)
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
+
+### Every Task (Context Loading)
+Before planning or executing ANY task:
+- **Current State:** [Project Log](/agent-docs/project-log.md)
+- **Architecture Check:** [Architecture](/agent-docs/architecture.md) & [Decisions](/agent-docs/decisions/)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
-- Check relevant files in:
-   - `agent-docs/roles/sub-agents` for sub-agent roles
-   - `agent-docs/development/` for development best practices
-   - `agent-docs/api/` for API contracts
-   - `agent-docs/decisions/` for architectural decisions
+
 
 ---
 
@@ -89,7 +89,12 @@ Before any planning, explicitly verify the handoff from BA in [BA To Senior Hand
 - [ ] **Constraints**: Are they compatible with current architecture?
 - [ ] **Scope**: Is the boundary clearly defined (what is NOT included)?
 - [ ] **Technical Debt**: Will this change introduce or resolve debt?
-- [ ] **Discovery**: Perform a quick probe (e.g., check browser support, verify API) to validate local assumptions before planning.
+
+### Discovery Phase (Foundational)
+**You cannot plan what you do not know.**
+- **Wildcard Resolution**: If a requirement is generic (e.g., "Install a UI library"), YOU must resolve it to specific packages/versions *before* planning.
+- **Probes**: Run `find`, `grep`, or check docs to validate assumptions.
+- **Constraints Check**: Verify new libs against `technical-context.md`.
 
 If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
@@ -107,6 +112,9 @@ Before any code is modified or any terminal command is run (except for discovery
     - **MANDATORY**: Specify the Testing Sequence. 
       - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
       - Deciding between Test-Driven Development (TDD) or Implementation-First is a Senior technical decision.
+    - **Code Ownership**: 
+      - **Senior Agent**: Owns Shared Infra (`lib/`, `config/`), Documentation, and Project Configuration.
+      - **Sub-Agents**: Own Feature Code (`components/`, `app/`, `hooks/`).
     - **Note**: Implementation by the Senior Agent is only permitted for project-wide configuration changes (e.g. `tsconfig`, `.env` templates) or simple documentation updates. For all other tasks, delegation is MANDATORY. Do not "shift" into sub-agent roles.
 
 #### 🛑 MANDATORY: Production-Grade Planning Standards

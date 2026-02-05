@@ -56,7 +56,10 @@ If intent is unclear, stop and ask the user.
 > [!CAUTION]
 > **Mandatory Reading Check**: Before you take your first action in this session, you MUST list the files you have read from the "Required Reading" section. If you proceed without naming these files, you are in violation of protocol.
 
-Once you’ve read the required docs:
+
+- **Mandatory Output Check**: You MUST execute a `notify_user` or `task_boundary` call early in your session explicitly listing the files you have read.
+   - *Example*: "I have read `AGENTS.md`, `technical-context.md`, `roles/ba.md`, and `reasoning-principles.md`."
+   - **Failure to do this implies you have not loaded context.**
 
 - **Verify your task is clear**
    - Do you understand the goal?

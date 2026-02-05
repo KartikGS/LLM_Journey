@@ -41,8 +41,9 @@ This protocol defines the mandatory communication and documentation flow between
 - **Trigger**: Integration and verification (all tests pass) complete.
 - **Content**:
     - [Technical Summary]
-    - [Evidence of AC Fulfillment]
+    - [Evidence of AC Fulfillment] (MUST include *executable* verification commands, e.g. "Run `pnpm test:e2e`", "Check file X")
     - [Technical Retrospective] (Key trade-offs, lessons learned, or new debt)
+
     - [Deployment Notes]
     - [Link to Updated Docs]
 - **Protocol**: Senior Dev MUST NOT update `project-log.md`. This is reserved for the BA Agent in Acceptance Phase.
