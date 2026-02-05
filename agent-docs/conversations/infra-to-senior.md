@@ -1,29 +1,48 @@
-# Report: Infrastructure Stability Improvements
+# Report: CR-002 - Git Guidelines & Tooling
 
-## Summary
-I have implemented conditional security headers and rate-limit bypasses to resolve E2E test failures, specifically addressing the Webkit HTTPS enforcement issue and telemetry rate-limiting.
+**Role**: Infra Agent
+**Status**: Complete
 
-## Changes
+## Execution Summary
+I have successfully implemented the Git Guidelines and Tooling as requested in `CR-002`.
 
-### 1. Environment Flags
-- Added `isProd`, `isE2E`, and `isDev` flags to `middleware.ts`.
-- Updated `package.json` to inject `E2E=true` when running `pnpm test:e2e`.
+### Documentation
+-   **[CREATED]** `CONTRIBUTING.md`: Defines the Branching Strategy (main, feat, fix, chore) and Commit Message Standard (Conventional Commits). Includes the "Code Quality & Hygiene" section merged from `git-hygiene.md`.
+-   **[UPDATED]** `agent-docs/development/git-hygiene.md`: Deprecated and redirected to `CONTRIBUTING.md`.
+-   **[UPDATED]** `agent-docs/workflow.md`: Added reference to `CONTRIBUTING.md`.
 
-### 2. Conditional Security Headers
-- **HSTS (`Strict-Transport-Security`)**: Removed from `next.config.ts` and moved to `middleware.ts`. It is now only applied if `NODE_ENV === 'production'` AND `E2E !== 'true'`.
-- **CSP (`upgrade-insecure-requests`)**: Modified the CSP header in `middleware.ts` to only include this directive if `NODE_ENV === 'production'` AND `E2E !== 'true'`.
-- **Rationale**: This prevents local E2E runs (especially in Webkit) from being forced into HTTPS when the dev server is running on HTTP, while maintaining strict security in production.
+### Tooling
+-   **[INSTALLED]** `husky`, `@commitlint/cli`, `@commitlint/config-conventional` (v20+).
+-   **[CREATED]** `commitlint.config.mjs`:
+    -   Enforces specific scopes: `['agent', 'api', 'docs', 'config', 'deps']`.
+    -   **Allows global (no-scope) commits** (Fix applied in v2).
+-   **[CONFIGURED]** `.husky/commit-msg`: Runs `commitlint --edit`.
+-   **[VERIFIED]**
+    -   `npm run prepare` (via `pnpm`) hooks up husky correctly.
+    -   Global commit: `feat: test` -> **PASS**
+    -   Valid scope: `feat(api): test` -> **PASS**
+    -   Invalid scope: `feat(invalid): test` -> **FAIL** (scope-enum rule triggers)
+    -   Performance: 0.56s (well within <2s limit).
 
-### 3. Rate Limit Bypass
-- Updated the rate-limiting logic in `middleware.ts` to bypass checks if `isE2E` is true or if the request originates from `localhost/127.0.0.1`.
-- **Rationale**: Prevents the telemetry proxy from rate-limiting high-volume telemetry events during automated tests.
+## Artifacts Created/Modified
+-   `/CONTRIBUTING.md`
+-   `/commitlint.config.mjs`
+-   `/.husky/commit-msg`
+-   `/package.json` (dependencies + prepare script)
+-   `agent-docs/development/git-hygiene.md`
+-   `agent-docs/workflow.md`
 
-## Verification
-- [x] `pnpm lint` passed.
-- [x] Manual inspection of `middleware.ts` logic confirms that in a normal local dev environment (where `NODE_ENV` is `development`), these headers are NOT applied, and rate-limiting is bypassed for localhost.
+## Notes for Senior Developer
+-   The `commitlint` configuration uses `.mjs` to align with the project's modern stack, though `package.json` does not strictly enforce valid ESM for all files yet. It works correctly with `pnpm exec commitlint`.
+-   Branch naming convention is defined in policy (`CONTRIBUTING.md`) but not yet enforced by technical hooks (as per plan).
 
-## Blockers
-- None identified.
+## Review Fixes (Post-CR Review)
+-   **[FIXED]** `commitlint.config.mjs`: Added `'scope-empty': [0]` to explicitly allow commits without scopes (e.g., `chore: update deps`).
+-   **[UPDATED]** `CONTRIBUTING.md`:
+    -   Added `refactor/`, `hotfix/`, and `spike/` branch types.
+    -   Retained `chore/` as a valid type.
+    -   Confirmed CR-ID branch naming convention (`feat/CR-XXX-...`).
 
 ## Next Steps
-- The Senior Developer should verify that Webkit tests now pass without the "white screen" issue caused by CSP/HTTPS enforcement.
+-   Senior Developer to perform final manual verification if desired.
+-   Close CR-002.

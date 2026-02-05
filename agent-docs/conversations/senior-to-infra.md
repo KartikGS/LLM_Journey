@@ -1,28 +1,38 @@
-# Handoff: Senior Developer to Infrastructure Engineer
+# Handoff: CR-002 - Git Guidelines & Tooling
 
-## Context
-We are stabilizing the E2E suite. Webkit is failing due to CSP enforcing HTTPS on local dev, and the telemetry proxy is rate-limiting test requests.
+**Role**: Infra Agent
+**Status**: Ready for Execution
 
-## Task
-Modify `middleware.ts` to allow conditional CSP and rate-limit bypass during E2E tests.
+## Objective
+Implement the "High-Quality Engineering" standard for Git usage by setting up tooling (`husky`, `commitlint`) and creating the authoritative `CONTRIBUTING.md` documentation.
 
-### Implementation Details
-1. **Define Environment Flags**:
-   - `isProd`: `process.env.NODE_ENV === 'production'`
-   - `isE2E`: `process.env.E2E === 'true'` (You may need to check if this env var is already available or suggest adding it).
+## Context & Rationale
+We are standardizing our commit history to ensure it is machine-readable and follows industry best practices (Conventional Commits). This is critical for future automation and to prevent "history rot" as more agents contribute.
 
-2. **Conditional CSP**:
-   - The CSP header currently includes `upgrade-insecure-requests` and `Strict-Transport-Security`.
-   - These should ONLY be active if `isProd && !isE2E`.
-   - This allows Webkit to connect to `http://localhost:3001` during local E2E runs.
-
-3. **Rate Limit Bypass**:
-   - Identify if the request is from `localhost` or if `isE2E` is true.
-   - Bypass the 429 (Too Many Requests) logic for these cases to prevent telemetry rate-limiting.
+## Execution Steps
+1.  **Documentation**:
+    -   Create `CONTRIBUTING.md` in the root directory.
+    -   **Content**: Define Branching Strategy (main, feat, fix, etc.) and Commit Message Standard (Conventional Commits).
+    -   **Reconciliation**: Review `agent-docs/development/git-hygiene.md`. Merge relevant sections into `CONTRIBUTING.md` and deprecate `git-hygiene.md` OR add cross-references if the content is complementary.
+    -   Update `agent-docs/workflow.md` to reference `CONTRIBUTING.md`: "For git commit and branching standards, see root CONTRIBUTING.md".
+2.  **Tooling**:
+    -   Install `husky`, `@commitlint/cli`, and `@commitlint/config-conventional` as dev dependencies.
+    -   Create `commitlint.config.js` with the following rule:
+        -   **Valid Scopes**: `['agent', 'api', 'docs', 'config', 'deps']`.
+        -   Allow commits without scope (global changes).
+    -   Configure `.husky/commit-msg` to run `commitlint`.
 
 ## Constraints
-- Do not use hardcoded values.
-- Ensure security is not compromised in production.
+-   **Performance**: The hook must run in <2s.
+-   **Safety**: Do NOT define rules that require network access in the hooks.
+-   **Compatibility**: Ensure `npm run prepare` (or `pnpm`) sets up hooks automatically.
 
-## Report
-Please provide your report in `agent-docs/conversations/infra-to-senior.md`.
+## Definition of Done
+-   [ ] `CONTRIBUTING.md` exists and covers branching/commit rules.
+-   [ ] `git commit -m "bad message"` fails.
+-   [ ] `git commit -m "feat(api): valid message"` succeeds.
+-   [ ] `commitlint.config.js` enforces the specific scopes defined.
+-   [ ] `agent-docs/development/git-hygiene.md` is handled (merged/referenced).
+
+## Reference
+-   [Technical Plan](file:///home/kartik/Metamorphosis/LLM-Journey/agent-docs/plans/CR-002-plan.md)

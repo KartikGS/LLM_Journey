@@ -32,6 +32,10 @@
   1. Approve the handoff for a sub-agent execution.
   2. Explicitly ask you to switch roles.
 
+### Code & Git Standards
+- All contributions must follow the rules defined in `CONTRIBUTING.md` (root directory).
+
+
 
 ### Implementation Phase (Sub-Agents)
 1. Sub-agent receives task specification from Senior Developer Agent in `/agent-docs/conversations/senior-to-<role>.md`
