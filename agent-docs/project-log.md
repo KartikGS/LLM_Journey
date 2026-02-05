@@ -17,6 +17,7 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
+-   **Recent Focus**: [S][DOC] **Git Guidelines**: Implemented `CR-002`. Standardized on Conventional Commits, `feat/CR-ID` branching, and `husky` enforcement. - **Completed**.
 -   **Recent Focus**: [S][DOC] **Agent Refinement**: Hardened `AGENTS.md` and `roles/ba.md` with strict reading checks and governance protocols - **Completed**.
 -   **Previous**: [S][M] **Standard Kit**: Defined CR-001 for library standardization and governance - **Completed**.
 -   **Previous**: [S][DOC] **Agent Meta-Refinement**: Codified "Permission to Disagree," "Mandatory Reading Check," and "BA-Senior Consultation" in agent docs - **Completed**.
