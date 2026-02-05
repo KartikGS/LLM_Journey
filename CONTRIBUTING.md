@@ -7,9 +7,6 @@ We follow a strict branching model to ensure stability and clarity.
 - **feat/CR-XXX**: Feature branches for specific Change Requirements.
 - **fix/CR-XXX**: Bug fix branches.
 - **chore/CR-XXX**: Maintenance, tooling, or refactoring.
-- **refactor/CR-XXX**: Code restructuring without behavioral change.
-- **hotfix/CR-XXX**: Critical production fixes.
-- **spike/CR-XXX**: Experimental/research work (do not merge to main).
 - **refactor/CR-XXX**: Code restructuring without behavioral changes.
 - **hotfix/CR-XXX**: Critical production fixes.
 - **spike/CR-XXX**: Experimental/research work (do not merge to main).
