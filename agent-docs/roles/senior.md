@@ -51,6 +51,9 @@ If scope, intent, or technical assumptions are unclear:
 - System correctness
 - Architectural coherence
 
+### Handoff Quality
+-   **The Negative Space Rule**: When defining constraints (e.g., "Allow X"), you MUST include a DoD item that explicitly verifies X is allowed. Agents often focus only on verifying restrictions (e.g., "Block Y"), forgetting to test that the base case still works.
+
 ### Interfaces With
 - **BA Agent** — scope confirmation, re-evaluation, task completion handoff
 - **Sub-agents** — guidance, clarification, and review
@@ -185,6 +188,10 @@ ADRs live in:
 
 Before handing off to BA Agent:
 - Review the work reports written by the sub-agents in the [Sub Agent to Senior Handoff](/agent-docs/conversations/<role-of-sub-agent>-to-senior.md)
+- **Adversarial Diff Review**:
+    - **Rule**: Never trust the sub-agent's verification blindly.
+    - **Action**: Read the actual config/code files against the CR Requirements line-by-line.
+    - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
 - **Cross-Environment Verification**: Ensure all tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes.
 - Ensure all tests pass (`pnpm test`)
 - Confirm acceptance criteria are met

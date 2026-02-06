@@ -25,3 +25,4 @@ Before planning or executing any task:
 -   [ ] Are secrets managed securely?
 -   [ ] Is the build time optimized?
 -   [ ] Is the local dev environment reproducible?
+-   [ ] **Verification**: Have you tested the *negative space*? (e.g., if you restrict X, did you verify Y is still allowed?)

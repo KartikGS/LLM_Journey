@@ -52,7 +52,8 @@
 
 ### Verification Phase (Senior Developer Agent)
 1. Senior reviews completed work reports
-2. Senior ensures integration works
+2. **Diff Review**: Senior inspects the code diffs for logic errors or missing edge cases (Adversarial Review).
+3. Senior ensures integration works
 3. Senior updates architectural docs if needed
 4. **Output:** Verified feature + completion report in `agent-docs/conversations/senior-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 

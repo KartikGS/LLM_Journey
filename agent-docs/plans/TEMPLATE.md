@@ -9,6 +9,11 @@
 - [Resolved Wildcards (e.g., "UI Lib" -> "Radix UI v1.0")]
 - [Validated Assumptions]
 
+## Configuration Specifications
+- [MANDATORY for task involving config files]
+- [Define critical rules/schema here. Do not defer critical logic to sub-agent]
+- [e.g. "eslint rules: warn on console.log", "commitlint scopes: [api, ui] only"]
+
 
 ## Critical Assumptions
 - [List of things that MUST be true for this plan to work]

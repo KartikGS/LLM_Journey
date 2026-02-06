@@ -101,6 +101,9 @@ Before handing off to Senior Developer:
 - [ ] **Did I challenge the prompt?** (Did I ask "Why" or suggest a better way?)
 - [ ] **Is this Synthesis or just Migration?** (Did I interpret the intent or copy text?)
 - [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?)
+- [ ] **Are validation criteria Quantifiable?** (Replaced "fast" with "<200ms"?)
+- [ ] **Is there a Rollback Plan?** (What if the hooks break?)
+- [ ] **Did I check the "Unhappy Path"?** (Legacy code, hotfixes, valid exceptions?)
 - [ ] Could a developer execute this without asking “what do you mean?”
 - [ ] Are acceptance criteria measurable?
 - [ ] Is scope explicitly bounded?

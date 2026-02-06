@@ -21,6 +21,14 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 *   **Local vs. Production**: Always ask "Will this work in build/production?" Dev-only fixes (like disabling security headers) are failures.
 *   **Deployment Constraints**: Consider if the solution survives a redeploy (e.g., memory vs. persistent storage).
 
+## Quantifiable Engineering (No Adjectives)
+*   **Numbers > Adjectives**: Avoid words like "fast", "heavy", or "standard". Use numbers: "<200ms", ">50MB", "Standard (S)".
+*   **Measurable Acceptance**: If an AC cannot be tested with a command or script, it is not an AC.
+
+## The Reversibility Principle (Plan B)
+*   **Safe Failures**: Every change must have a trivial rollback path (e.g., delete a folder, flip a feature flag).
+*   **The "What if it breaks?" Check**: If a tool or process fails, does it block the entire workflow? If yes, it requires a "Break-Glass" bypass.
+
 ## Intent Verification
 *   **Read for Design, Not Just Syntax**: Before proposing a change, read the surrounding comments and documentation to understand the author's intent.
 *   **Contextual Cross-Referencing**: Check `agent-docs/decisions/` and `agent-docs/architecture.md` before touching sensitive areas like security, telemetry, or core data flow.
@@ -42,3 +50,10 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 *   **Identity Integrity**: If you find yourself arguing with a documented role constraint (e.g., "I should delegate, but I'll do it anyway"), you are entering a logic loop. 
 *   **The "Abort-and-Report"**: If your reasoning steps start to repeat, you become stuck in a cycle of "self-correction" without change, or you feel uncertain about whether you are a "Manager" or a "Doer," stop immediately. Summarize the conflict to the User and ask for a status reset. 
 *   **Contextual Honesty**: Documentation exists to constrain your behavior for the sake of system quality. Bypassing a process "to be fast" is a failure of Senior-level reasoning.
+
+## The Deviation Protocol (How to Improve)
+If you identify a better pattern (e.g., stricter naming, safer config) during execution:
+1.  **Minor/Safe**: Implement it, but you **MUST** list it in the "Deviations" section of your final report.
+2.  **Major/Risky**: Stop and ask the User/Senior.
+3.  **Prohibited**: Never silently change a requirement and hide it.
+
