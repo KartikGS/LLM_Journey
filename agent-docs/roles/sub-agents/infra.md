@@ -13,7 +13,7 @@ Development environment, deployment pipelines, and security.
 Before planning or executing any task:
 - **System design:** [Architecture](/agent-docs/architecture.md)
 - **Key Endpoints:** [Technical Context](/agent-docs/technical-context.md)
-- **Repo Standards:** [/agent-docs/development/git-hygiene.md](/agent-docs/development/git-hygiene.md)
+- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
 
 ## Execution Responsibilities
 

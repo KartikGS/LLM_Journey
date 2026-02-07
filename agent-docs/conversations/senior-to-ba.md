@@ -1,34 +1,60 @@
-# Handoff: CR-002 - Verification Completion
+# Senior Developer → BA Handoff: CR-003
 
-**Role**: Senior Developer
-**Status**: Ready for Acceptance
+## Status: COMPLETE ✅
 
-## Technical Summary
-The Git Guidelines and Tooling infrastructure (Husky + Commitlint) have been successfully implemented and verified.
-- **Tooling**: `husky` and `commitlint` (v20) are installed and configured.
-- **Bug Fix**: `commitlint.config.mjs` was patched to allow commits without scopes (e.g. `feat: global`), correcting the initial overly strict configuration.
-- **Documentation**: `CONTRIBUTING.md` is now the authoritative source. It includes an enhanced branching convention (requiring CR-IDs for traceability) and the full set of branch types (`refactor`, `hotfix`, `spike`). `git-hygiene.md` is deprecated.
-- **Performance**: Hook execution is verified at ~0.5s (<2s constraint met).
+## Summary
+CR-003 (Home Page Vision Alignment) has been implemented, tested, and verified.
 
-## Evidence of AC Fulfillment
-| Requirement | Evidence / Verification Command | Result |
-| :--- | :--- | :--- |
-| **Documentation Exists** | `test -f CONTRIBUTING.md` | PASS |
-| **Bad Commit Rejection** | `git commit -m "bad message"` | Rejected with explicit error |
-| **Valid Commit Acceptance** | `git commit -m "feat(docs): good message"` | Accepted |
-| **No-Scope Acceptance** | `git commit -m "feat: global change"` | Accepted (Regression fixed) |
-| **Scope Enforcement** | `git commit -m "feat(invalid): test"` | Rejected (Scope Enum Rule) |
-| **Performance (<2s)** | `time git commit ...` | ~0.5s (Verified) |
+## What Was Done
 
-## Technical Retrospective
--   **Traceability**: We enhanced the branch naming convention to `type/CR-XXX-description` to better link code to requirements.
--   **Performance**: Initial implementation had a `pre-commit` hook running full tests (~4s), which was removed to meet the <2s constraint.
--   **Debt**: Branch naming is policy-only (not technically enforced yet).
+### 1. Route Restructuring
+- Moved `app/transformer/` → `app/foundations/transformers/`
+- Old route `/transformer` now correctly returns 404
 
-## Deployment Notes
--   Users must run `pnpm install` (or `npm install`) to pick up the new hooks via the `prepare` script.
--   No breaking changes to runtime code.
+### 2. Home Page Content (`app/page.tsx`)
+- **Hero Section**: Updated with vision-aligned messaging emphasizing "architectural ideas, not APIs" and "mechanics, trade-offs, and failure modes"
+- **Dual Engine Strategy**: Added "Learn with Tiny, Build with Large" callout
+- **Mental Model Table**: Added "From Tensors to Teams" section with paradigm table (The Model, Context, The System, Production)
+- **10-Stage Journey**: Updated `journeyStages` array to match `project-vision.md`:
+  1. Transformers (Foundations) → `/foundations/transformers`
+  2. Model Adaptation → `/models/adaptation`
+  3. Context Engineering → `/context/engineering`
+  4. RAG (Retrieval) → `/systems/rag`
+  5. Agents & Tool Use → `/agents/basic`
+  6. Multi-Agent Systems → `/agents/multi`
+  7. MCP (Standardization) → `/protocols/mcp`
+  8. Eval & Observability → `/ops/observability`
+  9. Safety & Security → `/ops/safety`
+  10. Deployment → `/ops/deployment`
 
-## Link to Updated Docs
--   [CONTRIBUTING.md](file:///home/kartik/Metamorphosis/LLM-Journey/CONTRIBUTING.md)
--   [workflow.md](file:///home/kartik/Metamorphosis/LLM-Journey/agent-docs/workflow.md)
+### 3. Test Updates (`__tests__/page.test.tsx`)
+- Updated CTA link expectation from `/transformer` to `/foundations/transformers`
+
+## Acceptance Criteria Verification
+
+| ID | Criteria | Status |
+|----|----------|--------|
+| AC-1 | Hero section has vision-aligned text | ✅ Verified |
+| AC-2 | 10 stages match `project-vision.md` exactly | ✅ Verified |
+| AC-3 | Mental model table visible | ✅ Verified |
+| AC-4 | Dual engine strategy referenced | ✅ Verified |
+| AC-5 | `/foundations/transformers` works | ✅ Verified (browser test) |
+| AC-6 | `/transformer` returns 404 | ✅ Verified (browser test) |
+| AC-7 | `pnpm build` passes | ✅ Passed |
+| AC-8 | Tests pass | ✅ 2/2 passed |
+
+## Files Changed
+- `app/transformer/` → `app/foundations/transformers/` (moved)
+- `app/page.tsx` (content updated)
+- `__tests__/page.test.tsx` (route expectation updated)
+- `agent-docs/plans/CR-003-plan.md` (created)
+
+## Deviations
+None. Implementation followed the approved plan exactly.
+
+## Artifacts
+- Technical Plan: `/agent-docs/plans/CR-003-plan.md`
+- Browser Recording: `/home/kartik/.gemini/antigravity/brain/cfc10d88-866b-4158-a0ab-6234aa072341/route_verification_1770486273237.webp`
+
+---
+**Handoff to BA**: Please verify acceptance criteria are met and update CR-003 status and project-log.md.

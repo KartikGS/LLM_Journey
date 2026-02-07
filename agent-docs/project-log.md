@@ -17,6 +17,7 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
+-   **Recent Focus**: [S] **Home Page Alignment**: `CR-003` - Aligned home page and transformer route with project vision - **Completed**.
 -   **Recent Focus**: [S][DOC] **Git Guidelines**: Implemented `CR-002`. Standardized on Conventional Commits, `feat/CR-ID` branching, and `husky` enforcement. - **Completed**.
 -   **Recent Focus**: [S][DOC] **Agent Refinement**: Hardened `AGENTS.md` and `roles/ba.md` with strict reading checks and governance protocols - **Completed**.
 -   **Previous**: [S][M] **Standard Kit**: Defined CR-001 for library standardization and governance - **Completed**.
@@ -24,8 +25,7 @@ Tags may be combined when appropriate.
 -   **Previous**: [S][DOC] Vision Finalization: Added explicit audience targeting and canonical roadmap URIs - **Completed**.
 
 ## Next Priorities
--   [ ] [S] Audit existing/needed pages against the 10-point Learning Narrative.
--   [ ] [M] Implement/Refine Transformers (Foundations) page.
+-   [ ] [M] Implement/Refine Transformers (Foundations) page content.
 -   [ ] [M] Implement Model Training & Adaptation (LLM + Fine-Tuning) page.
 -   [ ] [L] Implement RAG pipeline (Retrieval-Augmented Generation).
 -   [ ] [L] Setup Evaluation & Observability framework.

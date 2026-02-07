@@ -3,64 +3,87 @@ import Link from "next/link";
 export default function Home() {
   const journeyStages = [
     {
-      title: "Transformer",
-      href: "/transformer",
-      description: "Start with the foundation - a decoder-only transformer model trained on Shakespeare",
+      title: "Transformers (Foundations)",
+      href: "/foundations/transformers",
+      description: "How do we turn math into language? Start with attention, embeddings, and the decoder-only architecture.",
       stage: 1,
     },
     {
-      title: "LLM",
-      href: "/llm",
-      description: "Explore large language models and their capabilities",
+      title: "Model Adaptation",
+      href: "/models/adaptation",
+      description: "How do we specialize a pre-trained model? Explore fine-tuning, LoRA, and training trade-offs.",
       stage: 2,
     },
     {
-      title: "Fine-tuning",
-      href: "/fine-tuning",
-      description: "Learn how to adapt pre-trained models for specific tasks",
+      title: "Context Engineering",
+      href: "/context/engineering",
+      description: "How do we design effective inputs? Master prompting patterns, templates, and context windows.",
       stage: 3,
     },
     {
-      title: "Tools",
-      href: "/tools",
-      description: "Integrate external tools and APIs with LLMs",
+      title: "RAG (Retrieval)",
+      href: "/systems/rag",
+      description: "How do we stop the model from forgetting or hallucinating? Ground responses with external knowledge.",
       stage: 4,
     },
     {
-      title: "RAG",
-      href: "/rag",
-      description: "Retrieval-Augmented Generation for enhanced context-aware responses",
+      title: "Agents & Tool Use",
+      href: "/agents/basic",
+      description: "How do we give the model hands? Enable autonomous action through tool calling and planning.",
       stage: 5,
     },
     {
-      title: "Agents",
-      href: "/agents",
-      description: "Build advanced agent systems with reasoning capabilities",
+      title: "Multi-Agent Systems",
+      href: "/agents/multi",
+      description: "How do we give the model partners? Coordinate multiple agents for complex workflows.",
       stage: 6,
     },
     {
-      title: "MCP",
-      href: "/mcps",
-      description: "Model Context Protocol for structured model interactions",
+      title: "MCP (Standardization)",
+      href: "/protocols/mcp",
+      description: "How do we standardize model interactions? Learn the Model Context Protocol for interoperability.",
       stage: 7,
     },
     {
-      title: "Deployment",
-      href: "/deployment",
-      description: "Best practices for deploying LLM applications in production",
+      title: "Eval & Observability",
+      href: "/ops/observability",
+      description: "How do we measure what matters? Build evaluation pipelines and trace model behavior.",
       stage: 8,
     },
     {
-      title: "Safety",
-      href: "/safety",
-      description: "Safety considerations and guardrails for LLM applications",
+      title: "Safety & Security",
+      href: "/ops/safety",
+      description: "How do we build guardrails? Implement safety boundaries and security constraints.",
       stage: 9,
     },
     {
-      title: "Evaluation",
-      href: "/evaluation",
-      description: "Methods and metrics for evaluating LLM performance",
+      title: "Deployment",
+      href: "/ops/deployment",
+      description: "How do we go to production? Deploy, scale, and operate LLM applications reliably.",
       stage: 10,
+    },
+  ];
+
+  const mentalModelPhases = [
+    {
+      phases: "1-3",
+      paradigm: "The Model",
+      question: "How do we turn math into language?",
+    },
+    {
+      phases: "4",
+      paradigm: "Context",
+      question: "How do we stop the model from forgetting or hallucinating?",
+    },
+    {
+      phases: "5-7",
+      paradigm: "The System",
+      question: "How do we give the model hands and partners?",
+    },
+    {
+      phases: "8-10",
+      paradigm: "Production",
+      question: "How do we make it safe, fast, and measurable?",
     },
   ];
 
@@ -72,32 +95,71 @@ export default function Home() {
           LLM Journey
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 text-center max-w-3xl">
-          A comprehensive exploration of Large Language Models, from basic transformer architectures to advanced agent systems.
-          Learn about the evolution of LLM technology.
+          Instead of teaching APIs, LLM Journey teaches the{" "}
+          <strong>architectural ideas</strong> that led from transformers to agents.
+          Learn the <em>mechanics, trade-offs, and failure modes</em> that matter in production.
+        </p>
+        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-500 text-center max-w-2xl">
+          <strong>Learn with Tiny, Build with Large:</strong> Use small models to understand mechanics,
+          large models to build real applications.
         </p>
       </div>
 
       {/* Main CTA */}
       <div className="w-full flex flex-col items-center justify-center gap-4">
         <Link
-          href="/transformer"
+          href="/foundations/transformers"
           className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
         >
           Start Your Journey →
         </Link>
         <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 text-center">
-          Begin with the foundational Transformer model
+          Begin with the foundational Transformer architecture
         </p>
+      </div>
+
+      {/* Mental Model: From Tensors to Teams */}
+      <div className="w-full flex flex-col gap-4 sm:gap-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center">
+          From Tensors to Teams
+        </h2>
+        <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto">
+          Each phase exists because the previous one failed at a specific task.
+          This is a conceptual dependency chain, not just a list of topics.
+        </p>
+        <div className="w-full max-w-3xl mx-auto overflow-x-auto">
+          <table className="w-full border-collapse text-sm sm:text-base">
+            <thead>
+              <tr className="border-b border-black/[.08] dark:border-white/[.145]">
+                <th className="py-3 px-4 text-left font-semibold">Phase</th>
+                <th className="py-3 px-4 text-left font-semibold">Paradigm</th>
+                <th className="py-3 px-4 text-left font-semibold">Solving The Problem of...</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mentalModelPhases.map((phase) => (
+                <tr
+                  key={phase.phases}
+                  className="border-b border-black/[.08] dark:border-white/[.145]"
+                >
+                  <td className="py-3 px-4 font-medium">{phase.phases}</td>
+                  <td className="py-3 px-4">{phase.paradigm}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{phase.question}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Journey Overview */}
       <div className="w-full flex flex-col gap-6 sm:gap-8">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center">
-          The Journey Ahead
+          The 10-Stage Journey
         </h2>
         <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto">
-          Follow the progression from basic models to sophisticated AI systems. Each stage builds upon the previous,
-          introducing new concepts, techniques, and capabilities.
+          Follow the progression from foundational models to production systems.
+          Each stage builds upon the previous, addressing real engineering challenges.
         </p>
       </div>
 

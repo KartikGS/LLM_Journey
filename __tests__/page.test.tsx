@@ -12,6 +12,6 @@ describe('Home Page', () => {
         render(<Home />)
         const link = screen.getByRole('link', { name: /^Start Your Journey/i })
         expect(link).toBeInTheDocument()
-        expect(link).toHaveAttribute('href', '/transformer')
+        expect(link).toHaveAttribute('href', '/foundations/transformers')
     })
 })

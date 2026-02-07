@@ -19,8 +19,8 @@ Ensuring system stability and preventing regression.
 Before planning or executing any task:
 - **Environment and Tool Constraints:** [Tooling Strategy](/agent-docs/tooling-standard.md)
 - **tTest Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
-- **Repo Standards:** [/agent-docs/development/git-hygiene.md](/agent-docs/development/git-hygiene.md)
-- **Key Endpoints:** [/agent-docs/technical-context.md](/agent-docs/technical-context.md)
+- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Key Endpoints:** [Technical Context](/agent-docs/technical-context.md)
 
 ## Execution Responsibilities
 

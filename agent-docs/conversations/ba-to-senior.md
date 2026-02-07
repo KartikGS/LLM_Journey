@@ -1,30 +1,47 @@
-# Handoff: CR-002 - Git Guidelines & Standards
+# BA → Senior Developer Handoff: CR-003
 
-**Role**: Senior Developer
-**Status**: Ready for Planning
+## Context
+The project vision (`project-vision.md`) was finalized after the home page and transformers page were created. This CR aligns those pre-existing pages with the canonical 10-stage learning narrative.
 
-## Objective
-Implement a "High-Quality Engineering" standard for Git usage to ensure history legibility and agent safety. This is a foundational governance task that establishes the rules of the road for all future contributors (human and agent).
+## The Problem (What & Why)
+The current home page communicates a generic "comprehensive exploration of LLMs" message, but the project's actual mission is specific: **teach architectural ideas, not APIs**. The stage order, route paths, and descriptions don't match the finalized roadmap.
 
-## Key Deliverables
-1.  **Documentation**: Create `CONTRIBUTING.md` with explicit branching and commit rules.
-2.  **Enforcement**: Configure `husky` + `commitlint` to reject non-compliant commit messages locally.
+**Why this matters:** First impressions set expectations. A misaligned home page suggests a different learning journey than what we deliver.
 
-## Context & Rationale
--   **Why now?**: As we scale to multiple agents, the risk of "history rot" increases. We need machine-readable history for potential future automation.
--   **Why these rules?**: Conventional Commits + Feature Branching are industry standards that minimize coordination friction.
+## The Requirement
+Full details: [CR-003-home-page-alignment.md](/agent-docs/requirements/CR-003-home-page-alignment.md)
 
-## Definition of Done
--   [ ] `CONTRIBUTING.md` exists and matches the criteria in `CR-002`.
--   [ ] `npm install` installs `husky` hooks automatically.
--   [ ] `git commit -m "bad message"` fails with a helpful error.
--   [ ] `git commit -m "feat(docs): update readme"` succeeds.
--   [ ] **Performance**: The hook runs in <2s (no network, no build).
+**Summary:**
+1. Rewrite hero section with vision-aligned messaging
+2. Align all 10 stages (titles, descriptions, routes) to `project-vision.md`
+3. Add "From Tensors to Teams" mental model framing
+4. Add "Learn with Tiny, Build with Large" reference
+5. Move `app/transformer/` → `app/foundations/transformers/`
 
-## Constraints
--   **Do NOT** implement PR templates or CI/CD pipelines in this task.
--   **Do NOT** force-push or re-write existing history.
--   **Do NOT** block local-only branching, but enforcing push-standard is fine (though `husky` `commit-msg` is local-only by default, which is acceptable).
+## Scope Boundaries
+- **IN SCOPE:** Home page content, transformer route path
+- **OUT OF SCOPE:** Transformer page *content* (that's next CR), redirects from old routes
 
-## Reference
--   [CR-002 Requirement](file:///home/kartik/Metamorphosis/LLM-Journey/agent-docs/requirements/CR-002-git-guidelines.md)
+## Key Constraints
+- Clean break on old routes (no redirects)
+- Page must remain static/SSG
+- Existing tests (`__tests__/page.test.tsx`) will need updating
+
+## Acceptance Criteria (Summary)
+| ID | Criteria |
+|----|----------|
+| AC-1 | Hero section has vision-aligned text |
+| AC-2 | 10 stages match `project-vision.md` exactly |
+| AC-3 | Mental model table/summary visible |
+| AC-4 | Dual engine strategy referenced |
+| AC-5 | `/foundations/transformers` works |
+| AC-6 | `/transformer` returns 404 |
+| AC-7 | `pnpm build` passes |
+| AC-8 | Tests pass (updated) |
+
+## Questions for Technical Analysis
+1. Should the mental model table be a separate component or inline in `page.tsx`?
+2. Any concerns with the nested route structure (`/foundations/transformers`)?
+
+---
+**Requesting:** Technical complexity analysis and implementation plan.
