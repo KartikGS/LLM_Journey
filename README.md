@@ -1,33 +1,39 @@
 # LLM Journey
 
-A comprehensive web application that demonstrates the progression of Large Language Models (LLMs) from base models to advanced agents. This interactive platform showcases various LLM improvements and techniques over time.
+**Stop calling APIs. Start building systems.**
 
-## Overview
+LLM Journey is a guided learning environment for **software engineers with basic ML familiarity** who want to reason about LLM systems end-to-end. It is a systems-level reference implementation that strips away the magic, revealing the progression from raw self-attention to autonomous agentic teams.
 
-LLM Journey is an educational platform built with Next.js that walks through the evolution of language models, from basic transformer architectures to sophisticated agent systems. The application features reference materials, and practical implementations of key LLM concepts.
+> **Note:** This project is not a prompt-engineering cookbook or an API wrapper showcase. It is about understanding the architectural ideas that make these systems work.
 
-## Features
+---
 
-### Core Modules
+## 🎯 The Vision
+Most LLM education treats models as black boxes. This project treats them as **engineered components**. 
 
-- **Transformer**: A decoder-only self-attention transformer model (~0.2M parameters) trained on the Shakespeare dataset, running locally via ONNX Runtime
-- **LLM**: See how scaling transformer improves text generation
-- **Fine-tuning**: Explore fine-tuning methods for adapting pre-trained models
-- **Tools**: Integration with external tools and APIs
-- **RAG (Retrieval-Augmented Generation)**: Implementation of RAG for enhanced context-aware responses
-- **Agents**: Advanced agent systems with reasoning capabilities
-- **MCP (Model Context Protocol)**: Protocol-based model interactions
-- **Deployment**: Best practices for deploying LLM applications
-- **Safety**: Safety considerations and guardrails for LLM applications
-- **Evaluation**: Methods for evaluating LLM performance
+By the end of this journey, you won't just know how to use an agent; you will understand the architectural evolution that made it necessary, the failure modes that make it fragile, and the trade-offs required to make it production-grade.
 
-### Technical Highlights
+## 🗺️ The Learning Narrative: From Tensors to Teams
+We don't just list features; we follow a **conceptual dependency chain**. Each stage solves a fundamental limitation of the previous one.
 
-- **Local Inference**: Client-side model inference using ONNX Runtime Web
-- **Interactive Chat Interface**: Real-time interaction with various LLM implementations
-- **Model Loading**: Dynamic model loading with progress tracking
-- **Hugging Face Integration**: Support for Hugging Face model inference
-- **Modern UI**: Responsive design with dark mode support
+1.  **Foundations (The Engine)**: `Tensors → Transformers`. 
+    *   *The Lesson:* Why self-attention is the fire that fuels the engine, and what weights *cannot* tell you.
+2.  **Adaptation (The Behavior)**: `Base → Instruct → Optimized`. 
+    *   *The Lesson:* Alignment is a fragile layer of data, not an inherent property of scale.
+3.  **Context (The Interface)**: `Prompt → Structured Context`. 
+    *   *The Lesson:* Reliable LLM systems are built on context design, not temperature settings.
+4.  **Retrieval (The Memory)**: `RAG → Grounding`. 
+    *   *The Lesson:* How to stop models from dreaming by anchoring them in external reality.
+5.  **Agency (The Action)**: `Logic → Tool Use → Loop`. 
+    *   *The Lesson:* The shift from a chatbot to an agent happens when you hand the model a steering wheel.
+6.  **Coordination (The Organization)**: `Single Agent → Multi-Agent`. 
+    *   *The Lesson:* Solving complex problems by introducing roles, delegation, and (unavoidably) overhead.
+7.  **Protocol (The Standard)**: `Ad-hoc → MCP`. 
+    *   *The Lesson:* How to externalize capability safely using standardized interfaces.
+8.  **Engineering (The Reality)**: `Metrics → Observability → Safety`. 
+    *   *The Lesson:* Production AI is 10% model and 90% monitoring, evaluation, and security.
+
+---
 
 ## Tech Stack
 
@@ -44,6 +50,15 @@ LLM Journey is an educational platform built with Next.js that walks through the
 
 - Node.js 20 or higher
 - pnpm (or npm/yarn/bun)
+
+### Browser Support
+
+This project uses WebAssembly (WASM) for client-side inference. For security, we implement a strict Content Security Policy (CSP) that requires support for the `wasm-unsafe-eval` directive.
+
+Supported browsers:
+- **Chrome / Edge**: 95+
+- **Firefox**: 102+
+- **Safari**: 17.4+
 
 ### Installation
 
@@ -176,9 +191,21 @@ TypeScript is configured for strict type checking. The project uses ESLint with 
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+## Documentation
 
-Temp.
+The project documentation has been continuously evolved to support both human contributors and AI agents.
+
+### [For Agents & Contributors](agent-docs/AGENTS.md)
+**[Read this first.](agent-docs/AGENTS.md)**
+
+The documentation is organized by role and stability:
+
+-   **[agent-docs/AGENTS.md](agent-docs/AGENTS.md)**: The canonical entry point.
+-   **[agent-docs/roles/](agent-docs/roles/)**: Role-specific guides (Frontend, Backend, Infra, etc.).
+-   **[agent-docs/development/](agent-docs/development/)**: Coding standards and style guides.
+-   **[agent-docs/api/](agent-docs/api/)**: System contracts.
+
+## License
 
 ## Resources
 

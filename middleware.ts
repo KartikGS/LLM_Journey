@@ -42,7 +42,10 @@ export function middleware(request: NextRequest) {
     // - wasm-unsafe-eval: permit WASM (ONNX) without full eval()
     // - unsafe-eval: REQUIRED for Next.js in development mode (HMR, Source Maps)
     // - self: fallback for legacy browsers
+    const isProd = process.env.NODE_ENV === 'production';
+    const isE2E = process.env.E2E === 'true';
     const isDev = process.env.NODE_ENV === 'development';
+
     const scriptSrc = `
         'self' 
         'nonce-${nonce}'
@@ -65,7 +68,7 @@ export function middleware(request: NextRequest) {
         form-action 'self';
         frame-ancestors 'none';
         connect-src 'self' https:;
-        upgrade-insecure-requests;
+        ${isProd && !isE2E ? 'upgrade-insecure-requests;' : ''}
     `.replace(/\s{2,}/g, ' ').trim();
 
     // 3. Rate Limiting Logic
@@ -78,18 +81,18 @@ export function middleware(request: NextRequest) {
         }
 
         const ip = getClientIp(request);
-        const now = Date.now();
-        const timestamps = rateLimitMap.get(ip) ?? [];
-        const recent = timestamps.filter(ts => now - ts < apiConfig.rateLimit_windowMs);
+        const isLocalhost = ip === '127.0.0.1' || ip === '::1' || ip === 'unknown'; // 'unknown' is fallback in getClientIp
 
-        if (recent.length >= apiConfig.rateLimit_max) {
-            return new NextResponse('Too Many Requests', { status: 429 });
-        }
+        // Rate Limiting Bypass for Localhost/E2E
+        if (!isE2E && !isLocalhost) {
+            const now = Date.now();
+            const timestamps = rateLimitMap.get(ip) ?? [];
+            const recent = timestamps.filter(ts => now - ts < apiConfig.rateLimit_windowMs);
 
-        recent.push(now);
-        if (recent.length === 0) {
-            rateLimitMap.delete(ip);
-        } else {
+            if (recent.length >= apiConfig.rateLimit_max) {
+                return new NextResponse('Too Many Requests', { status: 429 });
+            }
+
             rateLimitMap.set(ip, recent);
         }
     }
@@ -105,6 +108,11 @@ export function middleware(request: NextRequest) {
     const acceptHeader = request.headers.get('accept');
     if (acceptHeader?.includes('text/html')) {
         response.headers.set('Content-Security-Policy', cspHeader);
+
+        // Add HSTS header conditionally
+        if (isProd && !isE2E) {
+            response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+        }
     }
 
     return response;
