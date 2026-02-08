@@ -14,13 +14,17 @@ Ensuring system stability and preventing regression.
     - **No Workarounds**: Do not use brittle alternative selectors (e.g., text-based search) to "get the test to pass" if a unique ID was expected.
     - **Priority**: Resolving the discrepancy via the [Feedback Protocol](/agent-docs/coordination/feedback-protocol.md) is your top priority.
 
-## Required Reads
+## Context Loading
 
-Before planning or executing any task:
-- **Environment and Tool Constraints:** [Tooling Strategy](/agent-docs/tooling-standard.md)
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Testing-specific readings.
+
+### Role-Specific Readings (Testing)
+Before executing any task, also read:
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
 - **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
-- **Key Endpoints:** [Technical Context](/agent-docs/technical-context.md)
+- **Task Instructions:** [Tech Lead To Testing](/agent-docs/conversations/tech-lead-to-testing.md)
 
 ## Execution Responsibilities
 

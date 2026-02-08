@@ -9,22 +9,27 @@ This file helps gather the necessary context for a role-specific agent to perfor
 LLM Journey is an educational platform built with Next.js that demonstrates the evolution of Large Language Models. It is a reference implementation for advanced agentic patterns, RAG, and model fine-tuning.
 
 ## Required Reading
-**General Standards:**
+
+> [!IMPORTANT]
+> **Two-Layer Reading Structure:**
+> 1. **First:** Read ALL "Universal Standards" below (applies to EVERY agent)
+> 2. **Then:** Read your role file, which contains **additional role-specific readings**
+> 
+> Your role file is NOT just a job description—it has its own "Required Readings" section with context you MUST load before starting work.
+
+### Layer 1: Universal Standards (ALL agents)
 - **How to think:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
-- **Tooling & Environment:** [Tooling Standard.md](/agent-docs/tooling-standard.md)
-- **Observability Setup:** [Observability Tools and Flow](/agent-docs/observability.md)
+- **Tooling & Environment:** [Tooling Standard](/agent-docs/tooling-standard.md)
+- **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
 - **How we work:** [Workflow](/agent-docs/workflow.md)
 
-**Based on your role:**
+### Layer 2: Role-Specific Context (see your role file)
 - Business Analyst → [roles/ba.md](/agent-docs/roles/ba.md)
 - Tech Lead → [roles/tech-lead.md](/agent-docs/roles/tech-lead.md)
 - Frontend → [roles/sub-agents/frontend.md](/agent-docs/roles/sub-agents/frontend.md)
 - Backend → [roles/sub-agents/backend.md](/agent-docs/roles/sub-agents/backend.md)
 - Infra → [roles/sub-agents/infra.md](/agent-docs/roles/sub-agents/infra.md)
 - Testing → [roles/sub-agents/testing.md](/agent-docs/roles/sub-agents/testing.md)
-
-**Shared Context:**
-- **Technical Map**: [Technical Context Cheat Sheet](/agent-docs/technical-context.md)
 
 ## Interfaces & Contracts
 Failed coordination kills projects. Stick to these contracts:

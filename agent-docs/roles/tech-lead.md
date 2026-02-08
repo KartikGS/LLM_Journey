@@ -138,23 +138,26 @@ For each file, ask: **"Is this feature code?"**
 - Must NOT allow undocumented architectural drift
 - Must NOT write feature code (see Hard Rule above)
 
----
+## Context Loading
 
-## Required Reads
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Tech Lead-specific readings.
 
 ### First Time (Onboarding)
-- **Role Context:** [Role Definition](/agent-docs/roles/tech-lead.md)
-- **Cognitive Framework:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
 
-### Every Task (Context Loading)
-Before planning or executing ANY task:
+### Every Task (Role-Specific)
+Before planning or executing ANY task, also read:
 - **Current State:** [Project Log](/agent-docs/project-log.md)
 - **Architecture Check:** [Architecture](/agent-docs/architecture.md) & [Decisions](/agent-docs/decisions/)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 
-
----
+### Reading Confirmation Template
+When reporting your readings, use this format:
+> "I have read:
+> - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
+> - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`"
 
 ## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)
 

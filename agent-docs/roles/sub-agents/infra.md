@@ -8,12 +8,17 @@ Development environment, deployment pipelines, and security.
 
 -   **Owns**: `Dockerfile`, `.github/workflows/**`, `middleware.ts` (security parts).
 
-## Required Reads
+## Context Loading
 
-Before planning or executing any task:
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Infra-specific readings.
+
+### Role-Specific Readings (Infra)
+Before executing any task, also read:
 - **System design:** [Architecture](/agent-docs/architecture.md)
-- **Key Endpoints:** [Technical Context](/agent-docs/technical-context.md)
 - **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Task Instructions:** [Tech Lead To Infra](/agent-docs/conversations/tech-lead-to-infra.md)
 
 ## Execution Responsibilities
 

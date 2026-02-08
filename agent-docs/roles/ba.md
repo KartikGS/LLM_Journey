@@ -56,17 +56,25 @@ The BA agent **does NOT**:
 If a new architectural constraint is required:
 → Escalate to Tech Lead Agent for ADR creation.
 
----
+## Context Loading
 
-## Required Readings
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** BA-specific readings.
 
-Before working on any CR:
+### Role-Specific Readings (BA)
+Before working on any CR, also read:
 - **High-Level Goals:** [Project Vision](/agent-docs/project-vision.md)
 - **Recent Changes:** [Project Log](/agent-docs/project-log.md)
 - **System Design:** [Architecture](/agent-docs/architecture.md)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 - **Architecture Context:** [Decisions](/agent-docs/decisions/)
-- **Cognitive Framework:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
+
+### Reading Confirmation Template
+When reporting your readings, use this format:
+> "I have read:
+> - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
+> - **Role-Specific** (BA): `project-vision.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`"
 
 ---
 
