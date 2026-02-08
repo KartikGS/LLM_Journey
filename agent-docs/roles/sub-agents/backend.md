@@ -17,8 +17,8 @@ Before planning or executing any task:
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Senior Developer agent in the [Senior To Backend Instructions](/agent-docs/conversations/senior-to-backend.md)
-- Make a report for the Senior Developer agent in the [Backend To Senior Report](/agent-docs/conversations/backend-to-senior.md)
+- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Backend Instructions](/agent-docs/conversations/tech-lead-to-backend.md)
+- Make a report for the Tech Lead agent in the [Backend To Tech Lead Report](/agent-docs/conversations/backend-to-tech-lead.md)
 
 ## Checklist
 -   [ ] Are input validations in place?

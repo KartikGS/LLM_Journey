@@ -128,7 +128,7 @@ If the test environment (network, ports, global headers, browser quirks) prevent
 - **Document the Evidence**: Capture logs, screenshots, or minimal reproduction cases.
 - **Consult Tooling Standard**: Check if the issue violates a fixed constraint (e.g., standard Port 3001).
 - **Escalate, Don't Fix**: The Testing Agent is NOT authorized to modify `/next.config.ts`, `/package.json`, or server-side infrastructure.
-- **Report**: Use `/agent-docs/conversations/testing-to-senior.md` to request environment level changes.
+- **Report**: Use `/agent-docs/conversations/testing-to-tech-lead.md` to request environment level changes.
 
 ---
 
@@ -171,7 +171,7 @@ Integration tests enforce the following system-level guarantees:
 ### Resilience & Edge Cases
 - Failures in non-critical paths (e.g., metrics, tracing, fallback UI) must be handled gracefully.
 - Tests should verify that the system fails safely and provides informative feedback (like the `BrowserGuard`).
-- **Policy**: If an edge case is identified but not yet implemented (e.g., "What if WASM fails mid-session?"), the Testing Agent should document it as a potential risk in the `testing-to-senior.md` report.
+- **Policy**: If an edge case is identified but not yet implemented (e.g., "What if WASM fails mid-session?"), the Testing Agent should document it as a potential risk in the `testing-to-tech-lead.md` report.
 
 ---
 

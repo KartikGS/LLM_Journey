@@ -1,4 +1,4 @@
-# Handoff: Senior Developer to Frontend Engineer
+# Handoff: Tech Lead to Frontend Engineer
 
 ## Context
 During E2E tests, failures are hard to diagnose because the `BrowserGuard` renders a blank div while checking environment compatibility. We need a loading indicator to distinguish between "still checking" and "stuck/failed".
@@ -13,5 +13,5 @@ Update `components/ui/browser-support-fallback.tsx`.
 - Ensure it aligns with the project's premium aesthetics.
 
 ## Report
-Please provide your report in `agent-docs/conversations/frontend-to-senior.md`.
+Please provide your report in `agent-docs/conversations/frontend-to-tech-lead.md`.
 Include a description of the UI changes made.

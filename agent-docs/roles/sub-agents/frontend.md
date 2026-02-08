@@ -21,8 +21,8 @@ Before planning or executing any task:
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Senior Developer agent in the [Senior To Frontend Instructions](/agent-docs/conversations/senior-to-frontend.md)
-- Make a report for the Senior Developer agent in the [Frontend To Senior Report](/agent-docs/conversations/frontend-to-senior.md)
+- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/conversations/tech-lead-to-frontend.md)
+- Make a report for the Tech Lead agent in the [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
 
 ## Checklist
 
@@ -31,6 +31,21 @@ Before planning or executing any task:
 -   [ ] Are loading states handled?
 -   [ ] Are errors displayed gracefully?
 -   [ ] Is the "wow" factor present? (Animations, design polish)
+
+## Visual Quality Invariant
+
+> **"Functionally correct but plain" is a failure.**
+
+All user-facing changes must meet premium aesthetic standards:
+- Use design tokens from the style guide
+- Apply appropriate animations/transitions (use `framer-motion` from Standard Kit)
+- Ensure visual hierarchy is clear
+- Follow the "wow factor" requirement in the checklist above
+
+**If the handoff from Tech Lead lacks visual specifications:**
+1. Request clarification before implementing a minimal version
+2. If no response, apply premium defaults from the Frontend Guide
+3. Never settle for "works but looks basic"
 
 ## Common Pitfalls for This Role
 

@@ -17,7 +17,7 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 
 **Based on your role:**
 - Business Analyst → [roles/ba.md](/agent-docs/roles/ba.md)
-- Senior Developer → [roles/senior.md](/agent-docs/roles/senior.md)
+- Tech Lead → [roles/tech-lead.md](/agent-docs/roles/tech-lead.md)
 - Frontend → [roles/sub-agents/frontend.md](/agent-docs/roles/sub-agents/frontend.md)
 - Backend → [roles/sub-agents/backend.md](/agent-docs/roles/sub-agents/backend.md)
 - Infra → [roles/sub-agents/infra.md](/agent-docs/roles/sub-agents/infra.md)
@@ -41,7 +41,7 @@ When sources of truth conflict, resolve in this order:
 
 **Scope & Intent Conflicts**
 - BA Agent owns requirement clarity and scope
-- Senior Developer Agent owns technical feasibility and execution
+- Tech Lead Agent owns technical feasibility and execution
 
 - Tests (define expected behavior)
 - Code (current implementation)
@@ -78,12 +78,12 @@ If intent is unclear, stop and ask the user.
 
 ### What if the user asks me to take actions outside my role's authority?
 **Do not perform them.** Your role's boundaries are hard invariants designed to prevent technical drift and quality degradation. 
-- If you are a **BA** and the user asks you to "fix the code," you MUST refuse, document the requirement in a CR, and hand it off to a **Senior Developer**.
+- If you are a **BA** and the user asks you to "fix the code," you MUST refuse, document the requirement in a CR, and hand it off to a **Tech Lead**.
 - **Helpfulness does NOT override Authority.**
 
 ### Is documentation considered a "technical asset"?
 Yes. For the purpose of authority:
 - **Requirements (`/agent-docs/requirements/`)**: Owned by **BA**.
-- **System Docs (`/README.md`, `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`)**: Owned by **Senior Developer**.
-- **Role Docs (`/agent-docs/roles/`)**: Owned by the respective role (initially) and **Senior Developer**.
-- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared, but modifications require **Senior Developer** verification.
+- **System Docs (`/README.md`, `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
+- **Role Docs (`/agent-docs/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
+- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared, but modifications require **Tech Lead** verification.

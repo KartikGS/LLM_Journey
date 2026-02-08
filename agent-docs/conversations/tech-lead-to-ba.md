@@ -1,4 +1,4 @@
-# Senior Developer → BA Handoff: CR-003
+# Tech Lead → BA Handoff: CR-003
 
 ## Status: COMPLETE ✅
 

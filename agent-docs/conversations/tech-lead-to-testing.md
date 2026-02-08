@@ -1,4 +1,4 @@
-# Handoff: Senior Developer to QA / Test Engineer
+# Handoff: Tech Lead to QA / Test Engineer
 
 ## Context
 The E2E suite is experiencing flake and failures specifically on Webkit and due to high parallelization on the dev server.
@@ -16,5 +16,5 @@ The E2E suite is experiencing flake and failures specifically on Webkit and due 
    - Specifically verify that Webkit tests show the application UI instead of a blank screen.
 
 ## Report
-Please provide your report in `agent-docs/conversations/testing-to-senior.md`.
+Please provide your report in `agent-docs/conversations/testing-to-tech-lead.md`.
 Include the results of the test runs.

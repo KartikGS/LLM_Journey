@@ -88,7 +88,7 @@ Move existing `/transformer` page to `/foundations/transformers`:
 - Transformer page *content* changes are out of scope; will be addressed in a subsequent CR.
 - This CR addresses the first priority item in `project-log.md`: "Audit existing/needed pages against the 10-point Learning Narrative."
 
-## Technical Analysis (filled by Senior Dev)
+## Technical Analysis (filled by Tech Lead)
 **Complexity:** [Low | Medium | High]
 **Estimated Effort:** [S | M | L]
 **Affected Systems:**

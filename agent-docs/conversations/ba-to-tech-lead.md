@@ -1,4 +1,4 @@
-# BA → Senior Developer Handoff: CR-003
+# BA → Tech Lead Handoff: CR-003
 
 ## Context
 The project vision (`project-vision.md`) was finalized after the home page and transformers page were created. This CR aligns those pre-existing pages with the canonical 10-stage learning narrative.

@@ -1,4 +1,4 @@
-# Report: QA / Test Engineer to Senior Developer
+# Report: QA / Test Engineer to Tech Lead
 
 ## Summary
 The E2E test suite has been stabilized and verified across all target browsers (Chromium, Firefox, and Webkit). The "blank screen" and "flake" issues previously reported have been resolved through coordination with Infra and Frontend agents, combined with a reduction in parallel worker count.
@@ -32,5 +32,5 @@ I have executed the full E2E suite (`pnpm test:e2e`) for 3 consecutive runs to e
 -   None. The environment is now stable for E2E testing.
 
 ## Next Steps
--   The Senior Developer can now proceed with further feature development or deployment planning.
+-   The Tech Lead can now proceed with further feature development or deployment planning.
 -   Maintain the reduced worker count until the development server performance is optimized or testing infrastructure is scaled.

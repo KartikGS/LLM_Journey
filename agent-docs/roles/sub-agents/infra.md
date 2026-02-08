@@ -17,8 +17,8 @@ Before planning or executing any task:
 
 ## Execution Responsibilities
 
-- **Execution input:** Before starting work, read and follow instructions from the Senior Developer agent in [Senior → Infra Execution Guidance](/agent-docs/conversations/senior-to-infra.md)
-- **Execution output:** After completing work, report findings, decisions, and blockers to the Senior Developer agent in [Infra → Senior Report](/agent-docs/conversations/infra-to-senior.md)
+- **Execution input:** Before starting work, read and follow instructions from the Tech Lead agent in [Tech Lead → Infra Execution Guidance](/agent-docs/conversations/tech-lead-to-infra.md)
+- **Execution output:** After completing work, report findings, decisions, and blockers to the Tech Lead agent in [Infra → Tech Lead Report](/agent-docs/conversations/infra-to-tech-lead.md)
 
 ## Checklist
 

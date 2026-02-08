@@ -35,7 +35,7 @@
 ## Notes
 [BA Agent notes, user clarifications, etc.]
 
-## Technical Analysis (filled by Senior Dev)
+## Technical Analysis (filled by Tech Lead)
 **Complexity:** [Low | Medium | High]
 **Estimated Effort:** [S | M | L]
 **Affected Systems:**
