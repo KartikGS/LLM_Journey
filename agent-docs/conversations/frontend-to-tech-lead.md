@@ -1,21 +1,51 @@
-# Report: Frontend Engineer to Tech Lead
+# Frontend → Tech Lead Report: CR-004 Navbar Alignment
 
-## Task: Browser Support Loading Indicator
+## Status: COMPLETE ✅
 
-I have updated `components/ui/browser-support-fallback.tsx` to include a premium loading indicator during the environment audit phase.
+## Objective
+Aligned navbar with project vision by creating shared journey stages module and updating navbar to display all 10 stages with icons.
 
-### Changes Made
-- Replaced the blank `div` in the `isSupported === null` state with a centered, animated loading UI.
-- Added a `browser-support-loading` ID to the container for better testability.
-- Implemented a "premium" aesthetic using:
-    - A custom SVG spinner with a backdrop blur and shadow.
-    - Multi-layered glow effects with pulse animations.
-    - Subtle typography with a "System Audit" status indicator.
-- Verified that the changes pass linting (`pnpm lint`).
+## Completed Tasks
 
-### Visual Details
-- **Background**: Consistent with the project's background (white/off-white in light mode, deep black in dark mode).
-- **Spinner**: Blue themed with a rotating ring and pulsed center dot.
-- **Text**: "Checking environment compatibility..." with a secondary "System Audit" label.
+### 1. Created `lib/journey-stages.ts`
+- Exported `JourneyStage` interface with `title`, `href`, `description`, `stage`, `icon` properties
+- Exported `journeyStages` array with all 10 vision-aligned stages
+- Exported `homeNavItem` for separate Home navigation
+- All icons from `lucide-react` per Standard Kit
 
-The interface now clearly signals that an audit is in progress, preventing the "blank screen" confusion during E2E tests and initial page loads.
+### 2. Updated `app/page.tsx`
+- Removed local `journeyStages` definition (62 lines)
+- Added import: `import { journeyStages } from "@/lib/journey-stages"`
+- `mentalModelPhases` kept local (home-page specific)
+
+### 3. Updated `app/ui/navbar.tsx`
+- Removed hardcoded `navItems` array (13 lines)
+- Added import: `import { journeyStages, homeNavItem } from '@/lib/journey-stages'`
+- Home item rendered first with icon
+- All 10 stages rendered with inline icons (`w-4 h-4`)
+- Flex layout with `gap-2` for icon alignment
+
+## Verification
+
+### Build
+```
+pnpm build → Exit code: 0
+```
+
+### Visual Confirmation
+- Screenshot captured showing navbar with all 11 items (Home + 10 stages)
+- Icons correctly displayed inline with titles
+- Titles match home page cards exactly
+
+## Files Modified
+| File | Action |
+|------|--------|
+| `lib/journey-stages.ts` | [NEW] Created shared module |
+| `app/page.tsx` | [MODIFY] Import from shared module |
+| `app/ui/navbar.tsx` | [MODIFY] Render stages with icons |
+
+## Outstanding Items
+- [ ] E2E test updates (assigned to Testing Agent per plan)
+
+## Deviations
+None. All implementation followed handoff exactly.

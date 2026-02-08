@@ -3,20 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-
-const navItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Transformer', href: '/transformer' },
-  { name: 'LLM', href: '/llm' },
-  { name: 'Fine-tuning', href: '/fine-tuning' },
-  { name: 'Tools', href: '/tools' },
-  { name: 'RAG', href: '/rag' },
-  { name: 'Agents', href: '/agents' },
-  { name: 'MCP', href: '/mcps' },
-  { name: 'Deployment', href: '/deployment' },
-  { name: 'Safety', href: '/safety' },
-  { name: 'Evaluation', href: '/evaluation' },
-]
+import { journeyStages, homeNavItem } from '@/lib/journey-stages'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -117,18 +104,31 @@ export default function Navbar() {
         </div>
         <div className="flex-1 overflow-y-auto py-4">
           <div className="flex flex-col space-y-1 px-2">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
+            {/* Home navigation item */}
+            <Link
+              href={homeNavItem.href}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${pathname === homeNavItem.href
+                ? 'bg-black/[.05] dark:bg-white/[.06] text-foreground'
+                : 'text-foreground/70 hover:text-foreground hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a]'
+                }`}
+            >
+              <homeNavItem.icon className="w-4 h-4" />
+              {homeNavItem.title}
+            </Link>
+            {/* Journey stages */}
+            {journeyStages.map((stage) => {
+              const isActive = pathname === stage.href
               return (
                 <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                  key={stage.href}
+                  href={stage.href}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${isActive
                     ? 'bg-black/[.05] dark:bg-white/[.06] text-foreground'
                     : 'text-foreground/70 hover:text-foreground hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a]'
                     }`}
                 >
-                  {item.name}
+                  <stage.icon className="w-4 h-4" />
+                  {stage.title}
                 </Link>
               )
             })}

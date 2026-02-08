@@ -1,47 +1,33 @@
-# BA → Tech Lead Handoff: CR-003
+# BA → Tech Lead: CR-004 Navbar Alignment
 
-## Context
-The project vision (`project-vision.md`) was finalized after the home page and transformers page were created. This CR aligns those pre-existing pages with the canonical 10-stage learning narrative.
+## Reading Confirmation
+I have read: `AGENTS.md`, `roles/ba.md`, `project-vision.md`, `reasoning-principles.md`, `technical-context.md`.
 
-## The Problem (What & Why)
-The current home page communicates a generic "comprehensive exploration of LLMs" message, but the project's actual mission is specific: **teach architectural ideas, not APIs**. The stage order, route paths, and descriptions don't match the finalized roadmap.
+## Summary
+The navbar was not updated during CR-003. The home page content now aligns with the 10-stage "From Tensors to Teams" roadmap, but the navbar still uses the old terminology and routes.
 
-**Why this matters:** First impressions set expectations. A misaligned home page suggests a different learning journey than what we deliver.
+### Problem
+- **Navbar routes are broken**: `/transformer` → 404 (page is at `/foundations/transformers`)
+- **Terminology mismatch**: Navbar says "LLM", home page says "Model Adaptation"
+- **E2E tests affected**: `navigation.spec.ts` uses old routes
 
-## The Requirement
-Full details: [CR-003-home-page-alignment.md](/agent-docs/requirements/CR-003-home-page-alignment.md)
+### User Decisions (2026-02-08)
+1. **Icons, not numbers**: Add `lucide-react` icons to each navbar item (see FR-2 for suggestions)
+2. **Shared data is mandatory**: Extract `journeyStages` to a shared module (FR-3)
 
-**Summary:**
-1. Rewrite hero section with vision-aligned messaging
-2. Align all 10 stages (titles, descriptions, routes) to `project-vision.md`
-3. Add "From Tensors to Teams" mental model framing
-4. Add "Learn with Tiny, Build with Large" reference
-5. Move `app/transformer/` → `app/foundations/transformers/`
+### Scope
+This is a **[S]** (Small) change:
+- Create shared module for stage data (`lib/journey-stages.ts`)
+- Update `page.tsx` to import from shared module
+- Update `navbar.tsx` with new routes, names, and icons
+- Update E2E tests to use new routes
 
-## Scope Boundaries
-- **IN SCOPE:** Home page content, transformer route path
-- **OUT OF SCOPE:** Transformer page *content* (that's next CR), redirects from old routes
+## Requirement Document
+See: `/agent-docs/requirements/CR-004-navbar-alignment.md`
 
-## Key Constraints
-- Clean break on old routes (no redirects)
-- Page must remain static/SSG
-- Existing tests (`__tests__/page.test.tsx`) will need updating
+## Visual Evidence
+![Navbar misalignment](file:///home/kartik/.gemini/antigravity/brain/46744d3c-4ca4-45bb-862d-ba73a5653c17/home_page_navbar_alignment_1770556291245.png)
 
-## Acceptance Criteria (Summary)
-| ID | Criteria |
-|----|----------|
-| AC-1 | Hero section has vision-aligned text |
-| AC-2 | 10 stages match `project-vision.md` exactly |
-| AC-3 | Mental model table/summary visible |
-| AC-4 | Dual engine strategy referenced |
-| AC-5 | `/foundations/transformers` works |
-| AC-6 | `/transformer` returns 404 |
-| AC-7 | `pnpm build` passes |
-| AC-8 | Tests pass (updated) |
+## Request
+Please review CR-004 and create an implementation plan. The requirements are now finalized with user decisions.
 
-## Questions for Technical Analysis
-1. Should the mental model table be a separate component or inline in `page.tsx`?
-2. Any concerns with the nested route structure (`/foundations/transformers`)?
-
----
-**Requesting:** Technical complexity analysis and implementation plan.

@@ -1,69 +1,7 @@
 import Link from "next/link";
+import { journeyStages } from "@/lib/journey-stages";
 
 export default function Home() {
-  const journeyStages = [
-    {
-      title: "Transformers (Foundations)",
-      href: "/foundations/transformers",
-      description: "How do we turn math into language? Start with attention, embeddings, and the decoder-only architecture.",
-      stage: 1,
-    },
-    {
-      title: "Model Adaptation",
-      href: "/models/adaptation",
-      description: "How do we specialize a pre-trained model? Explore fine-tuning, LoRA, and training trade-offs.",
-      stage: 2,
-    },
-    {
-      title: "Context Engineering",
-      href: "/context/engineering",
-      description: "How do we design effective inputs? Master prompting patterns, templates, and context windows.",
-      stage: 3,
-    },
-    {
-      title: "RAG (Retrieval)",
-      href: "/systems/rag",
-      description: "How do we stop the model from forgetting or hallucinating? Ground responses with external knowledge.",
-      stage: 4,
-    },
-    {
-      title: "Agents & Tool Use",
-      href: "/agents/basic",
-      description: "How do we give the model hands? Enable autonomous action through tool calling and planning.",
-      stage: 5,
-    },
-    {
-      title: "Multi-Agent Systems",
-      href: "/agents/multi",
-      description: "How do we give the model partners? Coordinate multiple agents for complex workflows.",
-      stage: 6,
-    },
-    {
-      title: "MCP (Standardization)",
-      href: "/protocols/mcp",
-      description: "How do we standardize model interactions? Learn the Model Context Protocol for interoperability.",
-      stage: 7,
-    },
-    {
-      title: "Eval & Observability",
-      href: "/ops/observability",
-      description: "How do we measure what matters? Build evaluation pipelines and trace model behavior.",
-      stage: 8,
-    },
-    {
-      title: "Safety & Security",
-      href: "/ops/safety",
-      description: "How do we build guardrails? Implement safety boundaries and security constraints.",
-      stage: 9,
-    },
-    {
-      title: "Deployment",
-      href: "/ops/deployment",
-      description: "How do we go to production? Deploy, scale, and operate LLM applications reliably.",
-      stage: 10,
-    },
-  ];
-
   const mentalModelPhases = [
     {
       phases: "1-3",
