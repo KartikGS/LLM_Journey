@@ -25,12 +25,20 @@
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
 
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
-- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task.
+- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the [Handoff Template](/agent-docs/conversations/TEMPLATE-tech-lead-to-sub-agent.md) for consistent structure.
 - **The "Wait" State**: Once `agent-docs/conversations/tech-lead-to-<role>.md` is created, the Tech Lead Agent MUST stop and report back to the User.
 - **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Tech Lead Agent. 
 - **The "Shift" Refusal**: If you feel the urge to "just do it" to be efficient, you are violating the Tech Lead role. Stop. Wait for the User to either:
   1. Approve the handoff for a sub-agent execution.
   2. Explicitly ask you to switch roles.
+
+#### Wait State Output
+When entering the Wait State, the Tech Lead MUST inform the user:
+1. Which sub-agent role needs to execute next
+2. The handoff file location (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
+3. Clear instruction: *"Start a new session and assign the [Role] to execute this handoff."*
+
+Do NOT simply say "I'm done" — the user needs actionable next steps.
 
 ### 🛑 Pre-Implementation Self-Check (Tech Lead)
 
@@ -71,10 +79,15 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
-2. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
-3. BA updates `agent-docs/project-log.md` with the final entry.
-4. BA notifies the human of completion.
-5. **Output:** Closed CR, updated project log.
+2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (e.g., file + line number). Do not bulk-accept without individual verification.
+3. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
+   - **Minor/Safe deviations**: Log acceptance in the CR's "Deviations Accepted" section.
+   - **Major deviations**: Escalate to User before closing the CR.
+4. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
+5. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
+6. BA updates `agent-docs/project-log.md` with the final entry.
+7. BA notifies the human of completion.
+8. **Output:** Closed CR, updated project log.
 
 ---
 
@@ -82,3 +95,8 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 
 ### 1. Traceability Invariant
 Every ID mentioned in the `agent-docs/project-log.md` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
+
+### 2. E2E Selector Invariant
+When a CR modifies **routes**, **page structure**, or **`data-testid` attributes**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. Selectors that are left stale after structural changes become pre-existing failures that pollute future verification cycles.
+
+*Example*: If CR-004 changes `/transformer` to `/foundations/transformers`, the E2E test asserting `href="/transformer"` must be updated in the same CR.

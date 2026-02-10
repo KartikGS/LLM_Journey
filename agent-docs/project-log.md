@@ -15,6 +15,12 @@ to help agents understand **expected complexity and coordination cost**.
 
 Tags may be combined when appropriate.
 
+### Entry Lifecycle
+- When adding a new completion entry, label it `Recent Focus`.
+- Demote the previous `Recent Focus` entry to `Previous`.
+- Keep at most **3** `Previous` entries visible. Move older entries to the `## Archive` section at the bottom of this file.
+- Use consistent prefix labels: `Recent Focus` (1 entry max), `Previous` (up to 3).
+
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
 -   **Recent Focus**: [S] **Visual Enhancement**: `CR-005` - Premium visual enhancement for Home Page and Navbar with glassmorphism, gradient glows, and framer-motion animations - **Completed**.

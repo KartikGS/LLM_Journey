@@ -152,12 +152,13 @@ Before planning or executing ANY task, also read:
 - **Current State:** [Project Log](/agent-docs/project-log.md)
 - **Architecture Check:** [Architecture](/agent-docs/architecture.md) & [Decisions](/agent-docs/decisions/)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
+- **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
 When reporting your readings, use this format:
 > "I have read:
 > - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
-> - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`"
+> - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
 
 ## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)
 
@@ -263,18 +264,28 @@ ADRs live in:
 
 ### Verification & BA Handoff
 
-Before handing off to BA Agent:
-- Review the work reports written by the sub-agents in the [Sub Agent to Tech Lead Handoff](/agent-docs/conversations/<role-of-sub-agent>-to-tech-lead.md)
-- **Adversarial Diff Review**:
+Before handing off to BA Agent, complete the **Verification Checklist**:
+
+#### Verification Checklist
+- [ ] Read sub-agent report (`conversations/<role>-to-tech-lead.md`)
+- [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
     - **Rule**: Never trust the sub-agent's verification blindly.
-    - **Action**: Read the actual config/code files against the CR Requirements line-by-line.
     - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-- **Cross-Environment Verification**: Ensure all tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes.
-- Ensure all tests pass (`pnpm test`)
-- Confirm acceptance criteria are met
-- **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants.
-- Verify documentation updates
-- **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md).
+- [ ] Run `pnpm lint` — must pass
+- [ ] Run `pnpm test:e2e` — classify any failures as **CR-related** vs. **pre-existing** (see below)
+- [ ] **Cross-Environment Verification**: Ensure tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes
+- [ ] If UI was changed: verify Light/Dark mode rendering
+- [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
+- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
+- [ ] Verify documentation updates
+- [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and [Handoff Template](/agent-docs/conversations/TEMPLATE-tech-lead-to-sub-agent.md)
+
+#### Pre-Existing Test Failures
+If tests fail for reasons **unrelated** to the current CR:
+- **Do NOT** modify the failing test (it is feature test code — delegate if needed)
+- **Do NOT** let unrelated failures block the current CR's completion
+- **Do** document the failure in the BA handoff with a recommendation for a follow-up CR
+- **Do** clearly distinguish CR-related failures (which block completion) from pre-existing failures (which do not)
 
 > [!CAUTION]
 > **Do NOT update `agent-docs/project-log.md`**. Final status updates and user notification are the responsibility of the BA Agent.

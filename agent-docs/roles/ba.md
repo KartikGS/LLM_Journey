@@ -88,6 +88,7 @@ Every BA task **must** produce:
    - Document "Symptoms", "Potential Causes", and "Suggested Strategies".
    - Put in `/agent-docs/reports/INVESTIGATION-XXX.md`.
 - **Change Requirement (CR) Document**
+   - **Numbering**: Check `/agent-docs/requirements/` for existing CRs and increment by 1. Format: `CR-XXX` (zero-padded to 3 digits, e.g., `CR-005`, `CR-012`).
    - Create a new file in `/agent-docs/requirements/CR-XXX.md`
    - Must include Business Value, Acceptance Criteria, and Constraints.
 - **Tech Lead Prompt**
@@ -97,6 +98,9 @@ Every BA task **must** produce:
    - **Strict Validation**: Do not accept "It's done". Check for:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX.md` AC?
+   - **AC Evidence Annotation**: When verifying each AC, mark it `[x]` in the CR document with a one-line evidence reference (e.g., `[x] Gradient glows — Verified: page.tsx L62-68`). This creates an audit trail of what was checked.
+   - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. For Minor/Safe deviations, log acceptance in the CR's "Deviations Accepted" section. For Major deviations, escalate to the User before closing.
+   - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
    - Update `/agent-docs/requirements/CR-XXX.md` status.
    - Update `/agent-docs/project-log.md` with closure entry.
    - Notify the Human of completion.
@@ -110,6 +114,7 @@ Before handing off to Tech Lead:
 - [ ] **Is this Synthesis or just Migration?** (Did I interpret the intent or copy text?)
 - [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?)
 - [ ] **Are validation criteria Quantifiable?** (Replaced "fast" with "<200ms"?)
+- [ ] **Subjective AC Guard**: If the user selects "Subjective Approval" as an AC, did I define at least 2-3 *objective* companion criteria alongside it (e.g., "uses gradient effects", "has hover animations") to prevent scope ambiguity during acceptance?
 - [ ] **Is there a Rollback Plan?** (What if the hooks break?)
 - [ ] **Did I check the "Unhappy Path"?** (Legacy code, hotfixes, valid exceptions?)
 - [ ] Could a developer execute this without asking "what do you mean?"

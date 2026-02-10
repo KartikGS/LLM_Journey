@@ -40,3 +40,7 @@
 **Estimated Effort:** [S | M | L]
 **Affected Systems:**
 **Implementation Approach:**
+
+## Deviations Accepted (filled at closure by BA)
+[List deviations from the Tech Lead's completion report and whether they were accepted or escalated.]
+- None / [Deviation description] — Accepted / Escalated

@@ -37,3 +37,8 @@ In scope:
 Out of scope:
 - Distributed denial-of-service attacks
 - Advanced bot detection
+
+### Component Rendering Strategy
+- Pages where **SEO is critical** (landing pages with organic traffic goals) should remain **Server Components**. Prefer CSS animations or `next/dynamic` imports to avoid converting to client components.
+- Pages where **interactivity is primary** (educational demos, tools) may be **Client Components** when features like `framer-motion` require it.
+- Converting a Server Component to a Client Component is a **Tech Lead decision** that should be acknowledged in the technical plan with rationale. If the page is SEO-critical, an ADR may be required.

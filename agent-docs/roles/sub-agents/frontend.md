@@ -21,6 +21,7 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ### Role-Specific Readings (Frontend)
 Before executing any task, also read:
 - **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
+- **Visual System:** [Design Tokens](/agent-docs/design-tokens.md)
 - **Task Instructions:** [Tech Lead To Frontend](/agent-docs/conversations/tech-lead-to-frontend.md)
 
 ## Execution Responsibilities
@@ -53,26 +54,47 @@ Before executing any task, also read:
 ## Visual Quality Invariant
 
 > **"Functionally correct but plain" is a failure.**
+> **"Flashy but unprofessional" is also a failure.**
 
 All user-facing changes must meet premium aesthetic standards. If the handoff from Tech Lead lacks visual specifications:
 1. Request clarification before implementing a minimal version
-2. If no response, apply premium defaults from this guide
+2. If no response, apply premium defaults from [Design Tokens](/agent-docs/design-tokens.md)
 3. Never settle for "works but looks basic"
+
+### Aesthetic North Star
+
+> **"Wow yet Professional, subtle but not too subtle."**
+
+The visual bar is set by modern developer tools: [Linear](https://linear.app), [Vercel](https://vercel.com), [Raycast](https://raycast.com). These are *professional*, not flashy.
+
+- Animations exist to **communicate state changes**, never to decorate
+- Depth comes from **shadow and blur**, not color overload
+- Both themes should feel **intentionally designed**, not inverted copies of each other
 
 ### Theme Support (Mandatory)
 
-**Dual-theme support is required.** Use Tailwind's `dark:` utility classes for all UI components.
+**Dual-theme support is required.** Use Tailwind's `dark:` utility classes for all UI components. Both modes must feel equally premium.
 
-| Mode | Surface Style | Example |
-|------|---------------|---------|
-| Dark | Glassmorphism | `bg-[#111111]/80 backdrop-blur-xl border-white/10` |
-| Light | High-clarity | `bg-[#fcfcfc] border-black/5 shadow-md` |
+| Mode | Surface Style | Example | Design Aesthetic |
+|------|---------------|---------|------------------|
+| Dark | Glassmorphism | `bg-[#111111]/80 backdrop-blur-2xl border-white/[0.08]` | Moody depth, subtle glow |
+| Light | Refined clarity | `bg-white/80 backdrop-blur-2xl border-black/[0.08] shadow-md shadow-black/5` | Clean, warm, airy |
+
+> [!IMPORTANT]
+> **Light mode is NOT just "remove dark stuff."** Light mode should use:
+> - Tinted shadows (e.g., `shadow-blue-500/5`) instead of plain gray
+> - Surface hierarchy through subtle opacity differences, not color changes
+> - Backdrop blur for the same glass depth effect as dark mode
+>
+> Refer to [Design Tokens](/agent-docs/design-tokens.md) for the full color palette.
 
 ### Accentuation & Effects
 
-- Subtle gradients: `from-blue-600 to-purple-600`
-- Glow effects: Limit opacity to `10%` in light mode for readability
-- Hover states: Always provide `transition-colors duration-200`
+- **Gradients**: Use `accent-gradient` token: `from-blue-600 via-indigo-500 to-purple-600`
+- **Glow effects**: Max `/10` opacity in light mode, `/5`–`/10` in dark mode
+- **Background glows**: Static only — do NOT animate/pulse background glow layers
+- **Gradient border glow**: Reserve for **at most 1–2 elements per viewport** (e.g., primary CTA only)
+- **Hover states**: `transition-colors duration-150` (use `duration-fast` token)
 
 ### Iconography
 
@@ -83,6 +105,42 @@ All user-facing changes must meet premium aesthetic standards. If the handoff fr
   <stage.icon className="w-4 h-4" />
   ```
 - If custom SVG is needed: use clean, balanced paths with `strokeWidth={2}`
+
+---
+
+## Animation Discipline
+
+> **Animation is seasoning, not the main course. Over-seasoning ruins the dish.**
+
+### Core Rules
+
+1. **One Hero, Rest Supporting Cast** — Each page gets at most *one* prominent animation (e.g., hero section fade-in). Everything else should be near-imperceptible micro-interactions.
+
+2. **Animate to communicate, not to decorate** — Every animation must answer: *"What state change am I communicating?"* If the answer is "none, it just looks cool," remove it.
+
+3. **GPU-only properties** — Only animate `transform` and `opacity`. Never animate `width`, `height`, `margin`, `padding`, or `box-shadow` directly.
+
+4. **Use design tokens** — All durations and spring configs come from [Design Tokens](/agent-docs/design-tokens.md). Do not invent ad-hoc timing values.
+
+### The "Shaky Screen" Anti-Pattern
+
+> [!CAUTION]
+> If `whileHover` applies `scale` or `y` translation to items in a grid or list, adjacent elements shift to accommodate the size change. With 10+ items this creates visible layout jitter — the screen feels "shaky."
+>
+> **Fix:** For grid/list items, use shadow transitions and border color changes on hover — NOT scale/translate. Reserve scale for isolated elements like a single CTA button.
+
+### What to Animate vs. What NOT to Animate
+
+| Element | Animate? | Correct Approach |
+|---------|----------|------------------|
+| Page entrance (hero) | ✅ Yes | Fade + subtle y-translate, once on mount |
+| CTA button hover | ✅ Yes | Subtle scale (`1.02`), glow opacity |
+| Nav menu open/close | ✅ Yes | `AnimatePresence` slide + backdrop fade |
+| Active nav indicator | ✅ Yes | `layoutId` smooth slide |
+| Card hover in grid | ⚠️ Carefully | Shadow + border change only, **no scale/translate** |
+| Background glow layers | ❌ No | Static — pulsing glows distract from content |
+| Multiple items stagger | ⚠️ Rarely | Only on initial page load, not on every scroll |
+| Table rows | ❌ No | Static — tables are for reading, not performing |
 
 ---
 
@@ -107,11 +165,15 @@ Rules:
 Before marking work complete:
 
 -   [ ] Is it responsive? (Mobile/Tablet/Desktop)
--   [ ] **Theme Consistency**: Does it look premium in both Light and Dark modes?
+-   [ ] **Theme Consistency**: Does it look premium in both Light AND Dark modes?
 -   [ ] Are loading states handled?
 -   [ ] Are errors displayed gracefully?
--   [ ] Is the "wow" factor present? (Animations, design polish)
+-   [ ] Does the page feel **polished and professional** — not plain, not flashy?
 -   [ ] Are icons rendered inline with proper sizing?
+-   [ ] **Animation restraint**: Are there ≤1 prominent animations per viewport?
+-   [ ] **No shaky screen**: Do hover effects on grid/list items avoid scale/translate?
+-   [ ] **Timing consistency**: Do all animations use [Design Token](/agent-docs/design-tokens.md) values?
+-   [ ] **Light mode parity**: Is light mode equally designed (not just "dark mode but white")?
 
 ---
 
@@ -127,6 +189,11 @@ Before marking work complete:
 | Unescaped special characters in JSX | Lint errors | Use `&quot;` or `{'"'}` |
 | Using wrong icon library | Standard Kit violation | Only `lucide-react` |
 | Missing dark mode styles | Dual-theme is mandatory | Add `dark:` variants |
+| `whileHover={{ scale }}` on grid items | Layout jitter ("shaky screen") | Use shadow + border transitions instead |
+| `animate-pulse` on background glows | Visual noise, distracts from content | Keep background glows static |
+| Inventing animation timing values | Inconsistent feel across components | Use tokens from `design-tokens.md` |
+| Every element gets a glow border | Nothing stands out, overwhelming | Reserve glow for 1–2 key elements |
+| Light mode = just white + thin border | Looks plain, second-class | Use tinted shadows, glass blur, surface hierarchy |
 
 ---
 
