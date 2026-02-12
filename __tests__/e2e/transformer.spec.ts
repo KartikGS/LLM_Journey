@@ -8,7 +8,7 @@ test.describe('Transformer Page', () => {
      */
     test('should generate text and send OTel traces @critical', async ({ page }) => {
         // Navigate to transformer page
-        await page.goto('/transformer');
+        await page.goto('/foundations/transformers');
 
         // 1. Select a sample input
         const sampleButton = page.getByRole('button', { name: 'Speak, speak.' });

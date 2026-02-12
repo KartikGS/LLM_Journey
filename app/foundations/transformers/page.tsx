@@ -1,263 +1,286 @@
+'use client';
+
+import React from 'react';
 import BaseLLMChat from "./components/BaseLLMChat";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { GlowBackground } from '@/app/ui/components/GlowBackground';
+import { GlassCard } from '@/app/ui/components/GlassCard';
+import { GradientText } from '@/app/ui/components/GradientText';
+import { BookOpen, Cpu, Database, Play, Layers, Activity } from 'lucide-react';
 
 export default function BaseLLMPage() {
+  const shouldReduceMotion = useReducedMotion();
+
+  // Animation variants
+  const fadeInUp = shouldReduceMotion
+    ? {}
+    : {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.5 },
+    };
+
+  const staggerContainer = shouldReduceMotion
+    ? {}
+    : {
+      animate: {
+        transition: {
+          staggerChildren: 0.1,
+        },
+      },
+    };
+
   return (
-    <div className="w-full flex-1 flex flex-col gap-6 sm:gap-8 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto">
-      {/* Title and Description */}
-      <div className="w-full flex flex-col justify-around items-center gap-2">
-        <div className="text-3xl sm:text-4xl md:text-5xl ml-12 md:ml-0 text-center">Interactive Decoder-Only Transformer</div>
-        <div className="w-full text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 text-center">
-          A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser.
+    <div className="w-full flex-1 flex flex-col gap-8 sm:gap-12 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto relative">
+      <GlowBackground />
+
+      {/* Hero Section */}
+      <motion.div
+        className="w-full flex flex-col justify-around items-center gap-6"
+        {...fadeInUp}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-medium uppercase tracking-wider mb-2"
+          >
+            Interactive Demo
+          </motion.div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center leading-tight">
+            <GradientText>Decoder-Only Transformer</GradientText>
+          </h1>
         </div>
-      </div>
+        <p className="w-full max-w-2xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 text-center leading-relaxed">
+          A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser.
+        </p>
+      </motion.div>
 
 
       {/* Chat Interface */}
-      <BaseLLMChat />
+      <motion.div {...fadeInUp}>
+        <BaseLLMChat />
+      </motion.div>
 
-      {/* Details */}
-      <div className="w-full flex flex-row flex-wrap justify-around gap-4">
+      {/* Details Grid */}
+      <motion.div
+        className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4"
+        {...staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
         {/* Model Overview */}
-        <section className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Model Overview</h2>
+        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
+              <Layers className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Overview</h2>
+          </div>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Architecture</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-                <li>Decoder-only Transformer (GPT-style)</li>
-                <li>Causal self-attention (no future token access)</li>
-                <li>Character-level language model</li>
-              </ul>
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Specs</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <SpecTag label="Ctx" value="32" />
+                <SpecTag label="Heads" value="4" />
+                <SpecTag label="Layers" value="4" />
+                <SpecTag label="Embed" value="64" />
+              </div>
             </div>
 
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Key Specs</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-                <li><strong>Vocabulary:</strong> unique characters from Tiny Shakespeare</li>
-                <li><strong>Context length (block size):</strong> 32 tokens</li>
-                <li><strong>Layers:</strong> 4</li>
-                <li><strong>Attention heads:</strong> 4</li>
-                <li><strong>Embedding size:</strong> 64</li>
-                <li><strong>Parameters:</strong> ~0.2M</li>
-              </ul>
-              <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                This model predicts the next character given the previous characters.
-              </p>
-            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              This model predicts the next character given the previous ones using causal self-attention (no future peeking).
+            </p>
 
-            <div>
+            <div className="mt-auto pt-4">
               <a
                 href="https://jalammar.github.io/illustrated-gpt2/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
               >
-                📎 Learn more: Decoder-Only Transformers →
+                <BookOpen className="w-4 h-4" /> Learn more
               </a>
             </div>
           </div>
-        </section>
+        </GlassCard>
 
         {/* How Self-Attention Works */}
-        <section className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold">How Self-Attention Works</h2>
+        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
+              <Activity className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Self-Attention</h2>
+          </div>
 
-          <div className="flex flex-col gap-3">
-            <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-              <strong>In simple terms:</strong>
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-              <li>Each character looks at previous characters only</li>
-              <li>Attention scores decide which past characters matter most</li>
-              <li>A causal mask ensures no peeking into the future</li>
+          <div className="flex flex-col gap-4 flex-1">
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <li className="flex gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Characters look at past context only</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Attention scores weight relevance</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-500">•</span>
+                <span>Causal mask blocks future tokens</span>
+              </li>
             </ul>
 
-            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                <strong>Key idea:</strong> This is why the model can generate text autoregressively, one token at a time.
+            <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
+              <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+                <strong>Key idea:</strong> Allows autoregressive generation one token at a time.
               </p>
             </div>
 
-            <div>
+            <div className="mt-auto pt-4">
               <a
                 href="https://jalammar.github.io/illustrated-transformer/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
               >
-                📎 Learn more: Self-Attention Explained →
+                <BookOpen className="w-4 h-4" /> Visual Guide
               </a>
             </div>
           </div>
-        </section>
+        </GlassCard>
 
         {/* Training Setup */}
-        <section className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Training Setup</h2>
+        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
+              <Database className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Training</h2>
+          </div>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Dataset</h3>
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                Tiny Shakespeare (character-level text)
-              </p>
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Dataset</span>
+                <span className="font-medium text-gray-900 dark:text-white">Tiny Shakespeare</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Objective</span>
+                <span className="font-medium text-gray-900 dark:text-white">Next-Char Pred</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Optimizer</span>
+                <span className="font-medium text-gray-900 dark:text-white">AdamW</span>
+              </div>
             </div>
 
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Training Objective</h3>
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                Predict the next character using cross-entropy loss
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Optimization</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-                <li>AdamW optimizer</li>
-                <li>Trained for several thousand steps</li>
-                <li>Evaluated on a held-out validation split</li>
-              </ul>
-            </div>
-
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 italic">
-              The goal is not memorization, but learning character-level structure and rhythm.
+            <p className="text-sm text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-white/5 p-3 rounded-lg border border-black/5 dark:border-white/5">
+              Goal: Learn character-level structure and rhythm, not just memorization.
             </p>
 
-            <div>
+            <div className="mt-auto pt-4">
               <a
                 href="https://github.com/karpathy/char-rnn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
               >
-                📎 Dataset source →
+                <Database className="w-4 h-4" /> Dataset Source
               </a>
             </div>
           </div>
-        </section>
+        </GlassCard>
 
-        {/* Text Generation Process */}
-        <section className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Text Generation Process</h2>
-
-          <div className="flex flex-col gap-3">
-            <h3 className="text-lg sm:text-xl font-medium">Generation Loop</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-              <li>Take the last N characters (context window)</li>
-              <li>Predict probabilities for the next character</li>
-              <li>Sample one character</li>
-              <li>Append and repeat</li>
-            </ol>
-
-            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                <strong>Important note:</strong> Sampling (not greedy decoding) is used, so outputs vary each time.
-              </p>
+        {/* Browser Runtime */}
+        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
+              <Cpu className="w-5 h-5" />
             </div>
-
-            <div>
-              <a
-                href="https://huggingface.co/blog/how-to-generate"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
-              >
-                📎 Optional reading: Greedy vs Sampling vs Temperature →
-              </a>
-            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Browser Runtime</h2>
           </div>
-        </section>
 
-        {/* Running Fully in the Browser */}
-        <section className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Running Fully in the Browser (ONNX)</h2>
+          <div className="flex flex-col gap-4 flex-1">
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <li className="flex gap-2">
+                <span className="text-orange-500">✓</span>
+                <span><strong>ONNX Runtime Web</strong></span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-orange-500">✓</span>
+                <span>No Server / API</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-orange-500">✓</span>
+                <span>WASM Accelerated</span>
+              </li>
+            </ul>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">How it runs</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-                <li>Model exported to ONNX</li>
-                <li>Executed using onnxruntime-web</li>
-                <li>No server, no Python, no GPU required</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg sm:text-xl font-medium mb-2">Why ONNX?</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-700 dark:text-gray-300 ml-4">
-                <li>Portable</li>
-                <li>Lightweight</li>
-                <li>Designed for inference</li>
-              </ul>
-            </div>
-
-            <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium">
-                Everything runs locally in your browser.
-              </p>
-            </div>
-
-            <div>
+            <div className="mt-auto pt-4">
               <a
                 href="https://onnxruntime.ai/docs/get-started/with-javascript.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
               >
-                📎 Learn more: ONNX Runtime Web →
+                <Cpu className="w-4 h-4" /> ONNX Docs
               </a>
             </div>
           </div>
-        </section>
-      </div>
+        </GlassCard>
+      </motion.div>
 
 
       {/* Reference Materials */}
-      <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-2 justify-around items-center text-center lg:text-left">
-        <h2 className="text-xl sm:text-2xl font-semibold">Reference Materials</h2>
+      <motion.div
+        className="w-full flex flex-col sm:flex-row gap-6 justify-center items-center py-8"
+        {...fadeInUp}
+      >
+        <Link
+          href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
+          target="_blank"
+          className="group flex items-center gap-3 px-6 py-3 bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+        >
+          <Play className="w-5 h-5 text-red-600 group-hover:scale-110 transition-transform" />
+          <span className="text-gray-900 dark:text-white font-medium">Watch on YouTube</span>
+        </Link>
 
-        {/* YouTube Video */}
-        <div className="flex flex-col gap-2 w-full sm:w-auto">
-          <h3 className="text-base sm:text-lg font-medium">YouTube Video</h3>
-          <a
-            href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
-          >
-            Watch on YouTube →
-          </a>
-        </div>
-
-        {/* Colab Link */}
-        <div className="flex flex-col gap-2 w-full sm:w-auto">
-          <h3 className="text-base sm:text-lg font-medium">Colab Notebook</h3>
-          <a
-            href="https://colab.research.google.com/drive/1B6ZeJNR0eiDCEUbexOj6beXZ-qMiH-3B?usp=sharing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
-          >
-            Open in Google Colab →
-          </a>
-        </div>
-
-      </div>
+        <Link
+          href="https://colab.research.google.com/drive/1B6ZeJNR0eiDCEUbexOj6beXZ-qMiH-3B?usp=sharing"
+          target="_blank"
+          className="group flex items-center gap-3 px-6 py-3 bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors"
+        >
+          <div className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-600 text-xs font-bold">C</div>
+          <span className="text-gray-900 dark:text-white font-medium">Open Colab</span>
+        </Link>
+      </motion.div>
 
       {/* Next page redirection*/}
-      <div className="w-full flex flex-col lg:flex-row items-center justify-around gap-4">
-        <div className="text-base sm:text-2xl text-gray-700 dark:text-gray-300 text-center">
-          Small transformers produce meaningless text, but when it is scaled we get LLMs which produces text that makes sence.
+      <motion.div
+        className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 p-8 rounded-2xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-200/20 dark:border-blue-500/10"
+        {...fadeInUp}
+      >
+        <div className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 text-center lg:text-left max-w-2xl">
+          Small transformers produce meaningless text, but when scaled we get LLMs which produces text that makes sense.
         </div>
         <Link
           href="/llm"
-          className="text-blue-600 dark:text-blue-400 text-base sm:text-2xl hover:underline"
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 whitespace-nowrap"
         >
           Explore LLM →
         </Link>
-      </div>
+      </motion.div>
     </div>
   );
+}
+
+function SpecTag({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="flex flex-col items-center p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">{label}</span>
+      <span className="font-mono font-semibold text-gray-900 dark:text-white">{value}</span>
+    </div>
+  )
 }

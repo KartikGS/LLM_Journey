@@ -3,6 +3,9 @@
 import { FormEvent, useState, useRef, useEffect } from "react";
 import { generate } from "@/lib/llm/generateClient";
 import { ModelMeta } from "@/types/llm";
+import { GlassCard } from "@/app/ui/components/GlassCard";
+import { Send, Terminal, Play, Cpu, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const sampleInputs = [
     "Before we proceed any further, hear me speak.",
@@ -88,21 +91,33 @@ export default function BaseLLMChat() {
     }
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full justify-around items-start lg:items-center">
-            <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-center lg:text-left">Try the Model</h2>
+        <GlassCard className="w-full flex flex-col lg:flex-row gap-6 md:gap-8 p-6 sm:p-8">
+            {/* Left Col: Instructions & Samples */}
+            <div className="w-full lg:w-1/2 flex flex-col gap-4 sm:gap-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg">
+                        <Terminal className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Try the Model</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Interact with the raw probability distribution</p>
+                    </div>
+                </div>
 
                 {/* Sample Inputs */}
-                <div className="flex flex-col gap-2 align-center lg:align-start">
-                    <p className="w-full text-center lg:text-left text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Sample Inputs:</p>
-                    <div className="flex lg:flex-row flex-wrap gap-2 justify-center lg:justify-start">
+                <div className="flex flex-col gap-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <Play className="w-3 h-3" />
+                        Sample Inputs (Tiny Shakespeare)
+                    </p>
+                    <div className="flex flex-wrap gap-2">
                         {sampleInputs.map((sample, index) => (
                             <button
                                 key={index}
                                 type="button"
                                 onClick={() => sampleInput(sample)}
                                 disabled={isLoading}
-                                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left max-w-full truncate"
                             >
                                 {sample.length > 32 ? `${sample.substring(0, 32)}...` : sample}
                             </button>
@@ -111,52 +126,82 @@ export default function BaseLLMChat() {
                 </div>
             </div>
 
-            <div className="w-full lg:w-1/2 flex flex-col min-h-[200px] gap-4">
-                {/* The Form: Always visible, but can shift slightly if you want */}
+            {/* Right Col: Console Interface */}
+            <div className="w-full lg:w-1/2 flex flex-col gap-4">
+                {/* Input Area */}
                 <form
                     onSubmit={onSubmit}
-                    className="w-full will-change-transform transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+                    className="w-full relative group"
                 >
                     <label htmlFor="chat" className="sr-only">Your message</label>
-                    <div className="flex items-center px-1.5 sm:px-2 py-1.5 rounded-lg border border-gray-300/30 dark:border-gray-600/30 bg-white/50 dark:bg-gray-800/30 focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/50 transition-all duration-300 ease-out">
+                    <div className="relative">
                         <textarea
                             ref={textareaRef}
                             id="chat"
                             name="chat"
-                            rows={1}
+                            rows={2}
                             maxLength={32}
                             onChange={handleInputChange}
-                            className="block mx-1 sm:mx-2 p-1.5 sm:p-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border-0 focus:ring-0 focus:outline-none dark:text-white dark:placeholder-gray-400 resize-none"
-                            placeholder="Your message..."
+                            className="w-full p-4 pr-12 text-base rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all resize-none shadow-inner"
+                            placeholder="Type raw text (max 32 chars)..."
                             disabled={isLoading || !meta}
                         ></textarea>
-                        <button
-                            type="submit"
-                            disabled={isLoading || !meta}
-                            className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transition-all duration-200"
-                        >
-                            <svg className="w-5 h-5 rotate-90" fill="currentColor" viewBox="0 0 18 20"><path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" /></svg>
-                        </button>
+
+                        <div className="absolute top-1/2 -translate-y-1/2 right-2">
+                            <button
+                                type="submit"
+                                disabled={isLoading || !meta}
+                                className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md shadow-blue-600/20"
+                            >
+                                {isLoading ? (
+                                    <Cpu className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <Send className="w-5 h-5" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 px-1">
+                        <span className="text-xs text-gray-400">Context Window: 32 chars</span>
+                        <span className="text-xs text-gray-400 font-mono">ONNX Runtime Web</span>
                     </div>
                 </form>
 
-                <div
-                    className={`p-3 sm:p-4 text-xs sm:text-sm text-gray-900 dark:text-white min-h-[100px] border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 whitespace-pre-wrap transition-all duration-500`}
-                >
-                    {isLoading ? (
-                        <span className="animate-pulse text-blue-500">Generating...</span>
-                    ) : hasGeneratedText ? (
-                        response
-                    ) : (
-                        <div className="text-gray-600 dark:text-gray-400">
-                            <p>Very small model → limited coherence.</p>
-                            <p>Short context window (32 characters), hence input limited to 32 characters.</p>
-                            <p>No instruction following, no factual knowledge.</p>
-                            <p>This demo is meant for learning and experimentation, not production use.</p>
+                {/* Output Console */}
+                <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-900 shadow-inner min-h-[160px] flex flex-col">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border-b border-white/5">
+                        <div className="flex gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
                         </div>
-                    )}
+                        <span className="text-xs text-gray-400 font-mono ml-2">model_output.txt</span>
+                    </div>
+
+                    <div className="p-4 font-mono text-sm leading-relaxed overflow-y-auto flex-1">
+                        {isLoading ? (
+                            <span className="animate-pulse text-blue-400">Processing input tensors...</span>
+                        ) : hasGeneratedText ? (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-green-400 whitespace-pre-wrap"
+                            >
+                                <span className="text-gray-500 select-none mr-2">$</span>
+                                {response}
+                                <span className="animate-pulse inline-block w-2 h-4 bg-green-400 ml-1 align-middle" />
+                            </motion.div>
+                        ) : (
+                            <div className="text-gray-500 space-y-2">
+                                <p className="flex items-center gap-2"><AlertCircle className="w-4 h-4" /> System ready.</p>
+                                <p className="opacity-70">Model: Decoder-only Transformer</p>
+                                <p className="opacity-70">Params: ~0.2M (Tiny Shakespeare)</p>
+                                <p className="opacity-70">Warn: Output may be hallucinatory.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+        </GlassCard>
     )
 }
