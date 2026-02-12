@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { journeyStages, homeNavItem } from '@/lib/journey-stages'
 
 export default function Navbar() {
@@ -41,14 +42,15 @@ export default function Navbar() {
   }, [pathname])
 
   // Animation variants
-  const navVariants = shouldReduceMotion
+  const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 }
+  const navVariants: Variants = shouldReduceMotion
     ? {
       closed: { x: '-100%' },
       open: { x: 0 },
     }
     : {
-      closed: { x: '-100%', transition: { type: 'spring', stiffness: 300, damping: 30 } },
-      open: { x: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
+      closed: { x: '-100%', transition: springTransition },
+      open: { x: 0, transition: springTransition },
     }
 
   const backdropVariants = shouldReduceMotion

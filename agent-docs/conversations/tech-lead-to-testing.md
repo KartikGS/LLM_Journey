@@ -1,48 +1,65 @@
-# Tech Lead → Testing Agent: CR-004 Navigation Tests Update
+# Handoff: Tech Lead -> Testing Agent
+
+## Subject: CR-007 - Pipeline Stabilization (Test Import + Full Verification)
 
 ## Objective
-Update E2E navigation tests to use the new vision-aligned routes.
+Stabilize the test/build pipeline portion owned by Testing by fixing stale test module pathing and producing verification evidence for CR-007 quality gates.
 
 ## Rationale (Why)
-CR-004 changes navbar routes from old paths to new paths. The existing E2E tests in `navigation.spec.ts` reference old routes:
-- `/transformer` → Now `/foundations/transformers`
-- `/llm` → Now `/models/adaptation`
+CR-007 is a baseline restoration CR. Current pipeline is blocked by deterministic regressions; we need minimal, reversible repair that restores trust in `test/lint/build` without relaxing standards.
 
-Without this update, E2E tests will fail.
+---
 
 ## Constraints
-- Maintain `@smoke` tags on tests
-- Do NOT add new tests (out of scope for CR-004)
-- Route changes per `project-vision.md`:
-  | Old Route | New Route |
-  |-----------|-----------|
-  | `/transformer` | `/foundations/transformers` |
-  | `/llm` | `/models/adaptation` |
 
-## Task
+### Technical
+- Use `pnpm` only.
+- Do not weaken lint/type/test thresholds.
+- No compatibility shim unless explicitly escalated as a deviation.
+- Keep test intent unchanged; this is path stabilization, not behavior redesign.
 
-### Update `__tests__/e2e/navigation.spec.ts`
+### Scope Guardrails
+- This handoff is limited to testing-owned files and verification commands.
+- If you find feature-code changes required, stop and report back.
 
-1. **Test 1:** "should navigate from Home to Transformer"
-   - Change URL expectation: `/transformer` → `/foundations/transformers`
-   - The "Start Your Journey →" link already points to correct route (updated in page.tsx)
-   - Update the page content expectation if needed (the page may not exist yet - adjust test accordingly)
+---
 
-2. **Test 2:** "should navigate from Transformer to LLM"
-   - Change `page.goto('/transformer')` → `page.goto('/foundations/transformers')`
-   - Change URL expectation: `/llm` → `/models/adaptation`
-   - Remove or update the "Explore LLM →" link check (original link may not exist)
+## Scope
 
-> [!WARNING]
-> The actual pages at `/foundations/transformers` and `/models/adaptation` may not exist yet (will 404). The tests should verify navigation occurs, but may need adjustment if page content doesn't exist.
+### Files to Modify
+
+#### `__tests__/components/BaseLLMChat.test.tsx`
+- Update stale import from old transformer path to canonical path under `app/foundations/transformers`.
+- Do not change assertion semantics unless required by canonical path migration evidence.
+
+---
 
 ## Definition of Done
-- [ ] E2E tests reference new routes
-- [ ] `pnpm exec playwright test __tests__/e2e/navigation.spec.ts` passes (or clearly shows expected 404 behavior)
-- [ ] No regressions in other E2E tests
+- [ ] Stale import in `__tests__/components/BaseLLMChat.test.tsx` is corrected to canonical module path.
+- [ ] `pnpm test` passes (exit code `0`).
+- [ ] `pnpm lint` passes (exit code `0`).
+- [ ] `pnpm exec tsc --noEmit` passes (exit code `0`).
+- [ ] `pnpm build` passes (exit code `0`).
+- [ ] Any remaining failure is explicitly classified as CR-related vs pre-existing.
 
-## Dependency
-Wait for Frontend Agent to complete their tasks first, as `page.tsx` updates will affect the "Start Your Journey" link behavior.
+## Verification
+1. Apply the import path fix.
+2. Run `pnpm test`.
+3. Run `pnpm lint`.
+4. Run `pnpm exec tsc --noEmit`.
+5. Run `pnpm build`.
+6. Capture concise evidence for each command (pass/fail + relevant error lines if fail).
 
-## Report
-After completion, write your work report in `/agent-docs/conversations/testing-to-tech-lead.md`.
+## Report Back
+Write execution report to `agent-docs/conversations/testing-to-tech-lead.md` including:
+- [Changes Made]
+- [Verification Results]
+- [Failure Classification]
+- [Deviations] (if any)
+
+Reference plan: `agent-docs/plans/CR-007-plan.md`
+
+---
+
+*Handoff created: 2026-02-12*
+*Tech Lead Agent*

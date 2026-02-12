@@ -23,14 +23,10 @@ Tags may be combined when appropriate.
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
--   **Recent Focus**: [S] **Visual Enhancement**: `CR-006` - Premium overhaul of Transformer Page with glassmorphism and animations - **Completed**.
+-   **Recent Focus**: [S][TEST] **Pipeline Stabilization**: `CR-007` - Restored `test/lint/build` quality gates after regression; no shim-based workaround introduced - **Completed**.
+-   **Previous**: [S] **Visual Enhancement**: `CR-006` - Premium overhaul of Transformer Page with glassmorphism and animations - **Completed**.
 -   **Previous**: [S] **Visual Enhancement**: `CR-005` - Premium visual enhancement for Home Page and Navbar with glassmorphism, gradient glows, and framer-motion animations - **Completed**.
 -   **Previous**: [S] **Navbar Alignment**: `CR-004` - Aligned navbar routes, names, and icons with project vision - **Completed**.
--   **Recent Focus**: [S][DOC] **Git Guidelines**: Implemented `CR-002`. Standardized on Conventional Commits, `feat/CR-ID` branching, and `husky` enforcement. - **Completed**.
--   **Recent Focus**: [S][DOC] **Agent Refinement**: Hardened `AGENTS.md` and `roles/ba.md` with strict reading checks and governance protocols - **Completed**.
--   **Previous**: [S][M] **Standard Kit**: Defined CR-001 for library standardization and governance - **Completed**.
--   **Previous**: [S][DOC] **Agent Meta-Refinement**: Codified "Permission to Disagree," "Mandatory Reading Check," and "BA-Senior Consultation" in agent docs - **Completed**.
--   **Previous**: [S][DOC] Vision Finalization: Added explicit audience targeting and canonical roadmap URIs - **Completed**.
 
 
 ## Next Priorities
@@ -38,3 +34,10 @@ Tags may be combined when appropriate.
 -   [ ] [M] Implement Model Training & Adaptation (LLM + Fine-Tuning) page.
 -   [ ] [L] Implement RAG pipeline (Retrieval-Augmented Generation).
 -   [ ] [L] Setup Evaluation & Observability framework.
+
+## Archive
+-   [S][DOC] **Git Guidelines**: Implemented `CR-002`. Standardized on Conventional Commits, `feat/CR-ID` branching, and `husky` enforcement. - **Completed**.
+-   [S][DOC] **Agent Refinement**: Hardened `AGENTS.md` and `roles/ba.md` with strict reading checks and governance protocols - **Completed**.
+-   [S][M] **Standard Kit**: Defined CR-001 for library standardization and governance - **Completed**.
+-   [S][DOC] **Agent Meta-Refinement**: Codified "Permission to Disagree," "Mandatory Reading Check," and "BA-Senior Consultation" in agent docs - **Completed**.
+-   [S][DOC] Vision Finalization: Added explicit audience targeting and canonical roadmap URIs - **Completed**.

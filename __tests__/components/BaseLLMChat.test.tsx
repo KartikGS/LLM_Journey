@@ -2,7 +2,7 @@
 // Orchestration logic is covered in generateClient integration tests.
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import BaseLLMChat from '@/app/transformer/components/BaseLLMChat';
+import BaseLLMChat from '@/app/foundations/transformers/components/BaseLLMChat';
 import { generate } from '@/lib/llm/generateClient';
 
 // Mock generateClient

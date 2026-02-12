@@ -1,17 +1,30 @@
-# Tech Lead Prompt: Execute CR-006
+# Tech Lead Prompt: Execute CR-007
 
-**Context**: 
-The Transformer Page is functionally correct but visually flat. We need to align it with the new premium design language established in CR-005.
+## Context
+The repository is currently unstable after the latest CR: quality gates are broken (`test` and `build`), while `lint` is green. This blocks safe iteration and release confidence.
 
-**Goal**:
-Implement the visual overhaul defined in `agent-docs/requirements/CR-006-transformer-page.md`.
+## Goal
+Execute `agent-docs/requirements/CR-007-pipeline-stabilization.md` and restore a fully green local pipeline:
+- `pnpm test`
+- `pnpm lint`
+- `pnpm build`
 
-**Key Directives**:
-1.  **Read the CR**: Review `CR-006` for specific visual requirements (Glassmorphism, Gradients, Cards).
-2.  **Reference CR-005**: Look at the logic in `app/page.tsx` and `browser-support-fallback.tsx` (or the previous plan `CR-005-plan.md`) for implementation patterns.
-3.  **Client Component Strategy**: You authorize the conversion of this page to a Client Component to support `framer-motion`.
-4.  **No Logic Changes**: Ensure the underlying `BaseLLMChat` functionality remains untouched and functional.
-5.  **Plan First**: Create `plans/CR-006-plan.md` before coding.
+## Discovery Evidence (BA)
+- Investigation report: `agent-docs/reports/INVESTIGATION-CR-007-pipeline-regression.md`
+- Current hard failures:
+  - stale import in `__tests__/components/BaseLLMChat.test.tsx`
+  - TypeScript/framer-motion variant typing failure in `app/ui/navbar.tsx`
 
-**Hand-off**:
-Please assume the role of **Tech Lead** and execute this plan.
+## Key Directives
+1. Read CR-007 and produce `agent-docs/plans/CR-007-plan.md` before implementation.
+2. Prioritize minimal, reversible fixes that restore baseline stability.
+3. Preserve architecture/security invariants; do not weaken TypeScript or lint settings.
+4. If temporary workaround is required, report as deviation with rollback path.
+5. Include verification evidence for all four checks:
+   - `pnpm test`
+   - `pnpm lint`
+   - `pnpm build`
+   - `pnpm exec tsc --noEmit`
+
+## Hand-off
+Please assume the role of **Tech Lead** and execute this CR via the standard planning and delegation workflow.

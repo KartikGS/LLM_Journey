@@ -1,45 +1,61 @@
-# Handoff: Tech Lead → BA Agent
+# Handoff: Tech Lead -> BA Agent
 
-## Subject: CR-006 - Transformer Page Visual Overhaul (Completed)
+## Subject: CR-007 - Pipeline Stabilization for Test, Lint, and Build (Completed)
 
 ## Technical Summary
-The visual overhaul of the Transformer foundations page is complete. We have successfully migrated the page to a "Premium" aesthetic using the new Design System components (`GlassCard`, `GlowBackground`, `GradientText`). The implementation aligns with the visual standards set in CR-005.
+CR-007 stabilization is complete. The two regression points identified in discovery were resolved with minimal, reversible changes:
+- Test import path updated to match the migrated transformers route structure.
+- Framer Motion navbar variants were made strict-TypeScript-safe without behavior changes.
 
-### Key Changes
-- **Design System**: Extracted `GlassCard`, `GlowBackground`, and `GradientText` into `/app/ui/components/` for reuse.
-- **Visuals**: Applied glassmorphism, multi-layered glows, and staggered animations to `/foundations/transformers`.
-- **Layout**: Refactored the "Model Overview" section from a bulleted list to a responsive Data Grid.
-- **Reference**: Updated `app/page.tsx` (Home) to use the new standardized components, resolving previous "shaky screen" issues.
-- **Tests**: Updated `transformer.spec.ts` to target the correct route (`/foundations/transformers`).
+### Final Changed Files
+- `__tests__/components/BaseLLMChat.test.tsx`
+- `app/ui/navbar.tsx`
 
 ## Evidence of AC Fulfillment
-- **Visuals**:
-    - [x] "Page background features multi-layered gradient blobs/glows." -> Verified in `GlowBackground.tsx` usage.
-    - [x] "Model Overview and other sections are presented as individual Glassmorphic cards." -> Verified `GlassCard` usage in `page.tsx`.
-    - [x] "Key Specs are displayed as a visual grid/tags." -> Verified `SpecTag` component grid.
-    - [x] "Dark Mode and Light Mode both have legible contrast." -> Verified manually.
-- **Interactivity**:
-    - [x] "Elements fade/slide in on load." -> Verified `framer-motion` implementation.
-    - [x] "Chat interface container looks distinct and premium." -> Verified `BaseLLMChat.tsx` styling.
-- **Technical**:
-    - [x] "Passes `pnpm lint`." -> **Passed**.
-    - [x] "Passes `pnpm build`." -> **Passed**.
-    - [x] "Passes `transformer.spec.ts`." -> **Passed** (after route correction).
+
+### AC-1: `pnpm test` passes
+- Command: `pnpm test`
+- Result: PASS (`14 passed, 14 total`; `91 passed, 91 total`)
+
+### AC-2: `pnpm lint` passes
+- Command: `pnpm lint`
+- Result: PASS (`No ESLint warnings or errors`)
+
+### AC-3: `pnpm build` passes
+- Command: `pnpm build`
+- Result: PASS (production build completes successfully)
+- Note: Non-blocking webpack warning from `require-in-the-middle` in OTel dependency chain remains informational only.
+
+### AC-4: No temporary shim merged unless documented deviation
+- Result: PASS
+- Verification: no compatibility shims added; only direct path/type fixes were applied.
+
+### Additional Verification Requested by BA Handoff
+- Command: `pnpm exec tsc --noEmit`
+- Result: PASS
+
+## Adversarial Diff Review
+- `__tests__/components/BaseLLMChat.test.tsx`: only import path changed from old `@/app/transformer/...` to canonical `@/app/foundations/transformers/...`; assertions and test behavior unchanged.
+- `app/ui/navbar.tsx`: added `Variants` typing and reusable `springTransition` with literal `'spring' as const`; animation behavior preserved while fixing TS2322.
 
 ## Technical Retrospective
-- **Reusable Components**: extracting `GlassCard` was a high-value move. It drastically reduced code duplication in `app/page.tsx` and ensured consistent hover behaviors.
-- **Testing Debt**: While the E2E tests pass, we identified that the testing suite for `transformers` could be more robust (visual regression, more granular interaction tests).
+- Root causes were narrow and migration-related (stale path + strict typing inference drift).
+- Stabilization strategy (targeted patching, no config relaxation) restored baseline quality gates without architectural impact.
+
+## Failure Classification
+- CR-related blockers: none remaining.
+- Non-blocking observation: webpack critical-dependency warning in OTel transitive dependency during build.
+- Environment constraint (verification context): `pnpm test:e2e` cannot run in this sandbox due to port bind restriction (`listen EPERM 0.0.0.0:3001`). This does not affect CR-007 AC because required gates are `test/lint/build` (+ `tsc --noEmit` evidence).
 
 ## Deployment Notes
-- No new environment variables required.
-- Standard Vercel deployment.
-
-## Follow-up Recommendations
-- **CR-007 (Testing)**: Create a dedicated CR to harden the E2E suite and potentially add visual regression testing, as agreed with the User.
+- No config or environment variable changes required.
+- Safe rollback: revert the two changed files listed above.
 
 ## Link to Updated Docs
-- `agent-docs/plans/CR-006-plan.md`
+- `agent-docs/requirements/CR-007-pipeline-stabilization.md`
+- `agent-docs/plans/CR-007-plan.md`
+- `agent-docs/conversations/testing-to-tech-lead.md`
 - `agent-docs/conversations/frontend-to-tech-lead.md`
 
-*Report created: 2026-02-11*
+*Report created: 2026-02-12*
 *Tech Lead Agent*
