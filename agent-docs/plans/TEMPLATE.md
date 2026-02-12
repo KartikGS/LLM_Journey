@@ -33,6 +33,20 @@
 | 1 | [e.g. Frontend] | [Description] |
 | 2 | [e.g. Testing] | [Description] |
 
+## Delegation Graph (MANDATORY)
+- **Execution Mode**: [Parallel | Sequential]
+- **Dependency Map**:
+  - [Step B depends on Step A output? yes/no]
+  - [If yes, specify required artifact/evidence]
+- **Parallel Groups**:
+  - [Group 1: Step X + Step Y] (only if independent)
+  - [Group 2: ...]
+- **Handoff Batch Plan**:
+  - [Parallel: list all handoffs issued together]
+  - [Sequential: list first handoff only, then expected follow-up handoffs]
+- **Final Verification Owner**:
+  - [Which agent runs final full quality gates and reports pass/fail]
+
 ## Operational Checklist
 - [ ] **Environment**: No hardcoded values.
 - [ ] **Observability**: Tracing/Logging/Metrics included.

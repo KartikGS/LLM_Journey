@@ -72,6 +72,29 @@ Configuration lives in:
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
 
+### Command Sequencing Rule (Pipeline Verification)
+For final CR verification evidence, run quality gates in sequence, not in parallel:
+1. `pnpm test`
+2. `pnpm lint`
+3. `pnpm exec tsc --noEmit`
+4. `pnpm build`
+
+Reason: some projects include generated `.next/types` entries in `tsconfig` and concurrent `tsc` + `build` execution can produce false negatives from transient type-generation state.
+
+---
+
+## Pipeline Stabilization Playbook (Regression Repair CRs)
+
+Use this order when a CR objective is to restore a broken pipeline:
+1. Fix test-path/module-resolution regressions first (fast signal restoration).
+2. Fix feature/type regressions next (strict compile/build blockers).
+3. Run full quality gates once at the end for closure evidence.
+
+### Ownership Guidance
+- Testing Agent: test-path fixes and full gate execution/reporting.
+- Frontend/Backend Agent: feature/type fixes in owned code.
+- Tech Lead: sequencing decision, integration review, and final BA handoff classification.
+
 ---
 
 ## E2E Refinement & Artifacts

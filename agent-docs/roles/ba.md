@@ -87,6 +87,16 @@ Every BA task **must** produce:
    - For bugs, performance issues, or environmental conflicts.
    - Document "Symptoms", "Potential Causes", and "Suggested Strategies".
    - Put in `/agent-docs/reports/INVESTIGATION-XXX.md`.
+- **Investigation Report Trigger Matrix**
+   - Create an investigation report when at least one condition is true:
+     - Failing `test`, `lint`, or `build` with unclear ownership
+     - Production-only behavior differs from local/dev behavior
+     - Multiple plausible root causes exist and implementation should not start with guessing
+     - Security, telemetry, or CSP-related regressions are involved
+   - Investigation report can be skipped when all are true:
+     - Scope is a straightforward enhancement (not a regression/incident)
+     - Root cause is already explicit in user-provided evidence
+     - No cross-cutting risk area (security/telemetry/build pipeline) is implicated
 - **Change Requirement (CR) Document**
    - **Numbering**: Check `/agent-docs/requirements/` for existing CRs and increment by 1. Format: `CR-XXX` (zero-padded to 3 digits, e.g., `CR-005`, `CR-012`).
    - Create a new file in `/agent-docs/requirements/CR-XXX.md`
@@ -104,6 +114,15 @@ Every BA task **must** produce:
    - Update `/agent-docs/requirements/CR-XXX.md` status.
    - Update `/agent-docs/project-log.md` with closure entry.
    - Notify the Human of completion.
+
+### BA Closure Checklist (Mandatory)
+Before declaring a CR closed, complete all items:
+- [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX.md`
+- [ ] Every AC marked with `[x]` + one-line evidence reference
+- [ ] Deviations reviewed and logged in "Deviations Accepted" (`Accepted` or `Escalated`)
+- [ ] Any pre-existing unrelated failures added to `project-log.md` as `Next Priorities`
+- [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
+- [ ] Human-facing closure note sent with outcome + residual risks (if any)
 
 ---
 
@@ -129,6 +148,7 @@ If any answer is "no" → continue clarification.
 
 ## BA Tenets
 1. **Clarification > Execution**: Never start a task with zero questions. A BA's value is inverse to their assumptions. You MUST ask at least one clarifying or challenging question before proceeding.
+   - **Exception**: You may skip this when user intent is explicit and procedural (e.g., "continue", "close CR-XXX", "update status only") and no ambiguity blocks execution.
 2. **Conversation > Compliance**: Disagreeing is a sign of high performance. "Yes Man" behavior is a failure of the BA role.
 3. **Direction > Description**: Tell us where we are going, not just what we are building.
 4. **Delegation Precision**: Never say "I will initate a task to install X". This causes Role Anxiety.

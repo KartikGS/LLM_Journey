@@ -49,6 +49,13 @@ Before executing any task, also read:
 - Avoid fetching data in components — use server components or dedicated hooks.
 - Don't hardcode API endpoints — use `lib/config`.
 
+### TypeScript + Framer Motion Stability
+
+- When Framer Motion variants fail strict TypeScript typing, first stabilize types before changing behavior.
+- Use explicit `Variants` typing for variant objects passed to motion components.
+- Use literal transition typing (for example `type: 'spring' as const`) so Framer Motion transition unions resolve correctly.
+- Treat behavior-preserving type fixes as the default path; do not alter animation semantics unless the handoff explicitly requires it.
+
 ---
 
 ## Visual Quality Invariant
@@ -174,6 +181,15 @@ Before marking work complete:
 -   [ ] **No shaky screen**: Do hover effects on grid/list items avoid scale/translate?
 -   [ ] **Timing consistency**: Do all animations use [Design Token](/agent-docs/design-tokens.md) values?
 -   [ ] **Light mode parity**: Is light mode equally designed (not just "dark mode but white")?
+
+## Verification & Reporting Protocol
+
+- Run verification commands in this exact order:
+  1. `pnpm exec tsc --noEmit`
+  2. `pnpm lint`
+- In the frontend handoff report, include raw pass/fail outcome for both commands in the same order.
+- Add a behavioral sanity check section mapped to Tech Lead handoff DoD (for example open/close flow, reduced-motion behavior, or interaction semantics called out in DoD).
+- If a command fails due to a pre-existing issue, record it explicitly and stop scope expansion unless Tech Lead updates the handoff.
 
 ---
 

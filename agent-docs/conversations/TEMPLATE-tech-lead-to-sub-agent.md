@@ -2,6 +2,9 @@
 
 ## Subject: [CR-ID] - [Title]
 
+## Status
+`issued`
+
 ## Objective
 [What the sub-agent needs to accomplish. Be specific and outcome-oriented.]
 

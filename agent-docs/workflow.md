@@ -23,10 +23,26 @@
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
 6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`. 
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
+7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
+   - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
+   - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
+
+#### Delegation Mode Rules
+- **Parallel Mode**
+  1. Create handoffs for all independent sub-agents in one batch.
+  2. Enter Wait State after issuing the batch.
+  3. Review all incoming reports before integration verification.
+- **Sequential Mode**
+  1. Create handoff for the first required sub-agent only.
+  2. Enter Wait State.
+  3. After report review, issue the next handoff(s) based on validated outputs.
+- **Decision Test**: If Step B requires any artifact, decision, or evidence from Step A, execution MUST be Sequential.
 
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
 - **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the [Handoff Template](/agent-docs/conversations/TEMPLATE-tech-lead-to-sub-agent.md) for consistent structure.
-- **The "Wait" State**: Once `agent-docs/conversations/tech-lead-to-<role>.md` is created, the Tech Lead Agent MUST stop and report back to the User.
+- **The "Wait" State**:
+  - **Parallel Mode**: Once the full planned handoff batch is created, the Tech Lead Agent MUST stop and report back to the User.
+  - **Sequential Mode**: Once the current step handoff is created, the Tech Lead Agent MUST stop and report back to the User.
 - **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Tech Lead Agent. 
 - **The "Shift" Refusal**: If you feel the urge to "just do it" to be efficient, you are violating the Tech Lead role. Stop. Wait for the User to either:
   1. Approve the handoff for a sub-agent execution.
@@ -34,9 +50,10 @@
 
 #### Wait State Output
 When entering the Wait State, the Tech Lead MUST inform the user:
-1. Which sub-agent role needs to execute next
-2. The handoff file location (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
-3. Clear instruction: *"Start a new session and assign the [Role] to execute this handoff."*
+1. Execution mode selected (`Parallel` or `Sequential`)
+2. Which sub-agent role(s) need to execute next
+3. The handoff file location(s) (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
+4. Clear instruction: *"Start a new session and assign the [Role] to execute this handoff."*
 
 Do NOT simply say "I'm done" — the user needs actionable next steps.
 

@@ -21,6 +21,21 @@ Tags may be combined when appropriate.
 - Keep at most **3** `Previous` entries visible. Move older entries to the `## Archive` section at the bottom of this file.
 - Use consistent prefix labels: `Recent Focus` (1 entry max), `Previous` (up to 3).
 
+### Canonical Transition Example
+Before adding a new completion:
+- Recent Focus: `CR-010`
+- Previous: `CR-009`, `CR-008`, `CR-007`
+
+After adding `CR-011`:
+- Recent Focus: `CR-011`
+- Previous: `CR-010`, `CR-009`, `CR-008`
+- Archive: includes `CR-007` (and older)
+
+Validation rules:
+- Exactly one `Recent Focus`
+- At most three `Previous`
+- Anything older than those three is moved to `Archive`
+
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
 -   **Recent Focus**: [S][TEST] **Pipeline Stabilization**: `CR-007` - Restored `test/lint/build` quality gates after regression; no shim-based workaround introduced - **Completed**.

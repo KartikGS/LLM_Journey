@@ -26,6 +26,11 @@
 
 ## Verification Mapping
 - **Development Proof**: [How should the developer prove the AC are met? e.g., 'Passes E2E test X', 'Manual verification of fallback UI']
+- **AC Evidence Format (for closure)**:
+  - Use one line per AC in this pattern:
+  - ``[x] <AC text> — Verified: <file-or-command>, <result>``
+  - Example:
+  - ``[x] pnpm build passes — Verified: `pnpm build`, exit code 0``
 - **User Validation**: [How will the human verify this? e.g., 'Navigation link takes me to /new-page']
 
 ## Dependencies
