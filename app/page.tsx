@@ -1,126 +1,193 @@
+'use client';
+
 import Link from "next/link";
+import { journeyStages } from "@/lib/journey-stages";
+import { motion, useReducedMotion } from "framer-motion";
+import { GlowBackground } from "@/app/ui/components/GlowBackground";
+import { GlassCard } from "@/app/ui/components/GlassCard";
+import { GradientText } from "@/app/ui/components/GradientText";
 
 export default function Home() {
-  const journeyStages = [
+  const shouldReduceMotion = useReducedMotion();
+
+  const mentalModelPhases = [
     {
-      title: "Transformer",
-      href: "/transformer",
-      description: "Start with the foundation - a decoder-only transformer model trained on Shakespeare",
-      stage: 1,
+      phases: "1-3",
+      paradigm: "The Model",
+      question: "How do we turn math into language?",
     },
     {
-      title: "LLM",
-      href: "/llm",
-      description: "Explore large language models and their capabilities",
-      stage: 2,
+      phases: "4",
+      paradigm: "Context",
+      question: "How do we stop the model from forgetting or hallucinating?",
     },
     {
-      title: "Fine-tuning",
-      href: "/fine-tuning",
-      description: "Learn how to adapt pre-trained models for specific tasks",
-      stage: 3,
+      phases: "5-7",
+      paradigm: "The System",
+      question: "How do we give the model hands and partners?",
     },
     {
-      title: "Tools",
-      href: "/tools",
-      description: "Integrate external tools and APIs with LLMs",
-      stage: 4,
-    },
-    {
-      title: "RAG",
-      href: "/rag",
-      description: "Retrieval-Augmented Generation for enhanced context-aware responses",
-      stage: 5,
-    },
-    {
-      title: "Agents",
-      href: "/agents",
-      description: "Build advanced agent systems with reasoning capabilities",
-      stage: 6,
-    },
-    {
-      title: "MCP",
-      href: "/mcps",
-      description: "Model Context Protocol for structured model interactions",
-      stage: 7,
-    },
-    {
-      title: "Deployment",
-      href: "/deployment",
-      description: "Best practices for deploying LLM applications in production",
-      stage: 8,
-    },
-    {
-      title: "Safety",
-      href: "/safety",
-      description: "Safety considerations and guardrails for LLM applications",
-      stage: 9,
-    },
-    {
-      title: "Evaluation",
-      href: "/evaluation",
-      description: "Methods and metrics for evaluating LLM performance",
-      stage: 10,
+      phases: "8-10",
+      paradigm: "Production",
+      question: "How do we make it safe, fast, and measurable?",
     },
   ];
 
-  return (
-    <div className="w-full flex-1 flex flex-col gap-6 sm:gap-8 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto">
-      {/* Hero Section */}
-      <div className="w-full flex flex-col justify-around items-center gap-4 sm:gap-6">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-center">
-          LLM Journey
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 text-center max-w-3xl">
-          A comprehensive exploration of Large Language Models, from basic transformer architectures to advanced agent systems.
-          Learn about the evolution of LLM technology.
-        </p>
-      </div>
+  // Animation variants
+  const fadeInUp = shouldReduceMotion
+    ? {}
+    : {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.5 },
+    };
 
-      {/* Main CTA */}
-      <div className="w-full flex flex-col items-center justify-center gap-4">
-        <Link
-          href="/transformer"
-          className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-        >
-          Start Your Journey →
+  const staggerContainer = shouldReduceMotion
+    ? {}
+    : {
+      animate: {
+        transition: {
+          staggerChildren: 0.1,
+        },
+      },
+    };
+
+  return (
+    <div className="w-full flex-1 flex flex-col gap-6 sm:gap-8 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto relative">
+      {/* Standardized Static Background */}
+      <GlowBackground />
+
+      {/* Hero Section */}
+      <motion.div className="w-full" {...fadeInUp}>
+        <GlassCard variant="hero" className="p-6 sm:p-8 md:p-12">
+          <div className="flex flex-col justify-around items-center gap-4 sm:gap-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-center">
+              <GradientText>LLM Journey</GradientText>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 text-center max-w-3xl">
+              Instead of teaching APIs, LLM Journey teaches the{" "}
+              <strong>architectural ideas</strong> that led from transformers to agents.
+              Learn the <em>mechanics, trade-offs, and failure modes</em> that matter in production.
+            </p>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-500 text-center max-w-2xl">
+              <strong>Learn with Tiny, Build with Large:</strong> Use small models to understand mechanics,
+              large models to build real applications.
+            </p>
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      {/* Main CTA - Allowed to scale as it is an isolated element */}
+      <motion.div
+        className="w-full flex flex-col items-center justify-center gap-4"
+        {...fadeInUp}
+      >
+        <Link href="/foundations/transformers" className="relative group">
+          {/* Gradient border glow - retained for primary CTA only */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-xl blur opacity-40 group-hover:opacity-70 transition duration-300" />
+
+          <motion.span
+            className="relative flex px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg bg-black dark:bg-white text-white dark:text-black transition-all duration-200"
+            whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+          >
+            Start Your Journey →
+          </motion.span>
         </Link>
         <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 text-center">
-          Begin with the foundational Transformer model
+          Begin with the foundational Transformer architecture
         </p>
-      </div>
+      </motion.div>
 
-      {/* Journey Overview */}
-      <div className="w-full flex flex-col gap-6 sm:gap-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center">
-          The Journey Ahead
+      {/* Mental Model: From Tensors to Teams */}
+      <motion.div
+        className="w-full flex flex-col gap-4 sm:gap-6"
+        {...fadeInUp}
+      >
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center text-gray-900 dark:text-white">
+          From Tensors to Teams
         </h2>
         <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto">
-          Follow the progression from basic models to sophisticated AI systems. Each stage builds upon the previous,
-          introducing new concepts, techniques, and capabilities.
+          Each phase exists because the previous one failed at a specific task.
+          This is a conceptual dependency chain, not just a list of topics.
         </p>
-      </div>
+
+        <div className="w-full max-w-3xl mx-auto">
+          <GlassCard variant="default">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm sm:text-base">
+                <thead>
+                  <tr className="border-b border-black/[0.08] dark:border-white/[0.145] bg-black/[0.02] dark:bg-white/[0.02]">
+                    <th className="py-4 px-4 text-left font-semibold text-gray-900 dark:text-white">Phase</th>
+                    <th className="py-4 px-4 text-left font-semibold text-gray-900 dark:text-white">Paradigm</th>
+                    <th className="py-4 px-4 text-left font-semibold text-gray-900 dark:text-white">Solving The Problem of...</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mentalModelPhases.map((phase, index) => (
+                    <tr
+                      key={phase.phases}
+                      className={`border-b border-black/[0.05] dark:border-white/[0.08] transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] ${index === mentalModelPhases.length - 1 ? "border-b-0" : ""
+                        }`}
+                    >
+                      <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{phase.phases}</td>
+                      <td className="py-4 px-4 text-gray-700 dark:text-gray-300">{phase.paradigm}</td>
+                      <td className="py-4 px-4 text-gray-600 dark:text-gray-400">{phase.question}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </GlassCard>
+        </div>
+      </motion.div>
+
+      {/* Journey Overview */}
+      <motion.div
+        className="w-full flex flex-col gap-6 sm:gap-8"
+        {...fadeInUp}
+      >
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center text-gray-900 dark:text-white">
+          The 10-Stage Journey
+        </h2>
+        <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto">
+          Follow the progression from foundational models to production systems.
+          Each stage builds upon the previous, addressing real engineering challenges.
+        </p>
+      </motion.div>
 
       {/* Journey Stages Grid */}
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {journeyStages.map((stage) => (
-          <Link
+      <motion.div
+        className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+        {...staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        {journeyStages.map((stage, index) => (
+          <motion.div
             key={stage.href}
-            href={stage.href}
-            className="flex flex-col gap-3 p-4 sm:p-6 rounded-lg border border-black/[.08] dark:border-white/[.145] bg-white/[.5] dark:bg-black/[.5] hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] transition-all hover:shadow-lg"
+            {...fadeInUp}
+            transition={{ delay: shouldReduceMotion ? 0 : index * 0.05 }}
           >
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/[.08] dark:bg-white/[.145] text-sm font-semibold">
-                {stage.stage}
-              </span>
-              <h3 className="text-lg sm:text-xl font-semibold">{stage.title}</h3>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              {stage.description}
-            </p>
-          </Link>
+            <Link href={stage.href} className="block h-full">
+              {/* Variant interactive ensures no shaky scale effect, only shadow/border */}
+              <GlassCard variant="interactive" className="h-full p-4 sm:p-6 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 text-sm font-semibold text-gray-900 dark:text-white">
+                    {stage.stage}
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-gray-900 dark:text-white">
+                    {stage.title}
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                  {stage.description}
+                </p>
+              </GlassCard>
+            </Link>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

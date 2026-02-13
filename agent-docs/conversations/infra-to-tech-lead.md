@@ -32,7 +32,7 @@ I have successfully implemented the Git Guidelines and Tooling as requested in `
 -   `agent-docs/development/git-hygiene.md`
 -   `agent-docs/workflow.md`
 
-## Notes for Senior Developer
+## Notes for Tech Lead
 -   The `commitlint` configuration uses `.mjs` to align with the project's modern stack, though `package.json` does not strictly enforce valid ESM for all files yet. It works correctly with `pnpm exec commitlint`.
 -   Branch naming convention is defined in policy (`CONTRIBUTING.md`) but not yet enforced by technical hooks (as per plan).
 
@@ -44,5 +44,5 @@ I have successfully implemented the Git Guidelines and Tooling as requested in `
     -   Confirmed CR-ID branch naming convention (`feat/CR-XXX-...`).
 
 ## Next Steps
--   Senior Developer to perform final manual verification if desired.
+-   Tech Lead to perform final manual verification if desired.
 -   Close CR-002.

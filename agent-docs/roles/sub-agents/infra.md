@@ -8,17 +8,22 @@ Development environment, deployment pipelines, and security.
 
 -   **Owns**: `Dockerfile`, `.github/workflows/**`, `middleware.ts` (security parts).
 
-## Required Reads
+## Context Loading
 
-Before planning or executing any task:
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Infra-specific readings.
+
+### Role-Specific Readings (Infra)
+Before executing any task, also read:
 - **System design:** [Architecture](/agent-docs/architecture.md)
-- **Key Endpoints:** [Technical Context](/agent-docs/technical-context.md)
-- **Repo Standards:** [/agent-docs/development/git-hygiene.md](/agent-docs/development/git-hygiene.md)
+- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Task Instructions:** [Tech Lead To Infra](/agent-docs/conversations/tech-lead-to-infra.md)
 
 ## Execution Responsibilities
 
-- **Execution input:** Before starting work, read and follow instructions from the Senior Developer agent in [Senior → Infra Execution Guidance](/agent-docs/conversations/senior-to-infra.md)
-- **Execution output:** After completing work, report findings, decisions, and blockers to the Senior Developer agent in [Infra → Senior Report](/agent-docs/conversations/infra-to-senior.md)
+- **Execution input:** Before starting work, read and follow instructions from the Tech Lead agent in [Tech Lead → Infra Execution Guidance](/agent-docs/conversations/tech-lead-to-infra.md)
+- **Execution output:** After completing work, report findings, decisions, and blockers to the Tech Lead agent in [Infra → Tech Lead Report](/agent-docs/conversations/infra-to-tech-lead.md)
 
 ## Checklist
 

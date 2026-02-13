@@ -14,29 +14,33 @@ Ensuring system stability and preventing regression.
     - **No Workarounds**: Do not use brittle alternative selectors (e.g., text-based search) to "get the test to pass" if a unique ID was expected.
     - **Priority**: Resolving the discrepancy via the [Feedback Protocol](/agent-docs/coordination/feedback-protocol.md) is your top priority.
 
-## Required Reads
+## Context Loading
 
-Before planning or executing any task:
-- **Environment and Tool Constraints:** [Tooling Strategy](/agent-docs/tooling-standard.md)
-- **tTest Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
-- **Repo Standards:** [/agent-docs/development/git-hygiene.md](/agent-docs/development/git-hygiene.md)
-- **Key Endpoints:** [/agent-docs/technical-context.md](/agent-docs/technical-context.md)
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Testing-specific readings.
+
+### Role-Specific Readings (Testing)
+Before executing any task, also read:
+- **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Task Instructions:** [Tech Lead To Testing](/agent-docs/conversations/tech-lead-to-testing.md)
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Senior Developer agent in the [Senior To Testing Handoff](/agent-docs/conversations/senior-to-testing.md)
-- Make a report for the Senior Developer agent in the [Testing To Senior Handoff](/agent-docs/conversations/testing-to-senior.md)
+- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Testing Handoff](/agent-docs/conversations/tech-lead-to-testing.md)
+- Make a report for the Tech Lead agent in the [Testing To Tech Lead Handoff](/agent-docs/conversations/testing-to-tech-lead.md)
 
 ### Handling Testability Blockers & Discrepancies
 If the codebase prevents you from writing a required test OR you discover an assumption in the task is false:
 - **Identify the gap/discrepancy**: e.g., "The Submit button has no unique selector" or "WebKit actually supports WASM."
 - **HALT IMMEDIATELY**: Do not modify the component file, and **do not continue with test implementation** for that feature.
-- **Use Feedback Protocol**: File a report in `/agent-docs/conversations/testing-to-senior.md` under `## BLOCKER / FEEDBACK`. Note: This includes environmental configs like `next.config.ts`. If a test fails due to a system-wide setting, you MUST NOT modify that setting yourself.
-- **Wait for Resolution**: The Senior Developer must either update the environment/code or revise the requirement before you proceed.
+- **Use Feedback Protocol**: File a report in `/agent-docs/conversations/testing-to-tech-lead.md` under `## BLOCKER / FEEDBACK`. Note: This includes environmental configs like `next.config.ts`. If a test fails due to a system-wide setting, you MUST NOT modify that setting yourself.
+- **Wait for Resolution**: The Tech Lead must either update the environment/code or revise the requirement before you proceed.
 
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):
-- Document the mismatch in the `/agent-docs/conversations/testing-to-senior.md` report.
+- Document the mismatch in the `/agent-docs/conversations/testing-to-tech-lead.md` report.
 - Update `/agent-docs/testing-strategy.md` if the quirk represents a permanent system constraint.
 
 ## Checklist
@@ -44,4 +48,4 @@ If tests fail due to the environment (e.g., Playwright version mismatch, CI vs l
 -   [ ] Do new features have integration tests?
 -   [ ] Are flakes minimized?
 -   [ ] Is the CI pipeline green?
--   [ ] Have all false assumptions or missing dependencies been reported back to the Senior Developer?
+-   [ ] Have all false assumptions or missing dependencies been reported back to the Tech Lead?

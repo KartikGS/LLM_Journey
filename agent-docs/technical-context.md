@@ -18,7 +18,7 @@ This document provide quick access to key technical configurations and endpoints
 
 ## Standard Kit (Version 1.0)
 > [!WARNING]
-> **Governance Invariant**: Sub-agents are FORBIDDEN from installing packages. Only the Senior Developer may approve and run install commands.
+> **Governance Invariant**: Sub-agents are FORBIDDEN from installing packages. Only the Tech Lead may approve and run install commands.
 
 | Category | Library | Purpose |
 | :--- | :--- | :--- |

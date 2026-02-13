@@ -11,7 +11,7 @@ Currently, library selection is ad-hoc ("figure it out as we go"), leading to po
 ## 3. Scope & Requirements
 
 ### 3.1 The Standard Kit (v1.0)
-The Senior Developer must install and configure the following libraries as the **immutable baseline**:
+The Tech Lead must install and configure the following libraries as the **immutable baseline**:
 
 | Category | Library | Purpose |
 | :--- | :--- | :--- |
@@ -31,7 +31,7 @@ The Senior Developer must install and configure the following libraries as the *
 ### 3.3 Governance Process
 - **Invariant**: Sub-agents (Frontend, Backend, etc.) are **FORBIDDEN** from installing packages.
 - **Proposal Flow**: A sub-agent may propose a new library in their plan.
-- **Approval**: Only the **Senior Developer** may approve and run the install command.
+- **Approval**: Only the **Tech Lead** may approve and run the install command.
 - **Version Control**: Every addition increments the "Standard Kit Version" in the technical context.
 
 ## 4. Acceptance Criteria

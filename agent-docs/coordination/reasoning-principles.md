@@ -42,18 +42,18 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 ## Scope Integrity
 *   **Stay in Your Lane**:
     *   BAs define the *What* and *Why* (the Problem).
-    *   Seniors define the *How* (the Plan).
+    *   Tech Leads define the *How* (the Plan).
     *   Sub-agents execute the *How*.
 *   If you find yourself designing implementation details as a BA, **STOP** and refocus on the problem statement.
 
 ## Logic Loop Prevention (Meta-Analysis)
 *   **Identity Integrity**: If you find yourself arguing with a documented role constraint (e.g., "I should delegate, but I'll do it anyway"), you are entering a logic loop. 
 *   **The "Abort-and-Report"**: If your reasoning steps start to repeat, you become stuck in a cycle of "self-correction" without change, or you feel uncertain about whether you are a "Manager" or a "Doer," stop immediately. Summarize the conflict to the User and ask for a status reset. 
-*   **Contextual Honesty**: Documentation exists to constrain your behavior for the sake of system quality. Bypassing a process "to be fast" is a failure of Senior-level reasoning.
+*   **Contextual Honesty**: Documentation exists to constrain your behavior for the sake of system quality. Bypassing a process "to be fast" is a failure of Tech Lead-level reasoning.
 
 ## The Deviation Protocol (How to Improve)
 If you identify a better pattern (e.g., stricter naming, safer config) during execution:
 1.  **Minor/Safe**: Implement it, but you **MUST** list it in the "Deviations" section of your final report.
-2.  **Major/Risky**: Stop and ask the User/Senior.
+2.  **Major/Risky**: Stop and ask the User/Tech Lead.
 3.  **Prohibited**: Never silently change a requirement and hide it.
 

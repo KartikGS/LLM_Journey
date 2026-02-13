@@ -2,8 +2,16 @@
 
 This protocol defines the mandatory communication and documentation flow between agents to ensure process integrity and role accountability. For handling discrepancies and errors in handoffs, see the [Feedback Protocol](./feedback-protocol.md).
 
-## BA → Senior Developer (Requirement Handoff)
-- **File**: `agent-docs/conversations/ba-to-senior.md`
+## Universal Handoff Status Model (MANDATORY)
+Every active handoff/report should declare one status:
+- `issued` - Handoff created, execution not started
+- `in_progress` - Agent is actively working
+- `blocked` - Execution cannot continue due to blocker
+- `complete` - Agent finished implementation and local verification
+- `verified` - Tech Lead completed adversarial review and integration verification
+
+## BA → Tech Lead (Requirement Handoff)
+- **File**: `agent-docs/conversations/ba-to-tech-lead.md`
 - **Trigger**: CR is "Clarified" and approved by User.
 - **Content**:
     - [Objective]
@@ -13,12 +21,13 @@ This protocol defines the mandatory communication and documentation flow between
     - [Constraints]
     - [Rationale (The 'Why')]
     - [Risk Analysis]
-- **Protocol**: Senior Dev MUST acknowledge the handoff and confirm the task is well-defined before planning.
+- **Protocol**: Tech Lead MUST acknowledge the handoff and confirm the task is well-defined before planning.
 
-## Senior Developer → Sub-Agent (Task Delegation)
-- **File**: `agent-docs/conversations/senior-to-<role>.md`
+## Tech Lead → Sub-Agent (Task Delegation)
+- **File**: `agent-docs/conversations/tech-lead-to-<role>.md`
 - **Trigger**: Planning Gate is complete and User has given "Go".
 - **Content**:
+    - [Status] (`issued`)
     - [Objective]
     - [Constraints]
     - [Rationale / Rationale (The 'Why')]
@@ -26,27 +35,41 @@ This protocol defines the mandatory communication and documentation flow between
     - [Reference Files]
 - **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.
 
-## Sub-Agent → Senior Developer (Execution Report)
-- **File**: `agent-docs/conversations/<role>-to-senior.md`
+## Sub-Agent → Tech Lead (Execution Report)
+- **File**: `agent-docs/conversations/<role>-to-tech-lead.md`
 - **Trigger**: Implementation and local verification are complete.
 - **Content**:
+    - [Status] (`complete` or `blocked`)
     - [Changes Made]
     - [Verification Results] (Tests passed)
+    - [Dependency Consumption] (Which upstream handoff/report this work depends on)
+    - [Failure Classification] (CR-related, pre-existing, environmental, or non-blocking warning)
+    - [Ready for Next Agent] (yes/no)
     - [New Artifacts]
     - [Follow-up Recommendations]
-- **Protocol**: Senior Dev MUST review this report and verify integration before Verification Phase completion.
+- **Protocol**: Tech Lead MUST review this report and verify integration before Verification Phase completion.
 
-## Senior Developer → BA Agent (Verification Completion)
-- **File**: `agent-docs/conversations/senior-to-ba.md`
+## Tech Lead → BA Agent (Verification Completion)
+- **File**: `agent-docs/conversations/tech-lead-to-ba.md`
 - **Trigger**: Integration and verification (all tests pass) complete.
 - **Content**:
+    - [Status] (`verified`)
     - [Technical Summary]
     - [Evidence of AC Fulfillment] (MUST include *executable* verification commands, e.g. "Run `pnpm test:e2e`", "Check file X")
     - [Technical Retrospective] (Key trade-offs, lessons learned, or new debt)
 
     - [Deployment Notes]
     - [Link to Updated Docs]
-- **Protocol**: Senior Dev MUST NOT update `project-log.md`. This is reserved for the BA Agent in Acceptance Phase.
+- **Protocol**: Tech Lead MUST NOT update `project-log.md`. This is reserved for the BA Agent in Acceptance Phase.
+
+## Failure Classification Rules (MANDATORY)
+When reporting failures or warnings, classify each item exactly once:
+- **CR-related**: Caused by current CR scope and blocks closure until fixed.
+- **Pre-existing**: Already existed before current CR scope and does not invalidate CR closure.
+- **Environmental**: Execution environment issue (sandbox/port/network/infra) not caused by code change.
+- **Non-blocking warning**: Warning that does not fail required quality gates.
+
+If classified as **environmental**, include concrete evidence (command + error line) and avoid framing it as a product regression.
 
 ## BA Agent → User (Acceptance Notification)
 - **Trigger**: Acceptance Phase (Acceptance) complete.

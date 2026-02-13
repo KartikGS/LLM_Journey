@@ -2,7 +2,7 @@
 
 **Contact**: BA Agent
 **Date**: 2026-02-01
-**Status**: For Review by User / Senior Developer
+**Status**: For Review by User / Tech Lead
 
 ---
 
@@ -50,4 +50,4 @@ Webkit-based tests fail consistently with a white screen in videos and screensho
 
 ## 4. Next Steps
 1.  Establish `CR-004: E2E Suite Stabilization`.
-2.  Hand off the technical implementation of the suggested fixes to the **Senior Developer Agent**.
+2.  Hand off the technical implementation of the suggested fixes to the **Tech Lead Agent**.

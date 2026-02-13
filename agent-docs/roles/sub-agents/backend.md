@@ -8,17 +8,22 @@ Reliability, security, and performance of server-side logic and API routes.
 -   **Interfaces with**: Frontend via defined API contracts.
 -   **Restricted**: Do not hardcode secrets. Use environment variables.
 
-## Required Reads
+## Context Loading
 
-Before planning or executing any task:
-- **Environment and Tool Constraints:** [Tooling Standard](/agent-docs/tooling-standard.md)
+> [!NOTE]
+> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> Below are **additional** Backend-specific readings.
+
+### Role-Specific Readings (Backend)
+Before executing any task, also read:
 - **Backend Standards:** [Backend Guide](/agent-docs/development/backend.md)
 - **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
+- **Task Instructions:** [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md)
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Senior Developer agent in the [Senior To Backend Instructions](/agent-docs/conversations/senior-to-backend.md)
-- Make a report for the Senior Developer agent in the [Backend To Senior Report](/agent-docs/conversations/backend-to-senior.md)
+- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Backend Instructions](/agent-docs/conversations/tech-lead-to-backend.md)
+- Make a report for the Tech Lead agent in the [Backend To Tech Lead Report](/agent-docs/conversations/backend-to-tech-lead.md)
 
 ## Checklist
 -   [ ] Are input validations in place?

@@ -4,7 +4,7 @@ This protocol defines how agents should handle discrepancies, logical flaws, and
 
 ## Discovery of Discrepancies
 
-If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUST NOT silently fix it if it belongs to another role's authority:
+If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they MUST NOT silently fix it if it belongs to another role's authority:
 
 - **Missing Contract**: A component lacks an expected property (e.g., a missing `id` required for testing).
 - **False Assumption**: A requirement or plan is based on a technical premise that is found to be incorrect (e.g., claiming a browser doesn't support a feature when it does).
@@ -12,28 +12,28 @@ If an agent (BA, Senior, or Sub-Agent) identifies one of the following, they MUS
 
 ## Reporting Path
 
-### Sub-Agent → Senior Developer
+### Sub-Agent → Tech Lead
 - **When**: A sub-agent finds a flaw in the plan or a missing dependency in the codebase.
 - **Action**: 
     1. Stop implementation of the affected part.
-    2. Document the issue in `agent-docs/conversations/<role>-to-senior.md` under a `## BLOCKER / FEEDBACK` section.
+    2. Document the issue in `agent-docs/conversations/<role>-to-tech-lead.md` under a `## BLOCKER / FEEDBACK` section.
     3. Clearly state:
         - What was expected (per plan).
         - What was found (reality).
         - Impact on the task.
     4. Notify the USER that a coordination check is required.
 
-### Senior Developer → BA Agent
+### Tech Lead → BA Agent
 - **When**: The plan reveals a requirement is unfeasible or based on wrong business logic.
 - **Action**:
-    1. Update `agent-docs/conversations/senior-to-ba.md` with a `## REQUIREMENT FEEDBACK` section.
+    1. Update `agent-docs/conversations/tech-lead-to-ba.md` with a `## REQUIREMENT FEEDBACK` section.
     2. Propose a technical alternative or request requirement clarification.
 
 ## Resolution Protocol
 
 1. **Acknowledge**: The receiving agent must acknowledge the feedback.
 2. **Re-delegate or Refine**:
-    - If it's a missing dependency: The Senior Developer may delegate a quick fix to the responsible sub-agent (e.g., Frontend) OR ask the current agent to fix it ONLY IF they update the documentation to reflect the fix.
+    - If it's a missing dependency: The Tech Lead may delegate a quick fix to the responsible sub-agent (e.g., Frontend) OR ask the current agent to fix it ONLY IF they update the documentation to reflect the fix.
     - If it's a false assumption: The plan must be revised and re-approved by the USER.
 
 ## Helpful Refusals

@@ -1,5 +1,8 @@
 # Investigation Report: [Title]
 
+> Reference example bundle:
+> - `agent-docs/reports/EXAMPLE-BA-COMPLETE-CR-007.md`
+
 **Date**: [YYYY-MM-DD]
 **Status**: [Draft / For Review / Closed]
 **Linked CR**: [CR-XXX (Optional)]
