@@ -97,14 +97,22 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
 2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (e.g., file + line number). Do not bulk-accept without individual verification.
-3. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
+3. **CR Immutability Rule (Historical Integrity):**
+   - Once a CR is marked `Done`, treat it as a historical record.
+   - Do **not** rewrite closed CRs to match newer templates or style conventions.
+   - If gaps are discovered later, create a new artifact (follow-up CR or investigation report) that references the original CR.
+4. **Allowed Post-Closure Edits (closed CRs only):**
+   - Typo/formatting fixes, broken link fixes, or factual corrections.
+   - Any such update must be logged in an `Amendment Log` section with date + reason.
+   - Do **not** retroactively change acceptance intent or silently rewrite AC history.
+5. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
    - **Minor/Safe deviations**: Log acceptance in the CR's "Deviations Accepted" section.
    - **Major deviations**: Escalate to User before closing the CR.
-4. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
-5. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
-6. BA updates `agent-docs/project-log.md` with the final entry.
-7. BA notifies the human of completion.
-8. **Output:** Closed CR, updated project log.
+6. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
+7. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
+8. BA updates `agent-docs/project-log.md` with the final entry.
+9. BA notifies the human of completion.
+10. **Output:** Closed CR, updated project log.
 
 ---
 
@@ -117,3 +125,9 @@ Every ID mentioned in the `agent-docs/project-log.md` (e.g., `CR-XXX`, `ADR-XXX`
 When a CR modifies **routes**, **page structure**, or **`data-testid` attributes**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. Selectors that are left stale after structural changes become pre-existing failures that pollute future verification cycles.
 
 *Example*: If CR-004 changes `/transformer` to `/foundations/transformers`, the E2E test asserting `href="/transformer"` must be updated in the same CR.
+
+### 3. Historical Artifact Invariant (CRs)
+Closed CRs are immutable records and must not be normalized retroactively.
+- Legacy format variance across older CRs is acceptable.
+- Standardization requirements apply to new CRs going forward.
+- If historical evidence needs clarification, append an amendment note or create a linked follow-up artifact rather than rewriting intent/history.

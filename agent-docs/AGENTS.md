@@ -39,6 +39,7 @@ Failed coordination kills projects. Stick to these contracts:
 - Do not invent policies, standards, or requirements
 - If a rule is not written in `agent-docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
+- Treat closed CRs in `/agent-docs/requirements/` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
 
 ## Authority & Conflict Resolution
 
