@@ -21,7 +21,8 @@
 3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
 4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `/agent-docs/plans/TEMPLATE.md`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
-6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`. 
+6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
+   - **Template Rule**: Use role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
@@ -39,7 +40,7 @@
 - **Decision Test**: If Step B requires any artifact, decision, or evidence from Step A, execution MUST be Sequential.
 
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
-- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the [Handoff Template](/agent-docs/conversations/TEMPLATE-tech-lead-to-sub-agent.md) for consistent structure.
+- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 - **The "Wait" State**:
   - **Parallel Mode**: Once the full planned handoff batch is created, the Tech Lead Agent MUST stop and report back to the User.
   - **Sequential Mode**: Once the current step handoff is created, the Tech Lead Agent MUST stop and report back to the User.
@@ -78,14 +79,36 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 1. Sub-agent receives task specification from Tech Lead Agent in `/agent-docs/conversations/tech-lead-to-<role>.md`
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
-3. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
+3. **Preflight Clarification (Mandatory)**: Before implementation, publish a concise preflight note to the role's `*-to-tech-lead.md` handoff including:
+   - assumptions being made,
+   - adjacent risks not covered by current scope,
+   - open questions that could affect implementation validity.
+   If open questions are non-empty and materially affect validity/scope, pause and wait for Tech Lead clarification.
+4. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
    - **STOP** implementation of the affected part immediately.
    - **DO NOT** attempt to "fix" or "work around" an architectural or environmental assumption without consulting the Tech Lead Agent.
    - Report the issue immediately via the `agent-docs/coordination/feedback-protocol.md`.
    - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
-4. Sub-agent executes within role boundaries.
-5. Sub-agent completes and verifies work.
-6. **Output:** Implementation + tests + updated docs + report for Tech Lead.
+5. Sub-agent executes within role boundaries.
+6. Sub-agent completes and verifies work.
+7. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
+   - **Testing Ownership Rule**: Creating/modifying tests is owned by the Testing Agent unless the Tech Lead handoff explicitly delegates test work to another role.
+
+#### Clarification Loop Protocol (Mandatory)
+- The execution model explicitly supports iterative loops, not one-shot handoffs:
+  - `Tech Lead handoff -> [Sub-agent concerns <-> Tech Lead responses] (0..N rounds) -> Sub-agent execution -> report -> [Tech Lead concerns <-> Sub-agent responses] (0..N rounds)`.
+- If disagreement exists, capture:
+  1. The disputed assumption/constraint
+  2. Proposed alternatives
+  3. Final decision owner (`Tech Lead` for technical feasibility, `BA` for scope/intent)
+- If unresolved and scope/intent is affected, escalate through BA feedback protocol before continuing.
+
+#### BA-Tech Lead Clarification Loop (Mandatory)
+- Requirement handoff is also iterative when needed:
+  - `BA handoff -> [Tech Lead concerns <-> BA responses] (0..N rounds) -> Plan approval -> execution`.
+- Acceptance is also iterative when needed:
+  - `Tech Lead verification handoff -> [BA concerns <-> Tech Lead responses] (0..N rounds) -> closure`.
+- Disagreement is expected when it improves correctness; unresolved scope conflicts must be escalated to user.
 
 ### Verification Phase (Tech Lead Agent)
 1. Tech Lead reviews completed work reports

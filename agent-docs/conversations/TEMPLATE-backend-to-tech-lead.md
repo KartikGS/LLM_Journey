@@ -1,0 +1,42 @@
+# Template: Backend -> Tech Lead Report
+
+## [Status]
+- `completed` | `blocked` | `partial`
+
+## [Scope Check]
+- Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
+- Files modified:
+  - `path/to/file.ext`
+- Scope compliance:
+  - [ ] All modified files are in Backend ownership or explicitly delegated.
+  - [ ] No test files were created/modified unless explicitly delegated.
+
+## [Changes Made]
+- Concise list of implemented backend changes.
+
+## [Verification Results]
+- `pnpm lint`: `pass|fail` (+ short evidence)
+- `pnpm exec tsc --noEmit`: `pass|fail` (+ short evidence)
+- Behavioral evidence mapped to handoff DoD:
+  - Allowed-path evidence:
+  - Blocked/error-path evidence:
+
+## [Out-of-Scope Requests Detected]
+- `none` OR list any request/file outside backend authority.
+
+## [Blockers]
+- `none` OR describe blocker and why work was halted.
+- If blocker exists, include required next handoff role (for example `Testing`, `Infra`, `Frontend`).
+
+## [Failure Classification]
+- CR-related failures:
+- Pre-existing failures:
+
+## [Deviations]
+- `none` OR list deviations with rationale per `agent-docs/coordination/reasoning-principles.md`.
+
+## [Ready for Next Agent]
+- `yes` | `no`
+
+## [Follow-up Recommendations]
+- Optional, role-appropriate follow-ups for Tech Lead.

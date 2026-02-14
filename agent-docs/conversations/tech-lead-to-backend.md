@@ -20,6 +20,7 @@ Current middleware logic updates the in-memory map without adding the current re
 - No dependency additions.
 - Preserve current per-route limits and environment bypass behavior (`isE2E`, localhost).
 - Keep change minimal and reversible.
+- Do not create or modify tests in this handoff (Testing Agent owns test changes unless explicitly delegated).
 
 ### Security/Behavior
 - Do not relax CSP/HSTS logic while fixing rate limiting.
@@ -53,14 +54,20 @@ Current middleware logic updates the in-memory map without adding the current re
 4. Provide concise behavior evidence for:
    - Allowed request flow under threshold.
    - Blocked request flow at/over threshold.
+   - Evidence may come from code-path analysis, existing tests, or runtime checks; do not add new tests for this task.
 
 ## Report Back
 Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` including:
 - [Status]
+- [Scope Check]
 - [Changes Made]
 - [Verification Results]
+- [Out-of-Scope Requests Detected]
+- [Blockers]
 - [Failure Classification]
 - [Ready for Next Agent]
+
+Use `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md` as the report structure.
 
 ---
 
