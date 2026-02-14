@@ -1,105 +1,78 @@
-## CR-007: Pipeline Stabilization - Test Import + Full Verification (Step 3 Rerun)
+# Handoff: Testing Agent -> Tech Lead
 
-### [Changes Made]
-- Updated stale import path in `__tests__/components/BaseLLMChat.test.tsx`.
-- Change applied:
-  - From: `@/app/transformer/components/BaseLLMChat`
-  - To: `@/app/foundations/transformers/components/BaseLLMChat`
+## Subject
+`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
 
-### [Verification Results]
-- `pnpm test`: PASS (exit code `0`)
-  - Evidence: `Test Suites: 14 passed, 14 total`; `Tests: 91 passed, 91 total`
-  - `__tests__/components/BaseLLMChat.test.tsx` passed.
-- `pnpm lint`: PASS (exit code `0`)
-  - Evidence: `✔ No ESLint warnings or errors`
-- `pnpm exec tsc --noEmit`: PASS (exit code `0`)
-- `pnpm build`: PASS (exit code `0`)
-  - Note: Build emits non-blocking webpack warnings for `require-in-the-middle` from OpenTelemetry dependency chain.
+## Preflight
 
-### [Failure Classification]
-- CR-related failures: None identified.
-- Pre-existing/non-blocking observations:
-  - Webpack warning (`Critical dependency: require function is used in a way in which dependencies cannot be statically extracted`) appears during `pnpm build`, but does not fail the build.
+### Assumptions I'm making
+- Home CTA contract is `Start Your Journey →` linking to `/foundations/transformers`.
+- Landing page can be validated via stable role/href contracts without depending on `div.grid > a`.
+- Transformer generation completion should be validated by durable post-submit behavior, not transient loading text visibility.
 
-### [Deviations]
+### Risks not covered by current scope
+- Constrained/sandboxed execution can fail before Playwright webServer startup.
+- OTEL upstream at `127.0.0.1:4318` may refuse connection; this is non-blocking if user-visible flow remains intact.
+
+### Questions for Tech Lead
 - None.
 
 ---
 
-## Health Check Follow-up: Middleware Rate-Limit Coverage
+## CR-010 - E2E Baseline Stabilization Report
 
 ### [Status]
 - Completed
 
 ### [Changes Made]
-- Updated `__tests__/middleware.test.ts` to add middleware rate-limit coverage:
-  - verifies under-limit traffic is allowed for `/api/telemetry-token` (10 requests).
-  - verifies over-limit traffic returns `429` on the 11th request.
-  - verifies localhost bypass (`127.0.0.1`) remains unblocked even above threshold.
-  - verifies E2E bypass (`process.env.E2E = 'true'`) remains unblocked even above threshold.
-- Added a local `jest.mock('next/server')` test double in `__tests__/middleware.test.ts` so middleware logic can be tested deterministically in Jest without changing application code or runtime config.
+- Updated `__tests__/e2e/landing-page.spec.ts`:
+  - Replaced stale CTA destination assertion from `/transformer` to `/foundations/transformers`.
+  - Removed brittle structural selector dependency (`div.grid > a`).
+  - Added stable href-contract assertions for journey links (`/models/adaptation`, `/context/engineering`, `/ops/deployment`).
+- Updated `__tests__/e2e/transformer.spec.ts`:
+  - Removed brittle transient `Generating...` visibility dependency.
+  - Added durable generation assertions: submit button disabled->enabled cycle and response container visibility/text after generation.
+  - Preserved OTEL request emission verification.
+- `__tests__/e2e/navigation.spec.ts`:
+  - No file change required.
+  - Verified as targeted regression check.
 
 ### [Verification Results]
-- `pnpm test`: PASS (exit code `0`)
-  - Evidence: `Test Suites: 14 passed, 14 total`; `Tests: 95 passed, 95 total`
-  - Includes new middleware rate-limit tests in `__tests__/middleware.test.ts`.
-- `pnpm lint`: PASS (exit code `0`)
-  - Evidence: `✔ No ESLint warnings or errors`
-- `pnpm exec tsc --noEmit`: PASS (exit code `0`)
+
+#### Reproduction Matrix
+| Command | Mode | Browsers | Result | Classification |
+|---|---|---|---|---|
+| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | CR-related assertions validated |
+| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`12 passed`) | regression check passed |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | durable transformer assertions validated |
+| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`18 passed`) | suite baseline stable |
+
+### [Dependency Consumption]
+- No dependency or runtime config changes.
 
 ### [Failure Classification]
-- CR-related failures: None.
-- Pre-existing/environmental observations:
-  - Jest reports an open-handles warning after completion: `Jest did not exit one second after the test run has completed.` This did not fail the run.
+- CR-related:
+  - Fixed landing CTA route assertion drift.
+  - Fixed landing selector strategy drift (removed structural dependency).
+  - Fixed transformer generation assertion drift (removed transient text dependence).
+- Environmental:
+  - Sandboxed runs consistently failed before test execution (`config.webServer exited early`).
+- Non-blocking warning:
+  - OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) observed in unsandboxed runs; expected under observability failure-boundary and did not affect user-visible flow/test pass.
 
 ### [Ready for Next Agent]
-- Yes. Testing handoff scope is complete and verified.
+- Yes.
 
-### [Requests to Tech Lead]
-- Please confirm whether to open a follow-up testing task for **rate-limit window expiration/reset** coverage (time-mocked test for `rateLimit_windowMs` boundary).
-- Please decide preferred **state-isolation strategy** for middleware tests going forward:
-  - `jest.resetModules()` re-import per test, or
-  - explicit middleware-owned test reset hook for in-memory limiter state.
-- Please confirm whether **middleware header-contract assertions** (CSP/HSTS behavior) are in scope for this CR or should be tracked as a separate CR.
+### [New Artifacts]
+- Updated test files:
+  - `__tests__/e2e/landing-page.spec.ts`
+  - `__tests__/e2e/transformer.spec.ts`
+- Playwright artifacts from intermediate failed attempts exist under `test-results/navigation-*` and `test-results/landing-page-*`.
 
-### [Assessment Notes on Test Critique]
-- **Hidden global state risk**: Valid. `rateLimitMap` is module-level state in `middleware.ts:8`, so state can leak across tests if not carefully isolated. Current IP separation reduces risk, but does not eliminate future brittleness.
-- **Threshold magic number assumption**: Partially valid, partially incorrect.
-  - The test uses hard-coded `10`, but this does not silently drift for the block-path check; if the limit changes (for example from `10` to `20`), the `11th request => 429` assertion fails loudly.
-  - Main tradeoff is maintainability vs explicit contract testing.
-- **No window expiration test**: Valid. Rate limiting uses a time window (`rateLimit_windowMs` and `Date.now()` in `middleware.ts:19` and `middleware.ts:88-90`). Expiration/reset behavior remains untested and is a common bug surface.
-- **Mocking `next/server` while asserting only status**: Partially valid.
-  - For this handoff (rate-limit behavior), status-only assertions are aligned with scope.
-  - Broader contract assertions are missing.
-  - `Retry-After` / `X-RateLimit-*` examples are not currently applicable because middleware does not set those headers.
-  - CSP header checks should be treated as separate scope and require `Accept: text/html` request coverage.
+### [Follow-up Recommendations]
+- Keep CR verification evidence sourced from local-equivalent/unsandboxed E2E runs in this environment until sandbox webServer startup behavior is resolved.
 
----
-
-## CR-008 Follow-up: Middleware Window Boundary + Isolation Hardening
-
-### [Status]
-- Completed
-
-### [Changes Made]
-- Updated `__tests__/middleware.test.ts` to apply module-state isolation for middleware tests:
-  - switched middleware loading to `beforeEach` with `jest.resetModules()` plus fresh `import('@/middleware')`.
-- Added deterministic window-boundary coverage:
-  - inside-window enforcement is validated with fixed `Date.now()` for threshold blocking.
-  - added expiration/reset test that verifies previously blocked IP is allowed again after `rateLimit_windowMs` passes (`60_001ms` boundary for a `60_000ms` window).
-- Preserved existing allow-path and bypass assertions (localhost and `E2E=true`).
-
-### [Verification Results]
-- `pnpm test`: PASS (exit code `0`)
-  - Evidence: `Test Suites: 14 passed, 14 total`; `Tests: 96 passed, 96 total`
-- `pnpm lint`: PASS (exit code `0`)
-  - Evidence: `✔ No ESLint warnings or errors`
-- `pnpm exec tsc --noEmit`: PASS (exit code `0`)
-
-### [Failure Classification]
-- CR-related failures: None.
-- Pre-existing/environmental observations:
-  - Jest still reports non-blocking open-handles warning after suite completion (`Jest did not exit one second after the test run has completed.`).
-
-### [Ready for Next Agent]
-- Yes. Follow-up testing handoff scope is complete and verified.

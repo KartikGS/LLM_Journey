@@ -8,12 +8,13 @@
 1. User provides rough CR.
 2. BA clarifies through Q&A.
 3. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
-4. BA creates structured requirement document.
-5. BA assesses business complexity.
-6. **Output:** `/agent-docs/requirements/CR-XXX.md` + prompt for Tech Lead.
-7. BA reports back to user for review and approval.
-8. User approves or requests changes.
-9. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
+4. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
+5. BA creates structured requirement document.
+6. BA assesses business complexity.
+7. **Output:** `/agent-docs/requirements/CR-XXX-<slug>.md` + prompt for Tech Lead.
+8. BA reports back to user for review and approval.
+9. User approves or requests changes.
+10. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
 
 ### Technical Planning & Delegation Phase (Tech Lead Agent)
 1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
@@ -21,12 +22,39 @@
 3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
 4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `/agent-docs/plans/TEMPLATE.md`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
+   - **Exception (narrow):** Skip explicit Go/No-Go only for strictly `[S][DOC]` work or pure discovery sessions with no execution/delegation handoff.
 6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
    - **Template Rule**: Use role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
+8. **Architecture-Only Mode (Conditional):** If a CR is intended as rendering-boundary/architecture-only (no product behavior redesign), Tech Lead MUST state this explicitly in plan + handoff and include:
+   - UI/copy/IA freeze statement (`no visual redesign, no content rewrite, no route rename`),
+   - contract preservation list (`routes`, `data-testid`, accessibility semantics),
+   - required regression checks (desktop/mobile + light/dark + critical interactive surfaces).
+9. **E2E Contract Sync Gate (Conditional):** If a CR changes routes, `data-testid`, or accessibility/semantic contracts, the Tech Lead MUST include a Testing handoff in the same CR and explicitly list affected route/selector/state contracts in the plan + handoff. For pure structure/class refactors with stable contracts, follow the matrix below.
+
+#### Testing Handoff Trigger Matrix (Mandatory)
+Use this matrix to decide whether a Testing handoff is required in the same CR:
+
+| Change Type | Testing Handoff Required? | Minimum Testing Scope |
+| :--- | :--- | :--- |
+| Route path rename/add/remove | Yes | Update affected E2E navigation assertions + run impacted specs |
+| `data-testid` add/remove/rename | Yes | Update selector-based tests + run impacted specs |
+| Accessibility contract change (`role`, `aria-*`, keyboard behavior) | Yes | Update semantic assertions + run impacted specs |
+| UI structure/class refactor with unchanged route/selector/semantics | Conditional | If no contract change, Tech Lead may close without Testing handoff after documenting contract stability evidence |
+| Copy-only change with stable selectors/contracts | No (default) | Existing quality gates only, unless CR explicitly requests copy assertions |
+| Shared component changes under `app/ui/**` | Conditional | Require route impact list + sanity checks; Testing handoff only if contracts/behavior changed |
+
+Canonical rule: this matrix is the source of truth for Testing handoff decisions. If any other section conflicts, follow this matrix.
+
+#### Conversation File Freshness Rule (Mandatory)
+- Conversation handoff/report files under `agent-docs/conversations/` are **single-CR working artifacts**.
+- For a new CR, agents MUST **replace file contents** with the current CR context. Do not append historical CR logs.
+- Every conversation file MUST include the active CR ID in `Subject`.
+- Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
+- Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
 
 #### Delegation Mode Rules
 - **Parallel Mode**
@@ -55,20 +83,14 @@ When entering the Wait State, the Tech Lead MUST inform the user:
 2. Which sub-agent role(s) need to execute next
 3. The handoff file location(s) (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
 4. Clear instruction: *"Start a new session and assign the [Role] to execute this handoff."*
+   - If the user explicitly overrides this and asks to continue in the same session, Tech Lead may proceed while still respecting role boundaries and delegation invariants.
 
 Do NOT simply say "I'm done" — the user needs actionable next steps.
 
 ### 🛑 Pre-Implementation Self-Check (Tech Lead)
-
-Before writing code or making changes directly, the Tech Lead MUST complete this checklist:
-
-1. **List the files you will modify.**
-2. **For each file, ask: "Is this feature code?"**
-   - Feature code = `components/`, `app/*/`, `hooks/`, `lib/` (feature-specific), feature tests
-3. **If YES to any** → STOP. Create handoff in `conversations/tech-lead-to-<role>.md`.
-4. **If NO to all** → Proceed with direct implementation.
-
-*Skipping this checklist is a protocol violation.*
+Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any direct edits.
+- Summary rule: if any target file is feature code, delegate and enter Wait State.
+- This section intentionally avoids repeating the full checklist to prevent policy drift.
 
 ### Code & Git Standards
 - All contributions must follow the rules defined in `CONTRIBUTING.md` (root directory).
@@ -84,14 +106,20 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
    - adjacent risks not covered by current scope,
    - open questions that could affect implementation validity.
    If open questions are non-empty and materially affect validity/scope, pause and wait for Tech Lead clarification.
-4. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
+4. **Pause vs Proceed Decision Rule (Mandatory)**:
+   - **Proceed** when assumptions are testable locally and implementation does not change scope/contracts/ownership.
+   - **Pause** when any open question can change route/API/test-id contracts, accessibility semantics, ownership boundaries, or expected behavior with two or more plausible implementations.
+   - When pausing, report the question with: `decision needed`, `options`, and `impact of each option`.
+5. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
    - **STOP** implementation of the affected part immediately.
    - **DO NOT** attempt to "fix" or "work around" an architectural or environmental assumption without consulting the Tech Lead Agent.
+   - **Reproduce before classify**: For environment/E2E blockers, run at least one exact-command rerun and one explicit-target rerun (plus local-equivalent verification if constrained execution affects startup/runtime) before final blocker classification.
    - Report the issue immediately via the `agent-docs/coordination/feedback-protocol.md`.
    - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
-5. Sub-agent executes within role boundaries.
-6. Sub-agent completes and verifies work.
-7. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
+6. Sub-agent executes within role boundaries.
+   - If user or Tech Lead feedback introduces changes outside the approved handoff scope (for example cross-route refactors or shared component extraction), mark this as a **scope extension** and get explicit Tech Lead or user confirmation before implementing.
+7. Sub-agent completes and verifies work.
+8. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
    - **Testing Ownership Rule**: Creating/modifying tests is owned by the Testing Agent unless the Tech Lead handoff explicitly delegates test work to another role.
 
 #### Clarification Loop Protocol (Mandatory)
@@ -114,8 +142,9 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 1. Tech Lead reviews completed work reports
 2. **Diff Review**: Tech Lead inspects the code diffs for logic errors or missing edge cases (Adversarial Review).
 3. Tech Lead ensures integration works
-3. Tech Lead updates architectural docs if needed
-4. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
+4. **E2E Contract Closure Check (Conditional)**: For CRs touching routes/page structure/test IDs, Tech Lead verifies matching E2E assertion updates are present in the same CR (not deferred silently).
+5. Tech Lead updates architectural docs if needed
+6. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
@@ -132,7 +161,7 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
    - **Minor/Safe deviations**: Log acceptance in the CR's "Deviations Accepted" section.
    - **Major deviations**: Escalate to User before closing the CR.
 6. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
-7. BA updates requirement status in `agent-docs/requirements/CR-XXX.md`.
+7. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
 8. BA updates `agent-docs/project-log.md` with the final entry.
 9. BA notifies the human of completion.
 10. **Output:** Closed CR, updated project log.
@@ -145,7 +174,7 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 Every ID mentioned in the `agent-docs/project-log.md` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
 
 ### 2. E2E Selector Invariant
-When a CR modifies **routes**, **page structure**, or **`data-testid` attributes**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. Selectors that are left stale after structural changes become pre-existing failures that pollute future verification cycles.
+When a CR modifies **routes**, **`data-testid` attributes**, or **accessibility/semantic contracts**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. For pure page structure/class refactors with unchanged contracts, a Testing handoff is optional only if contract stability evidence is documented per the Testing Handoff Trigger Matrix.
 
 *Example*: If CR-004 changes `/transformer` to `/foundations/transformers`, the E2E test asserting `href="/transformer"` must be updated in the same CR.
 
@@ -154,3 +183,11 @@ Closed CRs are immutable records and must not be normalized retroactively.
 - Legacy format variance across older CRs is acceptable.
 - Standardization requirements apply to new CRs going forward.
 - If historical evidence needs clarification, append an amendment note or create a linked follow-up artifact rather than rewriting intent/history.
+
+### 4. Scope Extension Invariant
+When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).
+
+### 5. Shared Component Blast-Radius Invariant
+If a CR modifies shared UI under `app/ui/**`:
+- The implementing agent MUST list impacted routes in preflight.
+- The completion report MUST include a regression sanity check for each impacted route (at minimum: render integrity and primary interactive surface visibility).

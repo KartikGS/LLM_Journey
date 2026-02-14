@@ -69,8 +69,47 @@ Configuration lives in:
 - Run all tests: `pnpm test`
 - Watch mode: `pnpm test:watch`
 - Run all E2E tests: `pnpm test:e2e`
+- Run a single E2E spec: `pnpm test:e2e -- __tests__/e2e/<spec>.spec.ts`
+- Run focused E2E by grep: `pnpm test:e2e -- --grep "<pattern|@tag>"`
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
+
+### E2E Reproducibility Rule
+When reporting E2E outcomes for handoff evidence, always include:
+- exact command string used,
+- target scope (spec path or grep expression),
+- execution mode (sandboxed vs local-equivalent/unsandboxed),
+- browser matrix covered (chromium/firefox/webkit),
+- pass/fail summary by browser.
+
+### E2E Triage Ladder (Before Declaring Blocked)
+If E2E fails, classify using this sequence:
+1. Re-run with the exact handoff command (no substitutions).
+2. Re-run with explicit spec targeting (`pnpm test:e2e -- __tests__/e2e/<spec>.spec.ts`).
+3. Confirm there is no stale server/process conflict on port `3001`.
+4. If startup/runtime differs in constrained execution, run a local-equivalent/unsandboxed verification.
+5. Inspect Playwright artifacts (`error-context.md`, screenshots, video) before classifying root cause.
+6. Declare `Blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
+
+### E2E Failure Classification Heuristics
+- `Process from config.webServer exited early`: environment/process startup class until reproduced in local-equivalent run.
+- Selector missing while app is clearly rendered: likely contract or test regression.
+- Selector missing while app is stuck on compatibility/guard screen: environment/runtime gate until proven persistent across contexts.
+- Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
+
+### E2E Selector Reliability Ladder (Mandatory)
+Use the highest reliable contract available for assertions:
+1. `data-testid` or explicit test contract IDs for structural page landmarks.
+2. Role + accessible name (`getByRole`) for interactive user controls.
+3. Stable URL/href/state contracts for navigation and lifecycle checks.
+4. Raw structural CSS selectors only when no explicit contract exists.
+
+If level 4 is used, report why levels 1-3 were unavailable in the testing handoff report.
+
+### Prohibited Brittle Assertions (Default)
+- Hard dependency on transient loading copy (for example exact `"Generating..."` visibility windows) unless the CR explicitly defines that copy as product contract.
+- Strict DOM shape selectors tied to layout internals (for example `div.grid > a`) when semantic/test-id contracts exist.
+- Timing-only waits without behavior/state confirmation.
 
 ### Command Sequencing Rule (Pipeline Verification)
 For final CR verification evidence, run quality gates in sequence, not in parallel:
@@ -80,6 +119,25 @@ For final CR verification evidence, run quality gates in sequence, not in parall
 4. `pnpm build`
 
 Reason: some projects include generated `.next/types` entries in `tsconfig` and concurrent `tsc` + `build` execution can produce false negatives from transient type-generation state.
+
+### Tech Lead Verification Matrix (Canonical)
+- `Always required`:
+  - `pnpm test`
+  - `pnpm lint`
+  - `pnpm exec tsc --noEmit`
+  - `pnpm build`
+- `Conditionally required`:
+  - `pnpm test:e2e` only when CR scope changes route/selector/semantic contracts, changes browser-sensitive behavior, or explicitly requests E2E evidence.
+- Source of truth for trigger decision:
+  - `agent-docs/workflow.md` -> `Testing Handoff Trigger Matrix (Mandatory)`.
+
+### Command Evidence Standard (for handoff reports)
+When citing verification evidence, use this normalized format:
+- Command: `[exact command]`
+- Scope: `[full suite | specific spec/grep | impacted routes/components]`
+- Execution Mode: `[sandboxed | local-equivalent/unsandboxed]`
+- Browser Scope (if E2E): `[chromium/firefox/webkit or narrowed scope]`
+- Result: `[PASS/FAIL + key counts or failure summary]`
 
 ---
 

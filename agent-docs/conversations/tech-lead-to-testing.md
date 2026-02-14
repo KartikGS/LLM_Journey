@@ -1,140 +1,82 @@
 # Handoff: Tech Lead -> Testing Agent
 
-## Subject: Health Check Follow-up - Middleware Rate-Limit Coverage
+## Subject
+`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
 
 ## Status
 `issued`
 
 ## Objective
-Add targeted tests that prove middleware rate limiting enforces thresholds and still allows traffic below threshold.
+Stabilize CR-010 E2E baseline by updating stale landing-page and transformer spec assertions to match the current app contract and durable behavioral signals.
 
 ## Rationale (Why)
-Health check identified a backend defect where rate-limit state was not incremented. Testing coverage is required so this class of security regression cannot pass green gates again.
-
----
+Current E2E failures are dominated by assertion drift and transient UI timing assumptions, which creates non-actionable noise and weakens release confidence. This handoff restores trust in route-level E2E signal without changing feature behavior.
 
 ## Constraints
+- Testing boundaries:
+  - Modify testing-owned files only under `__tests__/e2e/` unless escalation is explicitly approved by Tech Lead.
+  - Do not modify `app/`, `components/`, `hooks/`, or runtime config in this handoff.
+- Verification boundaries:
+  - Use `pnpm` commands only.
+  - Run required commands exactly as listed in Verification.
+  - Classify every failure as `CR-related`, `pre-existing`, `environmental`, or `non-blocking warning` with concrete evidence.
+- Security/architecture:
+  - Do not relax security controls to force test pass.
+  - Treat OTEL upstream refusal (`127.0.0.1:4318`) under observability failure-boundary intent unless it causes user-visible flow failure.
 
-### Technical
-- Use `pnpm` only.
-- Modify testing-owned files only.
-- Do not change middleware behavior directly.
-- If stable assertions require testability hooks not present today, stop and report via feedback protocol.
+## Assumptions To Validate (Mandatory)
+- Landing CTA canonical destination is `/foundations/transformers`.
+- Current home-page card structure can be asserted via stable locator strategy without `div.grid > a` dependency.
+- Transformer generation can be validated through durable user-visible behavior instead of strict `Generating...` transient text visibility.
 
-### Scope Guardrails
-- Focus on middleware rate-limit behavior only for this handoff.
-- Keep tests deterministic and isolated.
-
----
-
-## Scope
-
-### Files to Modify
-
-#### `__tests__/middleware.test.ts`
-- Add middleware-focused tests that verify:
-  - under-limit requests are allowed.
-  - over-limit requests return `429`.
-  - localhost/E2E bypass behavior is preserved.
-
----
-
-## Definition of Done
-- [ ] Middleware tests cover both block path and allow path (negative-space verification).
-- [ ] `pnpm test` passes.
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
-- [ ] Any failure is classified as CR-related, pre-existing, or environmental with evidence.
-
-## Verification
-1. Implement/add middleware rate-limit tests.
-2. Run `pnpm test`.
-3. Run `pnpm lint`.
-4. Run `pnpm exec tsc --noEmit`.
-5. Capture pass/fail evidence and failure classification where applicable.
-
-## Report Back
-Write execution report to `agent-docs/conversations/testing-to-tech-lead.md` including:
-- [Status]
-- [Changes Made]
-- [Verification Results]
-- [Failure Classification]
-- [Ready for Next Agent]
-
----
-
-*Handoff created: 2026-02-13*
-*Tech Lead Agent*
-
----
-
-# Handoff: Tech Lead -> Testing Agent (Follow-up)
-
-## Subject: CR-008 Follow-up - Middleware Window Boundary + Isolation Hardening
-
-## Status
-`issued`
-
-## Objective
-Add focused rate-limit boundary tests for window expiration/reset behavior and harden test isolation using module reset/re-import strategy.
-
-## Rationale (Why)
-Baseline rate-limit behavior is now covered, but window-boundary expiration remains a known bug surface. The prior report also identified module-level global state risk from the in-memory limiter map. This handoff closes those two residual testing gaps.
-
----
-
-## Constraints
-
-### Technical
-- Use `pnpm` only.
-- Modify testing-owned files only.
-- Do not change middleware implementation.
-- Use `jest.resetModules()` + re-import strategy for middleware state isolation.
-- Prefer deterministic time control (mocked/fixed `Date.now`) for window-boundary assertions.
-
-### Scope Guardrails
-- In scope: rate-limit window expiration/reset behavior and state isolation improvements for middleware tests.
-- Out of scope: CSP/HSTS header-contract assertions (track separately in a dedicated security verification CR/task).
-
----
+## Out-of-Scope But Must Be Flagged (Mandatory)
+- Any new route/content regressions discovered outside landing/navigation/transformer specs.
+- Any browser-specific environmental startup/runtime issues (port/server/Playwright webServer anomalies).
+- Any non-CR regressions revealed by full-suite run after assertion fixes.
 
 ## Scope
-
 ### Files to Modify
+- `__tests__/e2e/landing-page.spec.ts`: replace stale selector/route expectations with canonical/stable assertions.
+- `__tests__/e2e/transformer.spec.ts`: replace brittle `Generating...` timing assertion with stable behavioral signal(s).
+- `__tests__/e2e/navigation.spec.ts`: no expected edit; run as targeted regression check and update only if contract drift is proven.
 
-#### `__tests__/middleware.test.ts`
-- Add/adjust tests to verify:
-  - timestamps outside `rateLimit_windowMs` are pruned and traffic is re-allowed.
-  - threshold enforcement remains correct inside the active window.
-  - middleware module state is isolated between relevant tests via module reset + fresh import.
-
----
+## Verification Depth
+- `baseline`
 
 ## Definition of Done
-- [ ] Middleware tests include explicit window expiration/reset coverage.
-- [ ] Middleware tests use deterministic isolation (`jest.resetModules()` + re-import) where shared limiter state could leak.
-- [ ] Existing allow-path/block-path/bypass assertions remain valid.
-- [ ] `pnpm test` passes.
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
-- [ ] Any failure is classified as CR-related, pre-existing, or environmental with evidence.
+- [ ] Landing page route assertion validates `/foundations/transformers`.
+- [ ] Landing page selectors no longer depend on stale `div.grid > a` structure.
+- [ ] Transformer spec no longer depends on brittle `Generating...` visibility window.
+- [ ] `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` passes (browser matrix).
+- [ ] `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` passes (browser matrix).
+- [ ] `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` passes (browser matrix).
+- [ ] `pnpm test:e2e` full suite result recorded with explicit classification for any remaining failures.
+
+## Clarification Loop (Mandatory)
+- Post preflight assumptions/risks/questions in `agent-docs/conversations/testing-to-tech-lead.md` before implementation.
+- Tech Lead responds in the same file.
+- Repeat until concerns are resolved or status becomes `blocked`.
 
 ## Verification
-1. Update middleware tests for window-boundary coverage and isolation strategy.
-2. Run `pnpm test`.
-3. Run `pnpm lint`.
-4. Run `pnpm exec tsc --noEmit`.
-5. Capture pass/fail evidence and failure classification.
+1. Update scoped E2E assertion files.
+2. Run `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts`.
+3. Run `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`.
+4. Run `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`.
+5. Run `pnpm test:e2e`.
+6. Record pass/fail summary by browser and classify all failures once.
 
 ## Report Back
-Write execution report to `agent-docs/conversations/testing-to-tech-lead.md` including:
+Write completion report to `agent-docs/conversations/testing-to-tech-lead.md` including:
 - [Status]
 - [Changes Made]
-- [Verification Results]
+- [Verification Results] (exact commands + browser matrix)
+- [Dependency Consumption]
 - [Failure Classification]
 - [Ready for Next Agent]
+- [New Artifacts]
+- [Follow-up Recommendations]
 
----
+Reference plan: `agent-docs/plans/CR-010-plan.md`
 
-*Follow-up handoff created: 2026-02-13*
+*Handoff created: 2026-02-14*
 *Tech Lead Agent*

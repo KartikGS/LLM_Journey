@@ -22,12 +22,22 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 Before executing any task, also read:
 - **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
 - **Visual System:** [Design Tokens](/agent-docs/design-tokens.md)
+- **Refactor Safety:** [Frontend Refactor Checklist](/agent-docs/frontend-refactor-checklist.md)
 - **Task Instructions:** [Tech Lead To Frontend](/agent-docs/conversations/tech-lead-to-frontend.md)
 
 ## Execution Responsibilities
 
 - Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/conversations/tech-lead-to-frontend.md)
-- Make a report for the Tech Lead agent in the [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
+- Use [Frontend To Tech Lead Report Template](/agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md) when drafting the active CR report in [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
+
+## Architecture-Only Refactor Mode (Conditional)
+
+If the Tech Lead handoff marks a task as architecture-only/rendering-boundary:
+- Treat visual behavior, copy, route structure, and information architecture as frozen unless explicitly listed in scope.
+- Preserve all declared contracts (`routes`, `data-testid`, accessibility semantics).
+- Execute the [Frontend Refactor Checklist](/agent-docs/frontend-refactor-checklist.md) before reporting completion.
+
+If preserving behavior requires changing any frozen area, mark `scope extension requested` and pause.
 
 ---
 
@@ -49,12 +59,24 @@ Before executing any task, also read:
 - Avoid fetching data in components — use server components or dedicated hooks.
 - Don't hardcode API endpoints — use `lib/config`.
 
+### Accessibility & Testability Contracts
+
+- **Single-select controls** (exactly one option active) MUST use radio semantics:
+  - container: `role="radiogroup"`
+  - options: `role="radio"` + `aria-checked`
+  - keyboard behavior: arrow-key navigation between options.
+- Use toggle-button semantics (`aria-pressed`) only for true independent on/off controls.
+- Repeated interactive items (tabs/options/cards in mapped lists) MUST expose deterministic selectors derived from stable IDs.
+  - Preferred pattern: `data-testid="<prefix>-${stableId}"`.
+  - Do not rely on visible text or list order for primary E2E targeting.
+
 ### TypeScript + Framer Motion Stability
 
 - When Framer Motion variants fail strict TypeScript typing, first stabilize types before changing behavior.
 - Use explicit `Variants` typing for variant objects passed to motion components.
 - Use literal transition typing (for example `type: 'spring' as const`) so Framer Motion transition unions resolve correctly.
 - Treat behavior-preserving type fixes as the default path; do not alter animation semantics unless the handoff explicitly requires it.
+- Canonical animation values live in [Design Tokens](/agent-docs/design-tokens.md); do not redefine timing scales in task-specific docs.
 
 ---
 
@@ -188,6 +210,7 @@ Before marking work complete:
   1. `pnpm exec tsc --noEmit`
   2. `pnpm lint`
 - In the frontend handoff report, include raw pass/fail outcome for both commands in the same order.
+- Include contract evidence using file references for: route contract checks, selector/accessibility contract checks, and shared-component blast-radius checks (when `app/ui/**` changed).
 - Add a behavioral sanity check section mapped to Tech Lead handoff DoD (for example open/close flow, reduced-motion behavior, or interaction semantics called out in DoD).
 - If a command fails due to a pre-existing issue, record it explicitly and stop scope expansion unless Tech Lead updates the handoff.
 

@@ -22,6 +22,7 @@ If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they 
         - What was found (reality).
         - Impact on the task.
     4. Notify the USER that a coordination check is required.
+    5. For environment/E2E blockers, include a minimal reproduction matrix (exact command, execution mode, browser scope, result) and at least one artifact reference.
 
 ### Tech Lead → BA Agent
 - **When**: The plan reveals a requirement is unfeasible or based on wrong business logic.
@@ -50,3 +51,10 @@ If you discover a flaw:
 1.  **Halt implementation**: Do not "force" a solution or use brittle workarounds.
 2.  **Report immediately**: The focus shifts entirely to resolving the feedback.
 3.  **Resume only after resolution**: No further implementation steps should be taken until the feedback is acknowledged and the plan/code is updated.
+
+## Environmental Blocker Validation
+Before classifying an issue as an environmental blocker, agents must:
+1. Re-run with the exact handoff command.
+2. Re-run with explicit target scope (for example, spec path).
+3. If constrained execution can affect startup/runtime, run one local-equivalent verification.
+4. Attach at least one concrete artifact (`error-context.md`, screenshot, or log excerpt).

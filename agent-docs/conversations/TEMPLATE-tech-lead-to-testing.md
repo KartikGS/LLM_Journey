@@ -17,8 +17,21 @@
   - [Allowed files under `__tests__/` / testing docs]
   - [No app code changes unless explicitly delegated]
 - Verification boundaries:
-  - [Required command sequence]
+  - [Required command sequence (`pnpm test` -> `pnpm lint` -> `pnpm exec tsc --noEmit` -> `pnpm build` when full verification is in scope)]
+  - [E2E required? yes/no + trigger rationale from workflow testing matrix]
   - [Failure classification requirement]
+
+## Stable Signals to Assert (Mandatory)
+- [Durable contract 1: role/testid/href/state signal]
+- [Durable contract 2]
+
+## Prohibited Brittle Assertions (Mandatory)
+- [Transient loading-copy dependency not allowed]
+- [Layout-coupled selector not allowed]
+
+## Known Environmental Caveats (Mandatory)
+- [Sandbox/startup/runtime caveat]
+- [How to classify if reproduced]
 
 ## Assumptions To Validate (Mandatory)
 - [Assumption 1]
@@ -46,6 +59,7 @@
 - [ ] `pnpm test` passes
 - [ ] `pnpm lint` passes
 - [ ] `pnpm exec tsc --noEmit` passes
+- [ ] `pnpm build` passes (when delegated in scope)
 
 ## Clarification Loop (Mandatory)
 - Testing posts preflight concerns/questions in `agent-docs/conversations/testing-to-tech-lead.md`.
@@ -53,8 +67,7 @@
 - Repeat until concerns are resolved or status becomes `blocked`.
 
 ## Verification
-[Exact commands and expected evidence lines.]
+[Use command evidence standard: Command, Scope, Execution Mode, Browser Scope (if E2E), Result.]
 
 ## Report Back
 Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.
-

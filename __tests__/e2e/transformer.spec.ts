@@ -29,19 +29,18 @@ test.describe('Transformer Page', () => {
         const sendButton = page.locator('button[type="submit"]');
         await sendButton.click();
 
-        // 5. Assert "Generating..." is visible
-        await expect(page.getByText('Generating...')).toBeVisible();
+        // 5. Wait for submit cycle to complete (loading -> idle)
+        await expect(sendButton).toBeDisabled();
+        await expect(sendButton).toBeEnabled({ timeout: 60000 });
 
-        // 6. Wait for generation to complete (up to 60s for ONNX/WASM)
-        await expect(page.getByText('Generating...')).not.toBeVisible({ timeout: 60000 });
-
-        // 7. Verify some response is shown
+        // 6. Verify generated output is shown in terminal response area
         const responseContainer = page.locator('div.whitespace-pre-wrap');
+        await expect(responseContainer).toBeVisible();
         const responseText = await responseContainer.innerText();
         expect(responseText.length).toBeGreaterThan(0);
         expect(responseText).not.toContain('Very small model');
 
-        // 8. Verify OTel trace was sent
+        // 7. Verify OTel trace was sent
         const otelRequest = await otelRequestPromise;
         expect(otelRequest).toBeDefined();
     });

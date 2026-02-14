@@ -48,6 +48,12 @@ This document provide quick access to key technical configurations and endpoints
 - **Framework**: Next.js 15 (App Router).
 - **Browser Support**: Modern browsers with `wasm-unsafe-eval` support (Chrome 95+, FF 102+, Safari 17.4+).
 
+## E2E Execution Contexts (Truth Table)
+| Context | Expected Startup Behavior | Classification Guidance |
+| :--- | :--- | :--- |
+| **Sandboxed** | May fail before browser execution (`config.webServer` early exit / bind restrictions). | Classify as **environmental** unless reproduced in local-equivalent run. |
+| **Local-equivalent/unsandboxed** | Should start app on port `3001` and execute browser matrix. | Treat failures as product/test-contract regressions unless evidence shows infra/runtime fault. |
+
 ## Security & Privacy Context
 | Feature | Policy | Rationale |
 | :--- | :--- | :--- |

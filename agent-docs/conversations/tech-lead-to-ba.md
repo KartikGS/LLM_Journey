@@ -1,86 +1,83 @@
 # Handoff: Tech Lead -> BA Agent
 
-## Subject: CR-008 - Health Check Hardening (Rate Limiting + Middleware Test Coverage)
+## Subject
+CR-011 - Server-First Rendering Boundary for UI Pages
 
 ## Status
 `verified`
 
 ## Technical Summary
-CR-008 is technically complete and verified.
-- Backend fixed middleware rate-limit state mutation so request timestamps accumulate correctly in-window.
-- Testing added and hardened middleware rate-limit coverage, including:
-  - allow path under threshold
-  - block path over threshold
-  - localhost/E2E bypass paths
-  - window expiration/reset boundary behavior
-  - module-state isolation via `jest.resetModules()` with fresh middleware import
-- Requirements governance doc now includes explicit legacy status mapping guidance.
-
-### Final Changed Files
-- `middleware.ts`
-- `__tests__/middleware.test.ts`
-- `agent-docs/requirements/README.md`
-- `agent-docs/conversations/tech-lead-to-backend.md`
-- `agent-docs/conversations/backend-to-tech-lead.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/plans/CR-008-plan.md`
+- CR-011 is implemented and technically verified.
+- Rendering boundaries were corrected from page-level client rendering to server-first composition on:
+  - `app/page.tsx`
+  - `app/foundations/transformers/page.tsx`
+  - `app/models/adaptation/page.tsx`
+- Stateful interaction was preserved via targeted client islands:
+  - existing client chat module remains in `app/foundations/transformers/components/BaseLLMChat.tsx`
+  - adaptation selector interaction extracted into `app/models/adaptation/components/AdaptationStrategySelector.tsx`
+- Shared presentational components no longer force client rendering:
+  - `app/ui/components/GlassCard.tsx`
+  - `app/ui/components/JourneyStageHeader.tsx`
+  - `app/ui/components/JourneyContinuityLinks.tsx`
+- Route structure and key selector/href contracts were preserved; no Testing handoff was required.
 
 ## Evidence of AC Fulfillment
+- [x] AC-1: `app/page.tsx` no longer requires page-level `'use client'` and is composed as server-first with client islands only where required. — Evidence: `app/page.tsx:1` (no `'use client'`; server component imports only), `app/page.tsx:30`
+- [x] AC-2: `app/foundations/transformers/page.tsx` no longer requires page-level `'use client'`; interactive chat experience remains functional. — Evidence: `app/foundations/transformers/page.tsx:1` (no `'use client'`), `app/foundations/transformers/page.tsx:20` (`<BaseLLMChat />` retained)
+- [x] AC-3: `app/models/adaptation/page.tsx` no longer requires page-level `'use client'`; strategy selector interaction remains functional. — Evidence: `app/models/adaptation/page.tsx:1` (no `'use client'`), `app/models/adaptation/page.tsx:41` (`<AdaptationStrategySelector />`), `app/models/adaptation/components/AdaptationStrategySelector.tsx:1` (`'use client';`)
+- [x] AC-4: Shared presentational components no longer force client rendering unless they directly handle user input/state. — Evidence: `app/ui/components/GlassCard.tsx:1`, `app/ui/components/JourneyStageHeader.tsx:1`, `app/ui/components/JourneyContinuityLinks.tsx:1` (all without `'use client'`)
+- [x] AC-5: Core quality checks pass after refactor: `pnpm lint`, `pnpm test`, `pnpm build`. — Evidence: command results below all `PASS`
+- [x] AC-6: If page structure or `data-testid` contracts change, matching E2E updates are included in same CR. — Evidence: contract stability preserved (`app/models/adaptation/page.tsx:12`, `app/models/adaptation/page.tsx:24`, `app/models/adaptation/components/AdaptationStrategySelector.tsx:44`, `app/ui/components/JourneyContinuityLinks.tsx:22`); no contract delta detected, so no E2E test update required.
 
-### AC-1: Rate limits are enforced for protected middleware routes
-- Evidence: backend patch changed limiter state update to append current timestamp in `middleware.ts`.
-- Behavioral validation: testing report confirms 11th request on `/api/telemetry-token` returns `429`.
-
-### AC-2: Negative-space preserved (below-threshold and bypass behavior still allowed)
-- Evidence: testing report confirms:
-  - requests below threshold are not blocked,
-  - localhost traffic remains unblocked,
-  - `E2E=true` traffic remains unblocked.
-
-### AC-3: Window-boundary expiration behavior is covered
-- Evidence: testing follow-up report confirms blocked IP is re-allowed once request time advances past `rateLimit_windowMs` boundary.
-
-### AC-4: Full quality gates pass
+## Verification Commands
 - Command: `pnpm test`
-- Result: PASS (`14 passed, 14 total`; `96 passed, 96 total`)
-- Command: `pnpm lint`
-- Result: PASS (no ESLint warnings/errors)
-- Command: `pnpm exec tsc --noEmit`
-- Result: PASS
-- Command: `pnpm build`
-- Result: PASS (non-blocking webpack warning in OTel dependency chain remains informational)
+- Execution Mode: `sandboxed`
+- Result: `PASS` (14 suites, 96 tests)
 
-### AC-5: Legacy CR status interpretation is standardized without rewriting closed artifacts
-- Evidence: `agent-docs/requirements/README.md` now documents:
-  - `Completed` -> `Done`
-  - `Implemented` -> `Done`
-  - `Done ✅` -> `Done`
+- Command: `pnpm lint`
+- Execution Mode: `sandboxed`
+- Result: `PASS` (no ESLint warnings/errors)
+
+- Command: `pnpm exec tsc --noEmit`
+- Execution Mode: `sandboxed`
+- Result: `PASS`
+
+- Command: `pnpm build`
+- Execution Mode: `sandboxed`
+- Result: `PASS` (production build succeeds; static generation complete)
+
+## Failure Classification Summary
+- CR-related: `none`
+- Pre-existing: `none`
+- Environmental: `none`
+- Non-blocking warning:
+  - `pnpm lint`: Next.js deprecation notice for `next lint` command.
+  - `pnpm build`: known webpack critical dependency warnings from OTel dependency chain (`require-in-the-middle`); build still passes.
+
+## Adversarial Diff Review
+- Reviewed all frontend-modified files against CR-011 scope and AC boundaries.
+- Verified no route URI changes and no test contract drift for adaptation and continuity selectors/links.
+- Verified interactivity boundary remains explicit:
+  - chat remains in client component (`BaseLLMChat`)
+  - adaptation selector state/keyboard behavior remains in dedicated client island.
+- Residual risk:
+  - Decorative framer-motion entrance effects were removed from server-rendered page shells by design; visual styling remains preserved via CSS transitions.
 
 ## Technical Retrospective
-- Root cause for security gap: state mutation bug in middleware limiter map.
-- Root cause for detectability gap: missing middleware behavior tests allowed green gates despite ineffective rate limiting.
-- Hardening outcome: behavior now enforced and guarded by deterministic tests with isolation controls.
-
-## Failure Classification
-- CR-related failures: none remaining.
-- Non-blocking warnings:
-  - Build warning from OTel transitive dependency (`require-in-the-middle`).
-  - Jest open-handles warning observed in testing report (non-failing).
-- Environmental note:
-  - `pnpm test:e2e` remains blocked in this sandbox due to port bind `EPERM` on `3001` (not CR-related).
+- The refactor achieved architectural correction without expanding scope into redesign or route changes.
+- Splitting adaptation data (`strategy-data.ts`) from client interaction logic reduced client surface area while preserving deterministic selector contracts.
+- Converting `GlassCard` to a server-compatible component removed a central source of rendering-boundary leakage.
 
 ## Deployment Notes
-- No environment variable changes required.
-- No dependency changes required.
-- Safe rollback: revert `middleware.ts` and `__tests__/middleware.test.ts` changes as a pair.
+- No dependency changes.
+- No config/security/telemetry/middleware changes.
+- Rollback: revert CR-011 rendering-boundary refactor commits on affected page and shared UI component files.
 
 ## Link to Updated Docs
-- `agent-docs/plans/CR-008-plan.md`
-- `agent-docs/conversations/tech-lead-to-backend.md`
-- `agent-docs/conversations/backend-to-tech-lead.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/conversations/testing-to-tech-lead.md`
-- `agent-docs/requirements/README.md`
+- `agent-docs/requirements/CR-011-server-first-rendering-boundary.md`
+- `agent-docs/plans/CR-011-plan.md`
+- `agent-docs/conversations/tech-lead-to-frontend.md`
+- `agent-docs/conversations/frontend-to-tech-lead.md`
 
-*Report created: 2026-02-13*
+*Report created: 2026-02-14*
 *Tech Lead Agent*

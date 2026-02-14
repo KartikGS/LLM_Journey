@@ -91,7 +91,7 @@ export default function BaseLLMChat() {
     }
 
     return (
-        <GlassCard className="w-full flex flex-col lg:flex-row gap-6 md:gap-8 p-6 sm:p-8">
+        <GlassCard className="w-full flex flex-col lg:flex-row gap-6 md:gap-8 p-6 sm:p-8 overflow-visible">
             {/* Left Col: Instructions & Samples */}
             <div className="w-full lg:w-1/2 flex flex-col gap-4 sm:gap-6">
                 <div className="flex items-center gap-3">

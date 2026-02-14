@@ -163,7 +163,7 @@ Before planning or executing ANY task, also read:
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
-When reporting your readings, use this format:
+Use the mandatory reading output protocol from `AGENTS.md`. For Tech Lead sessions, include at least:
 > "I have read:
 > - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
 > - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
@@ -184,6 +184,12 @@ Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead H
 - **Wildcard Resolution**: If a requirement is generic (e.g., "Install a UI library"), YOU must resolve it to specific packages/versions *before* planning.
 - **Probes**: Run `find`, `grep`, or check docs to validate assumptions.
 - **Constraints Check**: Verify new libs against `technical-context.md`.
+
+#### E2E-Sensitive Pre-Handoff Probes (Mandatory when CR affects routes/UI contracts)
+- Confirm canonical route targets from source (`app/` and current nav contracts).
+- Confirm required stable selectors/contracts exist (`data-testid`, role/name, href/state markers).
+- Confirm browser matrix expectation for verification scope (`chromium`, `firefox`, `webkit` unless scope is explicitly narrowed).
+- Record findings in the technical plan under Discovery Findings before issuing any sub-agent handoff.
 
 If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
@@ -280,9 +286,14 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
     - **Rule**: Never trust the sub-agent's verification blindly.
     - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-- [ ] Run `pnpm lint` — must pass
-- [ ] Run `pnpm test:e2e` — classify any failures as **CR-related** vs. **pre-existing** (see below)
-- [ ] **Cross-Environment Verification**: Ensure tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes
+- [ ] Run quality gates in sequence (per `testing-strategy.md`):
+  1. `pnpm test`
+  2. `pnpm lint`
+  3. `pnpm exec tsc --noEmit`
+  4. `pnpm build`
+- [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
+- [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.
+- [ ] For global/browser-sensitive changes that include E2E scope, ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
 - [ ] If UI was changed: verify Light/Dark mode rendering
 - [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
