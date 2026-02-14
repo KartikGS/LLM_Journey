@@ -1,30 +1,29 @@
-# Tech Lead Prompt: Execute CR-007
+# Tech Lead Prompt: Plan and Execute CR-009
 
 ## Context
-The repository is currently unstable after the latest CR: quality gates are broken (`test` and `build`), while `lint` is green. This blocks safe iteration and release confidence.
+User requested we start building the **Model Adaptation** page in the roadmap.  
+BA created `agent-docs/requirements/CR-009-model-adaptation-page.md` as the scoped requirement artifact for Stage 2 (`/models/adaptation`).
 
 ## Goal
-Execute `agent-docs/requirements/CR-007-pipeline-stabilization.md` and restore a fully green local pipeline:
-- `pnpm test`
-- `pnpm lint`
-- `pnpm build`
+Execute CR-009 by delivering a complete, non-placeholder page for `/models/adaptation` with:
+- roadmap-consistent educational narrative,
+- premium visual consistency with existing pages,
+- one lightweight interactive learning element,
+- quality-gate and verification evidence.
 
-## Discovery Evidence (BA)
-- Investigation report: `agent-docs/reports/INVESTIGATION-CR-007-pipeline-regression.md`
-- Current hard failures:
-  - stale import in `__tests__/components/BaseLLMChat.test.tsx`
-  - TypeScript/framer-motion variant typing failure in `app/ui/navbar.tsx`
+## Scope Source of Truth
+- Requirement: `agent-docs/requirements/CR-009-model-adaptation-page.md`
+- Vision alignment: `agent-docs/project-vision.md` (Stage 2 definition)
 
 ## Key Directives
-1. Read CR-007 and produce `agent-docs/plans/CR-007-plan.md` before implementation.
-2. Prioritize minimal, reversible fixes that restore baseline stability.
-3. Preserve architecture/security invariants; do not weaken TypeScript or lint settings.
-4. If temporary workaround is required, report as deviation with rollback path.
-5. Include verification evidence for all four checks:
-   - `pnpm test`
-   - `pnpm lint`
-   - `pnpm build`
-   - `pnpm exec tsc --noEmit`
+1. Read CR-009 and create `agent-docs/plans/CR-009-plan.md` before implementation.
+2. Enforce route and selector integrity: if structure/test selectors change, include Testing Agent updates per workflow invariants.
+3. Keep scope controlled: baseline educational + lightweight interaction only. User has explicitly confirmed this scope on 2026-02-14.
+4. Preserve architecture/security invariants and avoid introducing external dependencies without explicit approval.
+5. Provide verification evidence for:
+   - route render behavior (`/models/adaptation`)
+   - required UI sections and interaction behavior
+   - `pnpm lint`, `pnpm test`, `pnpm build`
 
 ## Hand-off
-Please assume the role of **Tech Lead** and execute this CR via the standard planning and delegation workflow.
+Please assume the role of **Tech Lead** and run the standard planning + delegation workflow for CR-009.

@@ -6,7 +6,8 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { GlowBackground } from '@/app/ui/components/GlowBackground';
 import { GlassCard } from '@/app/ui/components/GlassCard';
-import { GradientText } from '@/app/ui/components/GradientText';
+import { JourneyStageHeader } from '@/app/ui/components/JourneyStageHeader';
+import { JourneyContinuityLinks } from '@/app/ui/components/JourneyContinuityLinks';
 import { BookOpen, Cpu, Database, Play, Layers, Activity } from 'lucide-react';
 
 export default function BaseLLMPage() {
@@ -36,25 +37,12 @@ export default function BaseLLMPage() {
       <GlowBackground />
 
       {/* Hero Section */}
-      <motion.div
-        className="w-full flex flex-col justify-around items-center gap-6"
-        {...fadeInUp}
-      >
-        <div className="flex flex-col items-center gap-2">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-medium uppercase tracking-wider mb-2"
-          >
-            Interactive Demo
-          </motion.div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center leading-tight">
-            <GradientText>Decoder-Only Transformer</GradientText>
-          </h1>
-        </div>
-        <p className="w-full max-w-2xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 text-center leading-relaxed">
-          A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser.
-        </p>
+      <motion.div {...fadeInUp}>
+        <JourneyStageHeader
+          testId="transformers-hero"
+          title="Decoder-Only Transformer"
+          description="A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser."
+        />
       </motion.div>
 
 
@@ -257,20 +245,26 @@ export default function BaseLLMPage() {
         </Link>
       </motion.div>
 
-      {/* Next page redirection*/}
-      <motion.div
-        className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 p-8 rounded-2xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-200/20 dark:border-blue-500/10"
-        {...fadeInUp}
-      >
-        <div className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 text-center lg:text-left max-w-2xl">
-          Small transformers produce meaningless text, but when scaled we get LLMs which produces text that makes sense.
-        </div>
-        <Link
-          href="/llm"
-          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 whitespace-nowrap"
-        >
-          Explore LLM →
-        </Link>
+      <motion.div {...fadeInUp}>
+        <JourneyContinuityLinks
+          testId="transformers-continuity-links"
+          previous={{
+            href: '/',
+            eyebrow: 'Previous Stage',
+            title: 'Journey Home',
+            description: 'Revisit the full map before diving deeper into model specialization.',
+            cta: 'Back to overview',
+            testId: 'transformers-link-home',
+          }}
+          next={{
+            href: '/models/adaptation',
+            eyebrow: 'Next Stage',
+            title: 'Model Adaptation',
+            description: 'Move from baseline mechanics to specialization trade-offs and strategy selection.',
+            cta: 'Continue to Stage 2',
+            testId: 'transformers-link-adaptation',
+          }}
+        />
       </motion.div>
     </div>
   );

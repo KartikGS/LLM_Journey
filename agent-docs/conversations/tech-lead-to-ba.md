@@ -84,3 +84,103 @@ CR-008 is technically complete and verified.
 
 *Report created: 2026-02-13*
 *Tech Lead Agent*
+
+---
+
+# Handoff: Tech Lead -> BA Agent
+
+## Subject: CR-009 - Model Adaptation Page (Stage 2)
+
+## Status
+`verified`
+
+## Technical Summary
+CR-009 is technically complete and verified.
+- Implemented Stage 2 route page at `/models/adaptation` with non-placeholder educational content and premium styling consistency.
+- Added comparison coverage for three adaptation strategies: Full Fine-Tuning, LoRA/PEFT, and Prompt/Prefix Tuning.
+- Implemented one lightweight interactive selector that updates explanatory output state immediately and supports keyboard navigation.
+- Added explicit journey continuity links to Stage 1 (`/foundations/transformers`) and Stage 3 (`/context/engineering`).
+- Added E2E assertions for route render markers, interaction state transition, and continuity-link contracts.
+
+### Final Changed Files
+- `app/models/adaptation/page.tsx`
+- `app/ui/components/JourneyStageHeader.tsx`
+- `app/ui/components/JourneyContinuityLinks.tsx`
+- `app/foundations/transformers/page.tsx`
+- `__tests__/e2e/navigation.spec.ts`
+- `agent-docs/plans/CR-009-plan.md`
+- `agent-docs/conversations/tech-lead-to-frontend.md`
+- `agent-docs/conversations/frontend-to-tech-lead.md`
+- `agent-docs/conversations/tech-lead-to-testing.md`
+- `agent-docs/conversations/testing-to-tech-lead.md`
+
+## Evidence of AC Fulfillment
+
+### AC-1: Visiting `/models/adaptation` renders a non-error page with a stage-relevant hero/intro
+- Evidence (implementation): `app/models/adaptation/page.tsx:85` (`adaptation-page` root), `app/models/adaptation/page.tsx:90` (`JourneyStageHeader` with stage narrative), `app/models/adaptation/page.tsx:91` (`adaptation-hero`).
+- Evidence (E2E): `__tests__/e2e/navigation.spec.ts:17` verifies route URL and visible page/hero selectors.
+
+### AC-2: Page includes strategy comparison with at least 3 differentiated approaches
+- Evidence (implementation): `app/models/adaptation/page.tsx:24` defines three strategies; `app/models/adaptation/page.tsx:97` renders comparison section.
+- Evidence (E2E): `__tests__/e2e/navigation.spec.ts:23` asserts `adaptation-strategy-comparison` visibility.
+
+### AC-3: Page includes one lightweight interactive element that changes explanatory UI state
+- Evidence (implementation): selector/radiogroup at `app/models/adaptation/page.tsx:127`; output state panel at `app/models/adaptation/page.tsx:158`; state update handler at `app/models/adaptation/page.tsx:63`.
+- Evidence (E2E): `__tests__/e2e/navigation.spec.ts:30` validates output changes from LoRA/PEFT to Full Fine-Tuning after selection.
+
+### AC-4: Page supports mobile and desktop without overlap/cutoff
+- Evidence (implementation): responsive grid and spacing classes applied across sections (`app/models/adaptation/page.tsx:84`, `app/models/adaptation/page.tsx:98`, `app/models/adaptation/page.tsx:128`, `app/models/adaptation/page.tsx:169`).
+- Evidence (cross-browser E2E signal): `pnpm test:e2e navigation` passed across Chromium/Firefox/WebKit (12/12).
+
+### AC-5: Visual alignment with premium style system
+- Evidence (implementation): `GlowBackground` + `GlassCard` usage in `app/models/adaptation/page.tsx:87`, `app/models/adaptation/page.tsx:103`, `app/models/adaptation/page.tsx:118`; shared premium header/continuity components in `app/ui/components/JourneyStageHeader.tsx:15` and `app/ui/components/JourneyContinuityLinks.tsx:24`.
+
+### AC-6: Journey continuity links to `/foundations/transformers` and `/context/engineering`
+- Evidence (implementation): continuity link targets defined in `app/models/adaptation/page.tsx:192` and `app/models/adaptation/page.tsx:200`.
+- Evidence (E2E): `__tests__/e2e/navigation.spec.ts:42` validates visibility and href contracts.
+
+### AC-7: Validation commands succeed (`pnpm lint`, `pnpm test`, `pnpm build`)
+- Command: `pnpm test`
+- Result: PASS (`14 passed, 14 total`; `96 passed, 96 total`)
+- Command: `pnpm lint`
+- Result: PASS (no ESLint warnings/errors)
+- Command: `pnpm exec tsc --noEmit`
+- Result: PASS
+- Command: `pnpm build`
+- Result: PASS
+- Command: `pnpm test:e2e navigation`
+- Result: PASS (`12 passed`, Chromium/Firefox/WebKit)
+
+## Technical Retrospective
+- The CR stayed within baseline scope (content-first + lightweight interaction), while still improving reuse via shared stage header and continuity-link components.
+- Interaction semantics were refined to radio-pattern behavior (`radiogroup`, `role="radio"`, `aria-checked`) improving accessibility and test determinism.
+- An initial sandbox-only Playwright webserver startup failure was confirmed as environmental after unsandboxed rerun passed; no product regression was reproduced.
+
+## Failure Classification
+- CR-related failures: none.
+- Environmental:
+  - Initial sandboxed `pnpm test:e2e navigation` run failed with early webServer exit.
+  - Escalated rerun passed fully; failure classified as environment/sandbox constraint.
+- Non-blocking warnings:
+  - Next.js/webpack warning from OpenTelemetry transitive dependency (`require-in-the-middle`).
+  - Deprecation notice for `next lint` command.
+
+## Deployment Notes
+- No dependency changes.
+- No environment variable changes.
+- Rollback path: revert CR-009 page/component/test changes listed above.
+
+## Link to Updated Docs
+- `agent-docs/plans/CR-009-plan.md`
+- `agent-docs/conversations/tech-lead-to-frontend.md`
+- `agent-docs/conversations/frontend-to-tech-lead.md`
+- `agent-docs/conversations/tech-lead-to-testing.md`
+- `agent-docs/conversations/testing-to-tech-lead.md`
+
+## Deviations
+- User-requested scope expansion applied during frontend refinement:
+  - Shared UI extraction to `app/ui/components/JourneyStageHeader.tsx` and `app/ui/components/JourneyContinuityLinks.tsx`
+  - Alignment update in `app/foundations/transformers/page.tsx`
+
+*Report created: 2026-02-14*
+*Tech Lead Agent*
