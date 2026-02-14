@@ -132,6 +132,14 @@ For each file, ask: **"Is this feature code?"**
 - **Sub-agents** — guidance, clarification, and review
 - **Human** — only when technical tradeoffs or "Go/No-Go" decisions require explicit confirmation
 
+### Clarification & Disagreement Duty
+- Treat handoffs as potentially iterative loops, not one-shot instructions.
+- If a sub-agent raises valid domain concerns, respond explicitly with one of:
+  - `accepted into current scope`
+  - `deferred to follow-up artifact`
+  - `rejected with rationale`
+- If disagreement affects scope/intent, reopen BA clarification loop before continuing execution.
+
 ### Restricted
 - Must NOT proceed with implementation under ambiguous scope
 - Must NOT bypass documented constraints
@@ -229,6 +237,7 @@ Present the **complete plan** to the USER, including:
 ### Execution & Coordination
 Once approved:
 -  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
+   - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 -  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
 -  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
@@ -278,7 +287,7 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
 - [ ] Verify documentation updates
-- [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and [Handoff Template](/agent-docs/conversations/TEMPLATE-tech-lead-to-sub-agent.md)
+- [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
 
 #### Pre-Existing Test Failures
 If tests fail for reasons **unrelated** to the current CR:

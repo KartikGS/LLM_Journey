@@ -93,7 +93,7 @@ export function middleware(request: NextRequest) {
                 return new NextResponse('Too Many Requests', { status: 429 });
             }
 
-            rateLimitMap.set(ip, recent);
+            rateLimitMap.set(ip, [...recent, now]);
         }
     }
 

@@ -83,6 +83,20 @@ Reason: some projects include generated `.next/types` entries in `tsconfig` and 
 
 ---
 
+## Abuse-Protection Coverage Checklist
+
+When testing middleware/API abuse protection (rate limiting, throttling, quotas), include this checklist unless the Tech Lead explicitly narrows scope:
+
+- **Threshold edge**: verify allow-path up to limit `N` and block-path at `N+1`.
+- **Window reset/expiry**: verify requests are re-allowed after the configured window elapses.
+- **State isolation**: prevent module-level state leakage between tests (for example, reset module registry + re-import, or approved explicit reset hook).
+- **Bypass and exemptions**: verify expected bypasses (for example localhost/E2E) remain intact.
+- **Contract headers**: assert response header contracts only when explicitly in scope (for example `Retry-After`, CSP/HSTS). Do not assert headers that are not implemented.
+
+If any checklist item is out of scope, report it as an explicit risk in `testing-to-tech-lead.md`.
+
+---
+
 ## Pipeline Stabilization Playbook (Regression Repair CRs)
 
 Use this order when a CR objective is to restore a broken pipeline:

@@ -10,6 +10,19 @@ Every active handoff/report should declare one status:
 - `complete` - Agent finished implementation and local verification
 - `verified` - Tech Lead completed adversarial review and integration verification
 
+## Bidirectional Clarification Loop (MANDATORY)
+Handoffs are not single-message contracts by default. Iterative discussion is allowed and expected:
+- `Tech Lead handoff -> [Sub-agent concerns <-> Tech Lead responses] (0..N rounds) -> implementation -> report -> [Tech Lead concerns <-> Sub-agent responses] (0..N rounds)`.
+- `BA handoff -> [Tech Lead concerns <-> BA responses] (0..N rounds) -> planning/execution`.
+- `Tech Lead verification handoff -> [BA concerns <-> Tech Lead responses] (0..N rounds) -> closure`.
+
+Protocol requirements:
+- Disagreement is permitted and encouraged when it improves correctness, safety, or scope clarity.
+- If a concern changes scope/intent, escalate to BA (or user if still unresolved).
+- If a concern changes technical feasibility only, Tech Lead resolves and records rationale.
+- Keep all rounds in the relevant conversation file to preserve traceability.
+- Optional structure: `agent-docs/conversations/TEMPLATE-ba-tech-lead-clarification.md`.
+
 ## BA → Tech Lead (Requirement Handoff)
 - **File**: `agent-docs/conversations/ba-to-tech-lead.md`
 - **Trigger**: CR is "Clarified" and approved by User.
@@ -34,6 +47,7 @@ Every active handoff/report should declare one status:
     - [Definition of Done]
     - [Reference Files]
 - **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.
+  - **Template**: Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 
 ## Sub-Agent → Tech Lead (Execution Report)
 - **File**: `agent-docs/conversations/<role>-to-tech-lead.md`
@@ -74,6 +88,6 @@ If classified as **environmental**, include concrete evidence (command + error l
 ## BA Agent → User (Acceptance Notification)
 - **Trigger**: Acceptance Phase (Acceptance) complete.
 - **Protocol**:
-    1. Update `agent-docs/requirements/CR-XXX.md` status to `Completed`.
+    1. Update `agent-docs/requirements/CR-XXX.md` status to `Done` (or legacy-equivalent mapping where applicable).
     2. Update `agent-docs/project-log.md` with the closure entry.
     3. Notify User of completion with a summary of the value delivered.

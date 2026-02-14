@@ -31,12 +31,21 @@ Before executing any task, also read:
 - Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Testing Handoff](/agent-docs/conversations/tech-lead-to-testing.md)
 - Make a report for the Tech Lead agent in the [Testing To Tech Lead Handoff](/agent-docs/conversations/testing-to-tech-lead.md)
 
+### Preflight Communication (Mandatory)
+Before writing or modifying tests, publish a short **Preflight** note in `/agent-docs/conversations/testing-to-tech-lead.md` with:
+- **Assumptions I'm making**
+- **Risks not covered by current scope**
+- **Questions for Tech Lead**
+
+If the **Questions for Tech Lead** section is non-empty and any answer can change test validity/scope, pause implementation and wait for clarification.
+
 ### Handling Testability Blockers & Discrepancies
 If the codebase prevents you from writing a required test OR you discover an assumption in the task is false:
 - **Identify the gap/discrepancy**: e.g., "The Submit button has no unique selector" or "WebKit actually supports WASM."
 - **HALT IMMEDIATELY**: Do not modify the component file, and **do not continue with test implementation** for that feature.
 - **Use Feedback Protocol**: File a report in `/agent-docs/conversations/testing-to-tech-lead.md` under `## BLOCKER / FEEDBACK`. Note: This includes environmental configs like `next.config.ts`. If a test fails due to a system-wide setting, you MUST NOT modify that setting yourself.
 - **Wait for Resolution**: The Tech Lead must either update the environment/code or revise the requirement before you proceed.
+- **No Silent Scope Fill**: If you notice a meaningful adjacent gap (for example, untested boundary behavior) that is not explicitly requested, report it as a risk and ask for scope confirmation before adding it.
 
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):

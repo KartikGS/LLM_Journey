@@ -42,6 +42,14 @@ The BA agent **does NOT**:
 - **Tech Lead Agent** — to hand off a well-defined task
 - **Tech Lead Agent (feedback loop)** — to refine scope if execution complexity is higher than expected
 
+### Clarification & Disagreement Protocol
+- BA-Tech Lead communication may run in 0..N rounds before plan finalization and again during acceptance.
+- If Tech Lead challenges feasibility assumptions, BA must respond with one of:
+  - `scope clarified`
+  - `scope changed`
+  - `requires user decision`
+- Disagreement is expected when it improves requirement quality; unresolved scope/intent conflicts must be escalated to user.
+
 ### Restricted
 - Must NOT write or modify:
   - `agent-docs/decisions/**`
