@@ -163,7 +163,7 @@ Before planning or executing ANY task, also read:
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
-When reporting your readings, use this format:
+Use the mandatory reading output protocol from `AGENTS.md`. For Tech Lead sessions, include at least:
 > "I have read:
 > - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
 > - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
@@ -286,9 +286,14 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
     - **Rule**: Never trust the sub-agent's verification blindly.
     - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-- [ ] Run `pnpm lint` — must pass
-- [ ] Run `pnpm test:e2e` — classify any failures as **CR-related** vs. **pre-existing** (see below)
-- [ ] **Cross-Environment Verification**: Ensure tests pass across all configured environments (e.g., `chromium`, `firefox`, `webkit`) for global changes
+- [ ] Run quality gates in sequence (per `testing-strategy.md`):
+  1. `pnpm test`
+  2. `pnpm lint`
+  3. `pnpm exec tsc --noEmit`
+  4. `pnpm build`
+- [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
+- [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.
+- [ ] For global/browser-sensitive changes that include E2E scope, ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
 - [ ] If UI was changed: verify Light/Dark mode rendering
 - [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants

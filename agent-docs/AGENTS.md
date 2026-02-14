@@ -35,11 +35,13 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 Failed coordination kills projects. Stick to these contracts:
 ### Process & Workflow
 - **How we work:** [Workflow](/agent-docs/workflow.md)
+- **Meta Improvements:** [Meta Improvement Protocol](/agent-docs/coordination/meta-improvement-protocol.md)
 **Constraint:**
 - Do not invent policies, standards, or requirements
 - If a rule is not written in `agent-docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
 - Treat closed CRs in `/agent-docs/requirements/` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
+- Agents may propose process improvements, but process/policy changes are not effective until Tech Lead verification is recorded.
 
 ## Authority & Conflict Resolution
 

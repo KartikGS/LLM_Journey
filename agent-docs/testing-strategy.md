@@ -120,6 +120,25 @@ For final CR verification evidence, run quality gates in sequence, not in parall
 
 Reason: some projects include generated `.next/types` entries in `tsconfig` and concurrent `tsc` + `build` execution can produce false negatives from transient type-generation state.
 
+### Tech Lead Verification Matrix (Canonical)
+- `Always required`:
+  - `pnpm test`
+  - `pnpm lint`
+  - `pnpm exec tsc --noEmit`
+  - `pnpm build`
+- `Conditionally required`:
+  - `pnpm test:e2e` only when CR scope changes route/selector/semantic contracts, changes browser-sensitive behavior, or explicitly requests E2E evidence.
+- Source of truth for trigger decision:
+  - `agent-docs/workflow.md` -> `Testing Handoff Trigger Matrix (Mandatory)`.
+
+### Command Evidence Standard (for handoff reports)
+When citing verification evidence, use this normalized format:
+- Command: `[exact command]`
+- Scope: `[full suite | specific spec/grep | impacted routes/components]`
+- Execution Mode: `[sandboxed | local-equivalent/unsandboxed]`
+- Browser Scope (if E2E): `[chromium/firefox/webkit or narrowed scope]`
+- Result: `[PASS/FAIL + key counts or failure summary]`
+
 ---
 
 ## Abuse-Protection Coverage Checklist

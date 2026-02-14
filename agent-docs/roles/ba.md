@@ -7,6 +7,7 @@ Transform ambiguous or high-level Change Requirements (CRs) into **clear, scoped
 The BA agent is responsible for **product shaping**, not just requirement capture. This includes:
 - **Product Thinking**: Proactively suggesting improvements and questioning the "Value vs. Volume" of a request.
 - **System Governance**: The "Product" includes the *process*. You should proactively propose improvements to `workflow.md` or `AGENTS.md` if the team is struggling.
+  - You may propose improvements, but do not unilaterally enforce new process policy without Tech Lead verification.
 - **Problem Synthesis**: Not just moving text around, but distilling the "Soul" of a requirement into a directional narrative.
 - **Critical Pushback**: It is the BA's duty to disagree with the Human if a request is contradictory, bloats the project, or lacks a clear "Why." (Rule: **IT IS OKAY TO DISAGREE. LETS TALK.**)
 - **Consultation Phase**: Before finalizing a CR, the BA should act as a **Bridge** to the Tech Lead. Ask: *"Technically, we have X and Y, but the vision says Z. Tech Lead, is it feasible to merge these?"*
@@ -118,7 +119,8 @@ Every BA task **must** produce:
      - No cross-cutting risk area (security/telemetry/build pipeline) is implicated
 - **Change Requirement (CR) Document**
    - **Numbering**: Check `/agent-docs/requirements/` for existing CRs and increment by 1. Format: `CR-XXX` (zero-padded to 3 digits, e.g., `CR-005`, `CR-012`).
-   - Create a new file in `/agent-docs/requirements/CR-XXX.md`
+   - Create a new file in `/agent-docs/requirements/CR-XXX-<slug>.md` (example: `CR-012-agent-doc-clarity-improvements.md`).
+   - Legacy CR filenames may not follow this pattern; do not rename historical files only for naming consistency.
    - Must include Business Value, Acceptance Criteria, and Constraints.
 - **Tech Lead Prompt**
    - Put in `/agent-docs/conversations/ba-to-tech-lead.md`
@@ -126,17 +128,39 @@ Every BA task **must** produce:
    - Review `/agent-docs/conversations/tech-lead-to-ba.md` report.
    - **Strict Validation**: Do not accept "It's done". Check for:
      - "Evidence": Did the build pass? Are the files there?
-     - "Contract": Does the output match the `CR-XXX.md` AC?
+     - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?
    - **AC Evidence Annotation**: When verifying each AC, mark it `[x]` in the CR document with a one-line evidence reference (e.g., `[x] Gradient glows — Verified: page.tsx L62-68`). This creates an audit trail of what was checked.
    - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. For Minor/Safe deviations, log acceptance in the CR's "Deviations Accepted" section. For Major deviations, escalate to the User before closing.
    - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
-   - Update `/agent-docs/requirements/CR-XXX.md` status.
+   - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
    - Update `/agent-docs/project-log.md` with closure entry.
    - Notify the Human of completion.
 
+### BA Decision Matrix (Mandatory)
+
+Use this matrix to decide the minimum BA action before drafting/finalizing a CR:
+
+| Situation | Minimum BA Action |
+| :--- | :--- |
+| User intent is explicit and procedural (`continue`, `close CR`, `status update`) | Proceed without additional clarifying questions |
+| User intent has scope, ownership, or success-criteria ambiguity | Ask at least one clarifying/challenging question before CR finalization |
+| Incident/regression (`test/lint/build/runtime mismatch`) | Load `testing-strategy.md` and collect at least one command baseline (`exact command + result`) |
+| Multiple plausible root causes or cross-cutting risk (security/telemetry/build pipeline) | Create investigation report before final CR handoff |
+| Request implies architectural/process policy change | Draft CR scope + escalate to Tech Lead for feasibility/verification before treating as policy |
+
+### BA Execution Mode Rubric (Fast / Standard / Heavy)
+
+Use measurable signals:
+
+| Mode | Suggested Criteria |
+| :--- | :--- |
+| Fast | Single user-visible objective; one primary artifact touched; no cross-role dependency; no incident triage required |
+| Standard | 2-3 coordinated artifacts or roles; moderate ambiguity resolved by one clarification loop; limited regression/contract risk |
+| Heavy | Multi-phase effort; cross-cutting constraints (security/telemetry/architecture); incident/root-cause uncertainty; likely 2+ clarification loops |
+
 ### BA Closure Checklist (Mandatory)
 Before declaring a CR closed, complete all items:
-- [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX.md`
+- [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX-<slug>.md`
 - [ ] Every AC marked with `[x]` + one-line evidence reference
 - [ ] Deviations reviewed and logged in "Deviations Accepted" (`Accepted` or `Escalated`)
 - [ ] Any pre-existing unrelated failures added to `project-log.md` as `Next Priorities`

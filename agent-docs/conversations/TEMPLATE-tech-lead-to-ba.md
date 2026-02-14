@@ -16,6 +16,7 @@ CR-XXX - [Short title]
 
 ## Verification Commands
 - Command: `[exact command]`
+- Scope: `[full suite | targeted scope]`
 - Execution Mode: `[sandboxed | local-equivalent/unsandboxed]`
 - Browser Scope (if E2E): `[chromium/firefox/webkit]`
 - Result: `[PASS/FAIL summary]`
