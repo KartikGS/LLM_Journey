@@ -28,6 +28,12 @@
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
 
+#### Conversation File Freshness Rule (Mandatory)
+- Conversation handoff/report files under `agent-docs/conversations/` are **single-CR working artifacts**.
+- For a new CR, agents MUST **replace file contents** with the current CR context. Do not append historical CR logs.
+- Every conversation file MUST include the active CR ID in `Subject`.
+- Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
+
 #### Delegation Mode Rules
 - **Parallel Mode**
   1. Create handoffs for all independent sub-agents in one batch.
@@ -87,9 +93,11 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 4. **Halt on Blocker/Assumption Invalidation**: If a blocker (missing contract, environmental discrepancy, or logical flaw) is identified:
    - **STOP** implementation of the affected part immediately.
    - **DO NOT** attempt to "fix" or "work around" an architectural or environmental assumption without consulting the Tech Lead Agent.
+   - **Reproduce before classify**: For environment/E2E blockers, run at least one exact-command rerun and one explicit-target rerun (plus local-equivalent verification if constrained execution affects startup/runtime) before final blocker classification.
    - Report the issue immediately via the `agent-docs/coordination/feedback-protocol.md`.
    - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
 5. Sub-agent executes within role boundaries.
+   - If user or Tech Lead feedback introduces changes outside the approved handoff scope (for example cross-route refactors or shared component extraction), mark this as a **scope extension** and get explicit Tech Lead or user confirmation before implementing.
 6. Sub-agent completes and verifies work.
 7. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
    - **Testing Ownership Rule**: Creating/modifying tests is owned by the Testing Agent unless the Tech Lead handoff explicitly delegates test work to another role.
@@ -154,3 +162,6 @@ Closed CRs are immutable records and must not be normalized retroactively.
 - Legacy format variance across older CRs is acceptable.
 - Standardization requirements apply to new CRs going forward.
 - If historical evidence needs clarification, append an amendment note or create a linked follow-up artifact rather than rewriting intent/history.
+
+### 4. Scope Extension Invariant
+When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).

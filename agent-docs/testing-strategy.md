@@ -69,8 +69,33 @@ Configuration lives in:
 - Run all tests: `pnpm test`
 - Watch mode: `pnpm test:watch`
 - Run all E2E tests: `pnpm test:e2e`
+- Run a single E2E spec: `pnpm test:e2e -- __tests__/e2e/<spec>.spec.ts`
+- Run focused E2E by grep: `pnpm test:e2e -- --grep "<pattern|@tag>"`
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
+
+### E2E Reproducibility Rule
+When reporting E2E outcomes for handoff evidence, always include:
+- exact command string used,
+- target scope (spec path or grep expression),
+- execution mode (sandboxed vs local-equivalent/unsandboxed),
+- browser matrix covered (chromium/firefox/webkit),
+- pass/fail summary by browser.
+
+### E2E Triage Ladder (Before Declaring Blocked)
+If E2E fails, classify using this sequence:
+1. Re-run with the exact handoff command (no substitutions).
+2. Re-run with explicit spec targeting (`pnpm test:e2e -- __tests__/e2e/<spec>.spec.ts`).
+3. Confirm there is no stale server/process conflict on port `3001`.
+4. If startup/runtime differs in constrained execution, run a local-equivalent/unsandboxed verification.
+5. Inspect Playwright artifacts (`error-context.md`, screenshots, video) before classifying root cause.
+6. Declare `Blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
+
+### E2E Failure Classification Heuristics
+- `Process from config.webServer exited early`: environment/process startup class until reproduced in local-equivalent run.
+- Selector missing while app is clearly rendered: likely contract or test regression.
+- Selector missing while app is stuck on compatibility/guard screen: environment/runtime gate until proven persistent across contexts.
+- Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
 
 ### Command Sequencing Rule (Pipeline Verification)
 For final CR verification evidence, run quality gates in sequence, not in parallel:

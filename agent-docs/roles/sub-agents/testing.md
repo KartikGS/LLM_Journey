@@ -47,6 +47,23 @@ If the codebase prevents you from writing a required test OR you discover an ass
 - **Wait for Resolution**: The Tech Lead must either update the environment/code or revise the requirement before you proceed.
 - **No Silent Scope Fill**: If you notice a meaningful adjacent gap (for example, untested boundary behavior) that is not explicitly requested, report it as a risk and ask for scope confirmation before adding it.
 
+### Blocker Declaration Gate (Mandatory)
+Before setting task status to `Blocked` for E2E/runtime issues, you MUST provide reproducibility evidence:
+1. One run using the exact handoff command.
+2. One run using explicit spec targeting.
+3. One local-equivalent/unsandboxed confirmation if constrained execution affects server startup/runtime.
+4. At least one Playwright artifact reference (`error-context.md`, screenshot, or video).
+
+If this evidence set is incomplete, classify as `Needs Environment Verification` instead of `Blocked`.
+
+### Reporting Format Addendum (Mandatory for E2E Issues)
+When reporting E2E failures in `/agent-docs/conversations/testing-to-tech-lead.md`, include a `Reproduction Matrix` table with:
+- command,
+- mode (sandboxed/local-equivalent),
+- browsers,
+- result,
+- short classification note.
+
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):
 - Document the mismatch in the `/agent-docs/conversations/testing-to-tech-lead.md` report.

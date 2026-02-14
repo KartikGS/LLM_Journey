@@ -49,6 +49,17 @@ Before executing any task, also read:
 - Avoid fetching data in components — use server components or dedicated hooks.
 - Don't hardcode API endpoints — use `lib/config`.
 
+### Accessibility & Testability Contracts
+
+- **Single-select controls** (exactly one option active) MUST use radio semantics:
+  - container: `role="radiogroup"`
+  - options: `role="radio"` + `aria-checked`
+  - keyboard behavior: arrow-key navigation between options.
+- Use toggle-button semantics (`aria-pressed`) only for true independent on/off controls.
+- Repeated interactive items (tabs/options/cards in mapped lists) MUST expose deterministic selectors derived from stable IDs.
+  - Preferred pattern: `data-testid="<prefix>-${stableId}"`.
+  - Do not rely on visible text or list order for primary E2E targeting.
+
 ### TypeScript + Framer Motion Stability
 
 - When Framer Motion variants fail strict TypeScript typing, first stabilize types before changing behavior.
