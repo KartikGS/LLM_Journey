@@ -1,9 +1,5 @@
-'use client';
-
-import React from 'react';
-import BaseLLMChat from "./components/BaseLLMChat";
-import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import BaseLLMChat from './components/BaseLLMChat';
+import Link from 'next/link';
 import { GlowBackground } from '@/app/ui/components/GlowBackground';
 import { GlassCard } from '@/app/ui/components/GlassCard';
 import { JourneyStageHeader } from '@/app/ui/components/JourneyStageHeader';
@@ -11,54 +7,19 @@ import { JourneyContinuityLinks } from '@/app/ui/components/JourneyContinuityLin
 import { BookOpen, Cpu, Database, Play, Layers, Activity } from 'lucide-react';
 
 export default function BaseLLMPage() {
-  const shouldReduceMotion = useReducedMotion();
-
-  // Animation variants
-  const fadeInUp = shouldReduceMotion
-    ? {}
-    : {
-      initial: { opacity: 0, y: 20 },
-      animate: { opacity: 1, y: 0 },
-      transition: { duration: 0.5 },
-    };
-
-  const staggerContainer = shouldReduceMotion
-    ? {}
-    : {
-      animate: {
-        transition: {
-          staggerChildren: 0.1,
-        },
-      },
-    };
-
   return (
     <div className="w-full flex-1 flex flex-col gap-8 sm:gap-12 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto relative">
       <GlowBackground />
 
-      {/* Hero Section */}
-      <motion.div {...fadeInUp}>
-        <JourneyStageHeader
-          testId="transformers-hero"
-          title="Decoder-Only Transformer"
-          description="A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser."
-        />
-      </motion.div>
+      <JourneyStageHeader
+        testId="transformers-hero"
+        title="Decoder-Only Transformer"
+        description="A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser."
+      />
 
+      <BaseLLMChat />
 
-      {/* Chat Interface */}
-      <motion.div {...fadeInUp}>
-        <BaseLLMChat />
-      </motion.div>
-
-      {/* Details Grid */}
-      <motion.div
-        className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4"
-        {...staggerContainer}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Model Overview */}
+      <section className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <GlassCard variant="default" className="p-6 flex flex-col gap-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
@@ -95,7 +56,6 @@ export default function BaseLLMPage() {
           </div>
         </GlassCard>
 
-        {/* How Self-Attention Works */}
         <GlassCard variant="default" className="p-6 flex flex-col gap-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
@@ -139,7 +99,6 @@ export default function BaseLLMPage() {
           </div>
         </GlassCard>
 
-        {/* Training Setup */}
         <GlassCard variant="default" className="p-6 flex flex-col gap-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
@@ -181,7 +140,6 @@ export default function BaseLLMPage() {
           </div>
         </GlassCard>
 
-        {/* Browser Runtime */}
         <GlassCard variant="default" className="p-6 flex flex-col gap-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
@@ -218,14 +176,9 @@ export default function BaseLLMPage() {
             </div>
           </div>
         </GlassCard>
-      </motion.div>
+      </section>
 
-
-      {/* Reference Materials */}
-      <motion.div
-        className="w-full flex flex-col sm:flex-row gap-6 justify-center items-center py-8"
-        {...fadeInUp}
-      >
+      <section className="w-full flex flex-col sm:flex-row gap-6 justify-center items-center py-8">
         <Link
           href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
           target="_blank"
@@ -243,38 +196,36 @@ export default function BaseLLMPage() {
           <div className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-600 text-xs font-bold">C</div>
           <span className="text-gray-900 dark:text-white font-medium">Open Colab</span>
         </Link>
-      </motion.div>
+      </section>
 
-      <motion.div {...fadeInUp}>
-        <JourneyContinuityLinks
-          testId="transformers-continuity-links"
-          previous={{
-            href: '/',
-            eyebrow: 'Previous Stage',
-            title: 'Journey Home',
-            description: 'Revisit the full map before diving deeper into model specialization.',
-            cta: 'Back to overview',
-            testId: 'transformers-link-home',
-          }}
-          next={{
-            href: '/models/adaptation',
-            eyebrow: 'Next Stage',
-            title: 'Model Adaptation',
-            description: 'Move from baseline mechanics to specialization trade-offs and strategy selection.',
-            cta: 'Continue to Stage 2',
-            testId: 'transformers-link-adaptation',
-          }}
-        />
-      </motion.div>
+      <JourneyContinuityLinks
+        testId="transformers-continuity-links"
+        previous={{
+          href: '/',
+          eyebrow: 'Previous Stage',
+          title: 'Journey Home',
+          description: 'Revisit the full map before diving deeper into model specialization.',
+          cta: 'Back to overview',
+          testId: 'transformers-link-home',
+        }}
+        next={{
+          href: '/models/adaptation',
+          eyebrow: 'Next Stage',
+          title: 'Model Adaptation',
+          description: 'Move from baseline mechanics to specialization trade-offs and strategy selection.',
+          cta: 'Continue to Stage 2',
+          testId: 'transformers-link-adaptation',
+        }}
+      />
     </div>
   );
 }
 
-function SpecTag({ label, value }: { label: string, value: string }) {
+function SpecTag({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col items-center p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
       <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">{label}</span>
       <span className="font-mono font-semibold text-gray-900 dark:text-white">{value}</span>
     </div>
-  )
+  );
 }

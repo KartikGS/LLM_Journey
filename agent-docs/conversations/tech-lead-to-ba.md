@@ -1,69 +1,83 @@
 # Handoff: Tech Lead -> BA Agent
 
-## Subject: CR-010 - E2E Baseline Stabilization (startup blocker classification + route assertion alignment)
+## Subject
+CR-011 - Server-First Rendering Boundary for UI Pages
 
 ## Status
 `verified`
 
 ## Technical Summary
-CR-010 is technically complete and verified.
-- Testing updated stale landing-page E2E contracts to match canonical route and stable link assertions.
-- Testing replaced brittle transformer transient-text checks with durable behavioral assertions.
-- Navigation spec remained valid and passed targeted regression.
-- Full E2E suite is now green in local-equivalent/unsandboxed execution; sandbox startup failures remain environmental and pre-test.
-
-### Final Changed Files
-- `__tests__/e2e/landing-page.spec.ts`
-- `__tests__/e2e/transformer.spec.ts`
-- `agent-docs/plans/CR-010-plan.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/conversations/testing-to-tech-lead.md`
+- CR-011 is implemented and technically verified.
+- Rendering boundaries were corrected from page-level client rendering to server-first composition on:
+  - `app/page.tsx`
+  - `app/foundations/transformers/page.tsx`
+  - `app/models/adaptation/page.tsx`
+- Stateful interaction was preserved via targeted client islands:
+  - existing client chat module remains in `app/foundations/transformers/components/BaseLLMChat.tsx`
+  - adaptation selector interaction extracted into `app/models/adaptation/components/AdaptationStrategySelector.tsx`
+- Shared presentational components no longer force client rendering:
+  - `app/ui/components/GlassCard.tsx`
+  - `app/ui/components/JourneyStageHeader.tsx`
+  - `app/ui/components/JourneyContinuityLinks.tsx`
+- Route structure and key selector/href contracts were preserved; no Testing handoff was required.
 
 ## Evidence of AC Fulfillment
+- [x] AC-1: `app/page.tsx` no longer requires page-level `'use client'` and is composed as server-first with client islands only where required. — Evidence: `app/page.tsx:1` (no `'use client'`; server component imports only), `app/page.tsx:30`
+- [x] AC-2: `app/foundations/transformers/page.tsx` no longer requires page-level `'use client'`; interactive chat experience remains functional. — Evidence: `app/foundations/transformers/page.tsx:1` (no `'use client'`), `app/foundations/transformers/page.tsx:20` (`<BaseLLMChat />` retained)
+- [x] AC-3: `app/models/adaptation/page.tsx` no longer requires page-level `'use client'`; strategy selector interaction remains functional. — Evidence: `app/models/adaptation/page.tsx:1` (no `'use client'`), `app/models/adaptation/page.tsx:41` (`<AdaptationStrategySelector />`), `app/models/adaptation/components/AdaptationStrategySelector.tsx:1` (`'use client';`)
+- [x] AC-4: Shared presentational components no longer force client rendering unless they directly handle user input/state. — Evidence: `app/ui/components/GlassCard.tsx:1`, `app/ui/components/JourneyStageHeader.tsx:1`, `app/ui/components/JourneyContinuityLinks.tsx:1` (all without `'use client'`)
+- [x] AC-5: Core quality checks pass after refactor: `pnpm lint`, `pnpm test`, `pnpm build`. — Evidence: command results below all `PASS`
+- [x] AC-6: If page structure or `data-testid` contracts change, matching E2E updates are included in same CR. — Evidence: contract stability preserved (`app/models/adaptation/page.tsx:12`, `app/models/adaptation/page.tsx:24`, `app/models/adaptation/components/AdaptationStrategySelector.tsx:44`, `app/ui/components/JourneyContinuityLinks.tsx:22`); no contract delta detected, so no E2E test update required.
 
-### AC-1: Landing page E2E route assertion validates current home CTA destination (`/foundations/transformers`)
-- Evidence: `__tests__/e2e/landing-page.spec.ts` now asserts CTA href `/foundations/transformers`.
+## Verification Commands
+- Command: `pnpm test`
+- Execution Mode: `sandboxed`
+- Result: `PASS` (14 suites, 96 tests)
 
-### AC-2: Landing page selector assertion passes against current page structure (no stale `div.grid > a`)
-- Evidence: `__tests__/e2e/landing-page.spec.ts` removed structural `div.grid > a` count assertion and uses stable href-based link checks.
+- Command: `pnpm lint`
+- Execution Mode: `sandboxed`
+- Result: `PASS` (no ESLint warnings/errors)
 
-### AC-3: Transformer E2E generation assertion is stable and passes across browsers
-- Evidence: `__tests__/e2e/transformer.spec.ts` removed strict `Generating...` visibility dependence and now verifies submit disabled->enabled cycle plus non-empty response output.
+- Command: `pnpm exec tsc --noEmit`
+- Execution Mode: `sandboxed`
+- Result: `PASS`
 
-### AC-4: E2E validation evidence includes full suite + targeted specs
-- Command: `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts`
-- Result (local-equivalent/unsandboxed): PASS (`3 passed`, chromium/firefox/webkit)
-- Command: `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`
-- Result (local-equivalent/unsandboxed): PASS (`12 passed`, chromium/firefox/webkit)
-- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
-- Result (local-equivalent/unsandboxed): PASS (`3 passed`, chromium/firefox/webkit)
-- Command: `pnpm test:e2e`
-- Result (local-equivalent/unsandboxed): PASS (`18 passed`, chromium/firefox/webkit)
+- Command: `pnpm build`
+- Execution Mode: `sandboxed`
+- Result: `PASS` (production build succeeds; static generation complete)
 
-## Adversarial Diff Review (Tech Lead)
-- Verified no unintended app/feature code modifications; scope remained test-contract stabilization.
-- Reviewed landing and transformer spec diffs against CR acceptance criteria and canonical route contract.
-- No logic regressions identified in updated E2E assertions.
+## Failure Classification Summary
+- CR-related: `none`
+- Pre-existing: `none`
+- Environmental: `none`
+- Non-blocking warning:
+  - `pnpm lint`: Next.js deprecation notice for `next lint` command.
+  - `pnpm build`: known webpack critical dependency warnings from OTel dependency chain (`require-in-the-middle`); build still passes.
 
-## Failure Classification
-- CR-related: resolved (landing route/selector drift and transformer transient assertion drift).
-- Environmental: sandboxed runs failed pre-execution with `Process from config.webServer exited early`.
-- Non-blocking warning: OTEL upstream refusal `ECONNREFUSED 127.0.0.1:4318` observed; consistent with observability failure-boundary and did not affect user-visible E2E outcomes.
+## Adversarial Diff Review
+- Reviewed all frontend-modified files against CR-011 scope and AC boundaries.
+- Verified no route URI changes and no test contract drift for adaptation and continuity selectors/links.
+- Verified interactivity boundary remains explicit:
+  - chat remains in client component (`BaseLLMChat`)
+  - adaptation selector state/keyboard behavior remains in dedicated client island.
+- Residual risk:
+  - Decorative framer-motion entrance effects were removed from server-rendered page shells by design; visual styling remains preserved via CSS transitions.
 
 ## Technical Retrospective
-- Root issue was assertion-contract drift, not route implementation defects.
-- Stabilizing around durable behavioral signals reduced timing fragility without weakening coverage intent.
-- Environmental startup limitations should continue to be documented explicitly in E2E evidence until sandbox webServer reliability is resolved.
+- The refactor achieved architectural correction without expanding scope into redesign or route changes.
+- Splitting adaptation data (`strategy-data.ts`) from client interaction logic reduced client surface area while preserving deterministic selector contracts.
+- Converting `GlassCard` to a server-compatible component removed a central source of rendering-boundary leakage.
 
 ## Deployment Notes
 - No dependency changes.
-- No runtime/config changes.
-- Rollback path: revert only CR-010 E2E assertion updates.
+- No config/security/telemetry/middleware changes.
+- Rollback: revert CR-011 rendering-boundary refactor commits on affected page and shared UI component files.
 
 ## Link to Updated Docs
-- `agent-docs/plans/CR-010-plan.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/conversations/testing-to-tech-lead.md`
+- `agent-docs/requirements/CR-011-server-first-rendering-boundary.md`
+- `agent-docs/plans/CR-011-plan.md`
+- `agent-docs/conversations/tech-lead-to-frontend.md`
+- `agent-docs/conversations/frontend-to-tech-lead.md`
 
 *Report created: 2026-02-14*
 *Tech Lead Agent*

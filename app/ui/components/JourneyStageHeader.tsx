@@ -1,5 +1,3 @@
-'use client';
-
 import { GlassCard } from '@/app/ui/components/GlassCard';
 import { GradientText } from '@/app/ui/components/GradientText';
 

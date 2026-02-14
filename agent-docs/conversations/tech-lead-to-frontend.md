@@ -1,160 +1,96 @@
 # Handoff: Tech Lead -> Frontend Agent
 
-## Subject: CR-007 - Navbar Framer Motion Type Stabilization
-
-## Objective
-Fix strict TypeScript typing failure in `app/ui/navbar.tsx` caused by Framer Motion variant transition type inference, while preserving current navbar behavior.
-
-## Rationale (Why)
-`pnpm build` and `pnpm exec tsc --noEmit` are blocked by `TS2322` in navbar motion variants. This is a targeted stabilization fix to restore pipeline health, not a UI redesign.
-
----
-
-## Constraints
-
-### Technical
-- No dependency changes.
-- No route changes.
-- No behavior changes to navbar open/close flow.
-- Preserve reduced-motion behavior.
-- Keep strict TypeScript compatibility with existing standards.
-
-### Accessibility
-- Preserve current interaction/accessibility semantics (`aria-label`, keyboard/click behavior).
-
-### Theme / Cross-Cutting
-- Do not change visual styling intent for light/dark modes.
-
----
-
-## Scope
-
-### Files to Modify
-
-#### `app/ui/navbar.tsx`
-- Normalize/explicitly type motion variants so `transition.type` resolves to Framer Motion’s expected literal union.
-- Keep animation semantics equivalent to current implementation.
-
----
-
-## Definition of Done
-- [ ] `app/ui/navbar.tsx` no longer triggers TypeScript Framer Motion variant error.
-- [ ] Mobile menu animation behavior remains functionally unchanged.
-- [ ] Reduced-motion branch remains intact and behaviorally correct.
-- [ ] No new lint errors introduced.
-
-## Verification
-1. Implement the type/inference-safe variant definition in `app/ui/navbar.tsx`.
-2. Run `pnpm exec tsc --noEmit`.
-3. Run `pnpm lint`.
-4. Provide short behavioral sanity note for navbar open/close + reduced motion.
-
-## Report Back
-Write execution report to `agent-docs/conversations/frontend-to-tech-lead.md` including:
-- [Changes Made]
-- [Verification Results]
-- [Behavioral Sanity Check]
-- [Deviations] (if any)
-
-Reference plan: `agent-docs/plans/CR-007-plan.md`
-
----
-
-*Handoff created: 2026-02-12*
-*Tech Lead Agent*
-
----
-
-# Handoff: Tech Lead -> Frontend Agent
-
 ## Subject
-`CR-009 - Model Adaptation Stage-2 Page Implementation`
+`CR-011 - Server-First Rendering Boundary Refactor for UI Pages`
 
 ## Status
 `issued`
 
 ## Objective
-Implement a complete, non-placeholder `/models/adaptation` page that teaches Stage 2 model adaptation concepts with premium visual consistency, one lightweight interactive learning element, and explicit journey continuity links.
+Refactor rendering boundaries so `/`, `/foundations/transformers`, and `/models/adaptation` are server-first page compositions, while preserving all required interactive behavior through targeted client islands only.
 
 ## Rationale (Why)
-CR-009 closes a roadmap gap: Stage 2 currently exists in navigation but has no page implementation. Learners need a coherent bridge from Stage 1 fundamentals to Stage 3 context engineering, with concrete adaptation trade-offs presented in a usable and visually consistent format.
+CR-011 corrects architectural drift from broad page-level client rendering. The project invariant requires content-heavy pages to remain Server Components, with Client Components reserved for user-input/stateful interaction surfaces. This reduces unnecessary client surface area without changing learning flow or visual quality.
 
 ## Constraints
 - UI/UX constraints:
-  - Maintain premium style alignment with existing pages using established primitives (`GlowBackground`, `GlassCard`, `GradientText`) or equivalent existing pattern.
-  - Ensure both light and dark mode readability and keyboard-accessible interaction controls.
-  - Respect reduced-motion behavior for non-essential animations.
-  - Mobile and desktop layouts must avoid overlap/cutoff.
-- Performance guardrails:
-  - Interaction updates should be immediate (local state only; no blocking loaders).
-- Security/architecture:
-  - No new external API calls, no secret handling, no middleware/CSP changes.
+  - Preserve current visual quality (glassmorphism, gradients, hierarchy, spacing).
+  - No redesign or content rewrite; this is a rendering-boundary refactor only.
+  - Preserve current responsive behavior across mobile and desktop.
+- Semantic/testability constraints:
+  - Preserve existing route contracts: `/`, `/foundations/transformers`, `/models/adaptation`.
+  - Preserve existing `data-testid` contracts already used by tests (including adaptation selectors and continuity links).
+  - Keep continuity link href contracts unchanged.
 - Ownership constraints:
-  - Frontend may modify feature UI files under `app/` and related frontend assets.
-  - Do not modify test files in this handoff; testing updates are delegated in the next step.
+  - Frontend-owned files in `app/` and UI components are in scope.
+  - Do not modify tests in this handoff unless Tech Lead explicitly issues a Testing handoff.
+  - No package installation.
 
 ## Design Intent (Mandatory for UI)
 - Target aesthetic:
-  - Educational, premium, and high-contrast clarity; keep the established glow + glass visual language.
+  - Keep existing premium look and feel unchanged to users.
 - Animation budget:
-  - Use minimal purposeful motion (stagger/fade where already patterned); no heavy continuous animation.
+  - Keep meaningful interaction animation where state/input exists.
+  - For non-interactive presentational blocks, use server-compatible styling patterns and avoid forcing page-level client rendering.
 - Explicit anti-patterns:
-  - Do not introduce placeholder text blocks.
-  - Do not implement heavy fine-tuning/runtime simulation in this CR.
-  - Do not introduce new UI libraries or dependencies.
+  - Do not keep `'use client'` at page level solely for decorative animation.
+  - Do not convert non-interactive presentational components to client without direct state/input need.
 
 ## Assumptions To Validate (Mandatory)
-- Existing route architecture allows adding `app/models/adaptation/page.tsx` without cross-route refactors.
-- Linking to `/context/engineering` is acceptable as forward journey affordance even if that destination route is not implemented yet.
+- `BaseLLMChat` remains a client component and can be embedded in a server-rendered transformers page.
+- Adaptation strategy selector behavior can be isolated into a client island while parent page remains server-rendered.
+- `app/ui/navbar.tsx` remains client-rendered by user decision (2026-02-14).
+- Shared presentational components can be refactored to avoid forcing client boundaries.
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
-- Any request to add advanced fine-tuning simulation, training loops, or backend integration.
-- Any requirement implying navbar/journey stage data model changes beyond this page’s local continuity links.
+- Any route rename or navigation information architecture change.
+- New feature additions beyond rendering-boundary extraction.
+- Security/telemetry/middleware behavior changes.
 
 ## Scope
 ### Files to Modify
-- `app/models/adaptation/page.tsx`: create Stage 2 page with:
-  - hero/intro explaining why adaptation follows base transformers,
-  - comparison section for at least 3 strategies (for example full fine-tuning, LoRA/PEFT, prompt/prefix tuning),
-  - one lightweight interactive control that updates explanatory text/state,
-  - visible links to `/foundations/transformers` and `/context/engineering`,
-  - stable `data-testid` anchors for critical verification sections and interaction output.
+- `app/page.tsx`: Remove page-level `'use client'`; keep server-first composition.
+- `app/foundations/transformers/page.tsx`: Remove page-level `'use client'`; preserve chat interactivity via client module usage.
+- `app/models/adaptation/page.tsx`: Remove page-level `'use client'`; extract stateful selector/interaction into client island component(s).
+- `app/ui/components/GlassCard.tsx`: Refactor so presentational usage does not force client rendering.
+- `app/ui/components/JourneyStageHeader.tsx`: Refactor to server-compatible presentational component.
+- `app/ui/components/JourneyContinuityLinks.tsx`: Refactor to server-compatible presentational component while preserving link contracts.
+- `app/models/adaptation/components/*` (new files allowed): Client island extraction for strategy selector/interactive region, if needed.
 
 ## Definition of Done
-- [ ] `/models/adaptation` renders a complete non-placeholder page.
-- [ ] Strategy comparison section includes at least 3 clearly differentiated approaches.
-- [ ] Exactly one lightweight interactive educational element changes visible explanatory state.
-- [ ] Visible continuity links exist to `/foundations/transformers` and `/context/engineering`.
-- [ ] Page is usable on mobile + desktop and legible in light + dark themes.
-- [ ] Reduced-motion path is respected for non-essential animations.
+- [ ] `app/page.tsx` no longer has page-level `'use client'`.
+- [ ] `app/foundations/transformers/page.tsx` no longer has page-level `'use client'`.
+- [ ] `app/models/adaptation/page.tsx` no longer has page-level `'use client'`.
+- [ ] Interactive behavior remains functional for:
+  - chat input/generation controls (transformers),
+  - adaptation strategy selector interaction,
+  - mobile nav behavior (unchanged via existing navbar client component).
+- [ ] Shared presentational components no longer force client rendering unless directly handling input/state.
+- [ ] Existing route and selector contracts remain stable; if changed, mark `scope extension requested`.
 - [ ] `pnpm exec tsc --noEmit` passes.
 - [ ] `pnpm lint` passes.
 
 ## Clarification Loop (Mandatory)
 - Post preflight assumptions/risks/questions in `agent-docs/conversations/frontend-to-tech-lead.md` before implementation.
-- I will respond in the same file.
-- Continue loop until resolved or marked `blocked`.
+- Wait for Tech Lead response if any open question materially affects implementation validity.
 
 ## Verification
-- Visual/behavioral checks:
-  - Open `/models/adaptation` and verify hero, strategy comparison, interactive section, and continuity links are visible.
-  - Validate keyboard interaction for the interactive control.
-  - Validate rendering and contrast in light and dark modes.
-  - Validate mobile and desktop layout integrity.
-- Command checks:
-  - Run `pnpm exec tsc --noEmit`.
-  - Run `pnpm lint`.
+- Execute and report:
+  - `pnpm exec tsc --noEmit`
+  - `pnpm lint`
+- Manual contract checks (and report evidence lines):
+  - `/`, `/foundations/transformers`, `/models/adaptation` render correctly.
+  - adaptation selector still updates displayed strategy output.
+  - continuity links preserve expected href relationships.
+  - no user-visible styling regressions in light/dark mode.
+
+## Scope Extension Control (Mandatory)
+- If implementation requires changing route structure, test-id names, or continuity link contracts, mark `scope extension requested` and pause for explicit approval.
 
 ## Report Back
 Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` with:
-- [Status]
-- [Changes Made]
-- [Verification Results]
-- [Failure Classification]
-- [Ready for Next Agent]
-- [New Artifacts]
-
-Reference plan: `agent-docs/plans/CR-009-plan.md`
-
-*Handoff created: 2026-02-14*
-*Tech Lead Agent*
+- status (`complete` or `blocked`)
+- changes made (file list)
+- verification results
+- failure classification for any issue (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
+- readiness for next agent.

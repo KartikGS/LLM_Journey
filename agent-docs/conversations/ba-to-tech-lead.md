@@ -1,38 +1,50 @@
-# Tech Lead Prompt: Plan and Execute CR-010
+# Tech Lead Prompt: Plan and Execute CR-011
 
 ## Subject
-CR-010 - E2E Baseline Stabilization (startup blocker classification + route assertion alignment)
+CR-011 - Server-First Rendering Boundary for UI Pages
 
 ## Context
-User reported failing E2E tests. BA investigation confirms:
-- Local full-suite run executes and currently fails at `6/18`:
-  - Landing page spec fails across browsers on stale selector contract (`div.grid > a` count).
-  - Transformer spec fails across browsers on brittle `"Generating..."` visibility expectation.
-- OTEL proxy shows upstream `ECONNREFUSED 127.0.0.1:4318` during run; treat this under failure-boundary expectations unless CR explicitly requires collector availability.
+User requested rollback of broad page-level client rendering introduced for `framer-motion`.
 
-Artifacts:
-- Requirement: `agent-docs/requirements/CR-010-e2e-baseline-stabilization.md`
-- Investigation: `agent-docs/reports/INVESTIGATION-CR-010-e2e-failures.md`
+Current signal:
+- Route pages currently marked as client:
+  - `app/page.tsx`
+  - `app/foundations/transformers/page.tsx`
+  - `app/models/adaptation/page.tsx`
+- Shared UI components that currently force client rendering:
+  - `app/ui/components/GlassCard.tsx`
+  - `app/ui/components/JourneyStageHeader.tsx`
+  - `app/ui/components/JourneyContinuityLinks.tsx`
+- Interactive modules that should remain client-oriented by design:
+  - `app/foundations/transformers/components/BaseLLMChat.tsx`
+  - strategy selector behavior on adaptation page
+  - mobile navbar open/close and active-state interaction in `app/ui/navbar.tsx`
+- User decisions (2026-02-14):
+  - Keep `app/ui/navbar.tsx` as a client component.
+  - Preserve styling/visual quality; do not convert server-rendered sections to client solely for styling or decorative animation.
+
+Artifact:
+- Requirement: `agent-docs/requirements/CR-011-server-first-rendering-boundary.md`
 
 ## Goal
-Execute CR-010 to restore reliable E2E baseline by:
-1. Aligning stale landing-page route/selector assertions with canonical app contract.
-2. Stabilizing transformer E2E assertions to use reliable behavioral checks.
-3. Running full + targeted E2E verification with explicit pass/fail evidence.
+Execute CR-011 by shifting to server-first composition for content-heavy pages while preserving client interactivity strictly where user input/state is required.
 
 ## Scope Source of Truth
-- `agent-docs/requirements/CR-010-e2e-baseline-stabilization.md`
+- `agent-docs/requirements/CR-011-server-first-rendering-boundary.md`
 
 ## Key Directives
-1. Create `agent-docs/plans/CR-010-plan.md` before implementation/delegation.
-2. Treat this as a testing-contract stabilization task (no unrelated feature expansion).
-3. Ensure workflow invariant compliance for selector/route updates.
-4. Include explicit command evidence for:
-   - `pnpm test:e2e`
-   - `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts`
-   - `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`
-   - `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
-5. Document handling rationale for OTEL upstream refusal in E2E context, aligned with architecture failure-boundary intent.
+1. Create `agent-docs/plans/CR-011-plan.md` before implementation/delegation.
+2. Preserve architecture rendering invariant:
+   - Prefer Server Components for SEO/content-heavy pages.
+   - Keep Client Components only for interaction/state surfaces.
+3. Treat this as a rendering-boundary refactor:
+   - Do not expand into unrelated redesign.
+   - Preserve existing visual system (glass/gradient/styling language) using server-compatible patterns where possible.
+4. Validate with explicit command evidence:
+   - `pnpm lint`
+   - `pnpm test`
+   - `pnpm build`
+5. If route structure or `data-testid` contracts are altered, include Testing handoff and same-CR E2E updates per workflow invariant.
 
 ## Hand-off
-Please assume **Tech Lead** role and run the standard planning + delegation flow for CR-010.
+Please assume **Tech Lead** role and run the standard planning + delegation flow for CR-011.
