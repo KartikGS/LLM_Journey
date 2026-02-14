@@ -1,29 +1,38 @@
-# Tech Lead Prompt: Plan and Execute CR-009
+# Tech Lead Prompt: Plan and Execute CR-010
+
+## Subject
+CR-010 - E2E Baseline Stabilization (startup blocker classification + route assertion alignment)
 
 ## Context
-User requested we start building the **Model Adaptation** page in the roadmap.  
-BA created `agent-docs/requirements/CR-009-model-adaptation-page.md` as the scoped requirement artifact for Stage 2 (`/models/adaptation`).
+User reported failing E2E tests. BA investigation confirms:
+- Local full-suite run executes and currently fails at `6/18`:
+  - Landing page spec fails across browsers on stale selector contract (`div.grid > a` count).
+  - Transformer spec fails across browsers on brittle `"Generating..."` visibility expectation.
+- OTEL proxy shows upstream `ECONNREFUSED 127.0.0.1:4318` during run; treat this under failure-boundary expectations unless CR explicitly requires collector availability.
+
+Artifacts:
+- Requirement: `agent-docs/requirements/CR-010-e2e-baseline-stabilization.md`
+- Investigation: `agent-docs/reports/INVESTIGATION-CR-010-e2e-failures.md`
 
 ## Goal
-Execute CR-009 by delivering a complete, non-placeholder page for `/models/adaptation` with:
-- roadmap-consistent educational narrative,
-- premium visual consistency with existing pages,
-- one lightweight interactive learning element,
-- quality-gate and verification evidence.
+Execute CR-010 to restore reliable E2E baseline by:
+1. Aligning stale landing-page route/selector assertions with canonical app contract.
+2. Stabilizing transformer E2E assertions to use reliable behavioral checks.
+3. Running full + targeted E2E verification with explicit pass/fail evidence.
 
 ## Scope Source of Truth
-- Requirement: `agent-docs/requirements/CR-009-model-adaptation-page.md`
-- Vision alignment: `agent-docs/project-vision.md` (Stage 2 definition)
+- `agent-docs/requirements/CR-010-e2e-baseline-stabilization.md`
 
 ## Key Directives
-1. Read CR-009 and create `agent-docs/plans/CR-009-plan.md` before implementation.
-2. Enforce route and selector integrity: if structure/test selectors change, include Testing Agent updates per workflow invariants.
-3. Keep scope controlled: baseline educational + lightweight interaction only. User has explicitly confirmed this scope on 2026-02-14.
-4. Preserve architecture/security invariants and avoid introducing external dependencies without explicit approval.
-5. Provide verification evidence for:
-   - route render behavior (`/models/adaptation`)
-   - required UI sections and interaction behavior
-   - `pnpm lint`, `pnpm test`, `pnpm build`
+1. Create `agent-docs/plans/CR-010-plan.md` before implementation/delegation.
+2. Treat this as a testing-contract stabilization task (no unrelated feature expansion).
+3. Ensure workflow invariant compliance for selector/route updates.
+4. Include explicit command evidence for:
+   - `pnpm test:e2e`
+   - `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts`
+   - `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`
+   - `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+5. Document handling rationale for OTEL upstream refusal in E2E context, aligned with architecture failure-boundary intent.
 
 ## Hand-off
-Please assume the role of **Tech Lead** and run the standard planning + delegation workflow for CR-009.
+Please assume **Tech Lead** role and run the standard planning + delegation flow for CR-010.

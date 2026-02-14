@@ -1,91 +1,78 @@
+# Handoff: Testing Agent -> Tech Lead
 
-## CR-009 Preflight
+## Subject
+`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
+
+## Preflight
 
 ### Assumptions I'm making
-- `/models/adaptation` is routable in the E2E environment and renders the `data-testid` anchors listed in the handoff.
-- The strategy selector is represented as a `radiogroup` with `role="radio"` options and immediate content updates in `adaptation-interaction-output`.
-- Continuity links are contractually validated by presence and `href`, not by destination route implementation status.
+- Home CTA contract is `Start Your Journey →` linking to `/foundations/transformers`.
+- Landing page can be validated via stable role/href contracts without depending on `div.grid > a`.
+- Transformer generation completion should be validated by durable post-submit behavior, not transient loading text visibility.
 
 ### Risks not covered by current scope
-- Destination behavior for `/context/engineering` is not validated beyond link presence/href and may remain intentionally unimplemented.
-- Full keyboard interaction semantics for arrow-key navigation are not covered unless explicitly requested.
+- Constrained/sandboxed execution can fail before Playwright webServer startup.
+- OTEL upstream at `127.0.0.1:4318` may refuse connection; this is non-blocking if user-visible flow remains intact.
 
 ### Questions for Tech Lead
 - None.
 
 ---
 
-## CR-009 - Model Adaptation Route + Interaction Verification
-
-### [Status]
-- Blocked (environment/runtime blocker prevents E2E contract validation)
-
-### [Changes Made]
-- Updated `__tests__/e2e/navigation.spec.ts` with CR-009 assertions:
-  - route-level test IDs on `/models/adaptation` (`adaptation-page`, `adaptation-hero`, `adaptation-strategy-comparison`, `adaptation-interaction`, `adaptation-strategy-selector`, `adaptation-interaction-output`, `adaptation-continuity-links`).
-  - interaction assertion: selecting `strategy-button-full-finetuning` updates `adaptation-interaction-output` content.
-  - continuity links assertion: `adaptation-link-transformers` and `adaptation-link-context` visibility + href contracts.
-
-### [Verification Results]
-- `pnpm test`: PASS
-  - Evidence: `Test Suites: 14 passed, 14 total`; `Tests: 96 passed, 96 total`
-  - Non-blocking warning: Jest worker forced exit/open handles.
-- `pnpm lint`: PASS
-  - Evidence: `✔ No ESLint warnings or errors`
-- `pnpm exec tsc --noEmit`: PASS
-- `pnpm build`: PASS
-  - Non-blocking warning: webpack critical dependency warning from OpenTelemetry (`require-in-the-middle`).
-- `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`: FAIL (12/12)
-  - Evidence: all three browser projects render only `System Audit` screen (`Checking environment compatibility...`) and never expose expected app/test-id content.
-  - Representative artifact: `test-results/navigation-Navigation-shou-e4684--to-Models-Adaptation-smoke-chromium/error-context.md`.
-
-### [Dependency Consumption]
-- No dependency or config changes.
-
-### [Failure Classification]
-- CR-related:
-  - Unable to confirm due blocker; new CR-009 E2E assertions cannot execute against target route content.
-- Pre-existing / environmental:
-  - Existing navigation smoke case (`Start Your Journey →`) also fails under same blocker, indicating broader runtime/environment issue beyond CR-009 selector additions.
-  - App appears gated by persistent `System Audit` compatibility screen in Playwright runtime.
-- Non-blocking warnings:
-  - Jest open-handle warning.
-  - Next.js build warning from OTel dependency chain.
-
-### [BLOCKER / FEEDBACK]
-- Blocker: E2E runtime does not progress past `System Audit` in Chromium/Firefox/WebKit; expected route DOM contracts are unavailable.
-- Impact: Cannot validate published CR-009 selector/interaction contract via browser automation despite tests being implemented.
-- Request: Tech Lead to resolve runtime compatibility gate behavior for E2E (or provide approved E2E bypass contract), then re-run this handoff.
-
-### [Ready for Next Agent]
-- No (blocked pending environment/runtime resolution).
-
-### [New Artifacts]
-- Updated test spec: `__tests__/e2e/navigation.spec.ts`
-- Playwright failure artifacts: `test-results/navigation-*`
-
-### [Out-of-Scope Risk Flag]
-- Forward-affordance risk remains for `/context/engineering` destination behavior (link contract asserted in test; destination implementation status not validated due blocker).
-
----
-
-## CR-009 Status Update (Rerun Verification)
+## CR-010 - E2E Baseline Stabilization Report
 
 ### [Status]
 - Completed
 
-### [Verification Rerun Results]
-- Re-ran E2E command explicitly requested by user:
-  - `pnpm test:e2e navigation`
-- Result:
-  - PASS (`12 passed`) across Chromium, Firefox, and WebKit.
+### [Changes Made]
+- Updated `__tests__/e2e/landing-page.spec.ts`:
+  - Replaced stale CTA destination assertion from `/transformer` to `/foundations/transformers`.
+  - Removed brittle structural selector dependency (`div.grid > a`).
+  - Added stable href-contract assertions for journey links (`/models/adaptation`, `/context/engineering`, `/ops/deployment`).
+- Updated `__tests__/e2e/transformer.spec.ts`:
+  - Removed brittle transient `Generating...` visibility dependency.
+  - Added durable generation assertions: submit button disabled->enabled cycle and response container visibility/text after generation.
+  - Preserved OTEL request emission verification.
+- `__tests__/e2e/navigation.spec.ts`:
+  - No file change required.
+  - Verified as targeted regression check.
 
-### [Failure Classification Update]
-- Prior blocker is reclassified as environment/session-specific and non-persistent.
-- No CR-009 functional or selector-contract failure reproduced on rerun.
+### [Verification Results]
+
+#### Reproduction Matrix
+| Command | Mode | Browsers | Result | Classification |
+|---|---|---|---|---|
+| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
+| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | CR-related assertions validated |
+| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`12 passed`) | regression check passed |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | durable transformer assertions validated |
+| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`18 passed`) | suite baseline stable |
+
+### [Dependency Consumption]
+- No dependency or runtime config changes.
+
+### [Failure Classification]
+- CR-related:
+  - Fixed landing CTA route assertion drift.
+  - Fixed landing selector strategy drift (removed structural dependency).
+  - Fixed transformer generation assertion drift (removed transient text dependence).
+- Environmental:
+  - Sandboxed runs consistently failed before test execution (`config.webServer exited early`).
+- Non-blocking warning:
+  - OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) observed in unsandboxed runs; expected under observability failure-boundary and did not affect user-visible flow/test pass.
 
 ### [Ready for Next Agent]
 - Yes.
 
-### [Notes]
-- Sandbox-constrained run can still fail before Playwright webServer startup; unsandboxed/local-equivalent execution is required for reliable E2E verification in this environment.
+### [New Artifacts]
+- Updated test files:
+  - `__tests__/e2e/landing-page.spec.ts`
+  - `__tests__/e2e/transformer.spec.ts`
+- Playwright artifacts from intermediate failed attempts exist under `test-results/navigation-*` and `test-results/landing-page-*`.
+
+### [Follow-up Recommendations]
+- Keep CR verification evidence sourced from local-equivalent/unsandboxed E2E runs in this environment until sandbox webServer startup behavior is resolved.
+

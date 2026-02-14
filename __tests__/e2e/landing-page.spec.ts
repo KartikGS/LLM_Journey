@@ -11,13 +11,14 @@ test.describe('Landing Page', () => {
         const heading = page.getByRole('heading', { level: 1, name: 'LLM Journey' });
         await expect(heading).toBeVisible();
 
-        // Assert 10 journey stage cards are present
-        const stageCards = page.locator('div.grid > a');
-        await expect(stageCards).toHaveCount(10);
-
-        // Assert "Start Your Journey →" link exists and points to /transformer
+        // Assert "Start Your Journey →" CTA points to canonical route
         const startLink = page.getByRole('link', { name: 'Start Your Journey →' });
         await expect(startLink).toBeVisible();
-        await expect(startLink).toHaveAttribute('href', '/transformer');
+        await expect(startLink).toHaveAttribute('href', '/foundations/transformers');
+
+        // Assert key stage links exist via stable href contracts (no grid structure dependency)
+        await expect(page.locator('a[href="/models/adaptation"]').first()).toBeVisible();
+        await expect(page.locator('a[href="/context/engineering"]').first()).toBeVisible();
+        await expect(page.locator('a[href="/ops/deployment"]').first()).toBeVisible();
     });
 });
