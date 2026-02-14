@@ -97,6 +97,20 @@ If E2E fails, classify using this sequence:
 - Selector missing while app is stuck on compatibility/guard screen: environment/runtime gate until proven persistent across contexts.
 - Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
 
+### E2E Selector Reliability Ladder (Mandatory)
+Use the highest reliable contract available for assertions:
+1. `data-testid` or explicit test contract IDs for structural page landmarks.
+2. Role + accessible name (`getByRole`) for interactive user controls.
+3. Stable URL/href/state contracts for navigation and lifecycle checks.
+4. Raw structural CSS selectors only when no explicit contract exists.
+
+If level 4 is used, report why levels 1-3 were unavailable in the testing handoff report.
+
+### Prohibited Brittle Assertions (Default)
+- Hard dependency on transient loading copy (for example exact `"Generating..."` visibility windows) unless the CR explicitly defines that copy as product contract.
+- Strict DOM shape selectors tied to layout internals (for example `div.grid > a`) when semantic/test-id contracts exist.
+- Timing-only waits without behavior/state confirmation.
+
 ### Command Sequencing Rule (Pipeline Verification)
 For final CR verification evidence, run quality gates in sequence, not in parallel:
 1. `pnpm test`

@@ -28,6 +28,11 @@ The BA agent **does NOT**:
 - Assign sub-agents
 - **Perform Implementation**: This includes modifying code, system documentation (README, Architecture docs, etc.), or technical standards. If a business-requested change requires a technical modification, the BA MUST create a CR and hand off to a Tech Lead Agent.
 
+The BA agent **MAY**:
+- Run diagnostic verification commands (for example `pnpm test`, `pnpm lint`, `pnpm test:e2e`) to gather evidence for requirement clarification and blocker classification.
+- Collect command outputs and artifact references for CR evidence.
+- The BA must still not modify implementation code to make tests pass.
+
 ---
 
 ## Boundaries
@@ -78,11 +83,17 @@ Before working on any CR, also read:
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 - **Architecture Context:** [Decisions](/agent-docs/decisions/)
 
+### Conditional Required Readings (BA)
+When the task is incident/regression/testing related (failing test, lint, build, runtime mismatch), BA must also read:
+- **Testing Policy & E2E Triage:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Runner Contract (E2E only):** `/playwright.config.ts`
+
 ### Reading Confirmation Template
 When reporting your readings, use this format:
 > "I have read:
 > - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
-> - **Role-Specific** (BA): `project-vision.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`"
+> - **Role-Specific** (BA): `project-vision.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`
+> - **Conditional (if applicable):** `testing-strategy.md`, `playwright.config.ts`"
 
 ---
 

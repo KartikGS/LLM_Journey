@@ -8,12 +8,13 @@
 1. User provides rough CR.
 2. BA clarifies through Q&A.
 3. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
-4. BA creates structured requirement document.
-5. BA assesses business complexity.
-6. **Output:** `/agent-docs/requirements/CR-XXX.md` + prompt for Tech Lead.
-7. BA reports back to user for review and approval.
-8. User approves or requests changes.
-9. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
+4. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
+5. BA creates structured requirement document.
+6. BA assesses business complexity.
+7. **Output:** `/agent-docs/requirements/CR-XXX.md` + prompt for Tech Lead.
+8. BA reports back to user for review and approval.
+9. User approves or requests changes.
+10. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
 
 ### Technical Planning & Delegation Phase (Tech Lead Agent)
 1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
@@ -27,6 +28,7 @@
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
+8. **E2E Contract Sync Gate (Conditional):** If a CR changes routes, page structure, or `data-testid` contracts, the Tech Lead MUST include a Testing handoff in the same CR and explicitly list affected route/selector/state contracts in the plan + handoff.
 
 #### Conversation File Freshness Rule (Mandatory)
 - Conversation handoff/report files under `agent-docs/conversations/` are **single-CR working artifacts**.
@@ -122,8 +124,9 @@ Before writing code or making changes directly, the Tech Lead MUST complete this
 1. Tech Lead reviews completed work reports
 2. **Diff Review**: Tech Lead inspects the code diffs for logic errors or missing edge cases (Adversarial Review).
 3. Tech Lead ensures integration works
-3. Tech Lead updates architectural docs if needed
-4. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
+4. **E2E Contract Closure Check (Conditional)**: For CRs touching routes/page structure/test IDs, Tech Lead verifies matching E2E assertion updates are present in the same CR (not deferred silently).
+5. Tech Lead updates architectural docs if needed
+6. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.

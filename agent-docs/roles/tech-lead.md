@@ -185,6 +185,12 @@ Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead H
 - **Probes**: Run `find`, `grep`, or check docs to validate assumptions.
 - **Constraints Check**: Verify new libs against `technical-context.md`.
 
+#### E2E-Sensitive Pre-Handoff Probes (Mandatory when CR affects routes/UI contracts)
+- Confirm canonical route targets from source (`app/` and current nav contracts).
+- Confirm required stable selectors/contracts exist (`data-testid`, role/name, href/state markers).
+- Confirm browser matrix expectation for verification scope (`chromium`, `firefox`, `webkit` unless scope is explicitly narrowed).
+- Record findings in the technical plan under Discovery Findings before issuing any sub-agent handoff.
+
 If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
 ---

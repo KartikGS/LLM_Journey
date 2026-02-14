@@ -42,6 +42,7 @@ Protocol requirements:
 - **Content**:
     - [Status] (`issued`)
     - [Objective]
+    - [Contract Delta] (Mandatory when contracts changed: route/selector/state additions, removals, or renames)
     - [Constraints]
     - [Rationale / Rationale (The 'Why')]
     - [Definition of Done]
@@ -70,6 +71,7 @@ Protocol requirements:
     - [Status] (`verified`)
     - [Technical Summary]
     - [Evidence of AC Fulfillment] (MUST include *executable* verification commands, e.g. "Run `pnpm test:e2e`", "Check file X")
+    - [Failure Classification Summary] (MUST classify each observed item exactly once as `CR-related`, `pre-existing`, `environmental`, or `non-blocking warning`)
     - [Technical Retrospective] (Key trade-offs, lessons learned, or new debt)
 
     - [Deployment Notes]

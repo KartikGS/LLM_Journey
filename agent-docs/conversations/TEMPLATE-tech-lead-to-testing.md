@@ -20,6 +20,18 @@
   - [Required command sequence]
   - [Failure classification requirement]
 
+## Stable Signals to Assert (Mandatory)
+- [Durable contract 1: role/testid/href/state signal]
+- [Durable contract 2]
+
+## Prohibited Brittle Assertions (Mandatory)
+- [Transient loading-copy dependency not allowed]
+- [Layout-coupled selector not allowed]
+
+## Known Environmental Caveats (Mandatory)
+- [Sandbox/startup/runtime caveat]
+- [How to classify if reproduced]
+
 ## Assumptions To Validate (Mandatory)
 - [Assumption 1]
 - [Assumption 2]
@@ -57,4 +69,3 @@
 
 ## Report Back
 Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.
-

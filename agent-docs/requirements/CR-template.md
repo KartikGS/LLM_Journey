@@ -33,6 +33,18 @@
   - ``[x] pnpm build passes — Verified: `pnpm build`, exit code 0``
 - **User Validation**: [How will the human verify this? e.g., 'Navigation link takes me to /new-page']
 
+## Baseline Failure Snapshot (Required for Regression/Incident CRs)
+- **Date**: [YYYY-MM-DD]
+- **Command(s)**: [Exact command(s) used]
+- **Execution Mode**: [sandboxed | local-equivalent/unsandboxed]
+- **Observed Result**: [Failing specs/errors with concise facts]
+
+## Post-Fix Validation Snapshot (Filled at Closure)
+- **Date**: [YYYY-MM-DD]
+- **Command(s)**: [Exact command(s) used]
+- **Execution Mode**: [sandboxed | local-equivalent/unsandboxed]
+- **Observed Result**: [Pass/fail summary, including browser matrix for E2E]
+
 ## Dependencies
 - Blocks: 
 - Blocked by:
