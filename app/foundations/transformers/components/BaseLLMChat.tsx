@@ -99,8 +99,8 @@ export default function BaseLLMChat() {
                         <Terminal className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Try the Model</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Interact with the raw probability distribution</p>
+                        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Tiny Transformer Playground</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Character-level generation from a tiny local model</p>
                     </div>
                 </div>
 
@@ -175,7 +175,7 @@ export default function BaseLLMChat() {
                             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
                             <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
                         </div>
-                        <span className="text-xs text-gray-400 font-mono ml-2">model_output.txt</span>
+                        <span className="text-xs text-gray-400 font-mono ml-2">tiny_transformer_output.txt</span>
                     </div>
 
                     <div className="p-4 font-mono text-sm leading-relaxed overflow-y-auto flex-1">

@@ -1,78 +1,164 @@
 # Handoff: Testing Agent -> Tech Lead
 
 ## Subject
-`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
+`CR-012 - Transformers Narrative + Frontier Contract Test Sync`
 
 ## Preflight
 
 ### Assumptions I'm making
-- Home CTA contract is `Start Your Journey →` linking to `/foundations/transformers`.
-- Landing page can be validated via stable role/href contracts without depending on `div.grid > a`.
-- Transformer generation completion should be validated by durable post-submit behavior, not transient loading text visibility.
+- New section and interaction contracts are intentionally anchored with `data-testid` values listed in the CR-012 testing handoff.
+- `POST /api/frontier/base-generate` is the single backend contract for frontier interaction, with `mode: "live"` and `mode: "fallback"` success envelopes plus `400` validation errors.
+- Existing tiny transformer interaction remains available and should continue to pass prior behavior checks.
 
 ### Risks not covered by current scope
-- Constrained/sandboxed execution can fail before Playwright webServer startup.
-- OTEL upstream at `127.0.0.1:4318` may refuse connection; this is non-blocking if user-visible flow remains intact.
+- Sandboxed Playwright execution may still fail during `webServer` startup before browser tests run.
+- The CR acceptance requirement for a same-prompt Tiny vs Frontier comparison artifact may be unmet after frontend refinement; this may force CR-related blocker classification even if automated tests otherwise pass.
 
 ### Questions for Tech Lead
 - None.
 
+## Preflight Status
+- `clear-to-implement`
+
 ---
 
-## CR-010 - E2E Baseline Stabilization Report
+## CR-012 Testing Report
 
 ### [Status]
-- Completed
+- `blocked`
 
 ### [Changes Made]
-- Updated `__tests__/e2e/landing-page.spec.ts`:
-  - Replaced stale CTA destination assertion from `/transformer` to `/foundations/transformers`.
-  - Removed brittle structural selector dependency (`div.grid > a`).
-  - Added stable href-contract assertions for journey links (`/models/adaptation`, `/context/engineering`, `/ops/deployment`).
+- Updated `__tests__/components/BaseLLMChat.test.tsx`:
+  - Aligned tiny chat heading assertion with renamed UI framing (`Tiny Transformer Playground`).
+- Added `__tests__/components/FrontierBaseChat.test.tsx`:
+  - Added stable contract assertions for:
+    - `frontier-form`
+    - `frontier-input`
+    - `frontier-submit`
+    - `frontier-status`
+    - `frontier-output`
+  - Added behavior tests for:
+    - `mode: "live"` response handling
+    - `mode: "fallback"` response handling
+    - backend validation error payload rendering
+    - client-side empty prompt validation path
+- Added `__tests__/api/frontier-base-generate.test.ts`:
+  - Added route-level tests for:
+    - invalid prompt -> HTTP `400` + controlled `invalid_prompt` payload
+    - missing config -> HTTP `200` + `mode: "fallback"` envelope
+    - configured upstream success -> HTTP `200` + `mode: "live"` envelope
 - Updated `__tests__/e2e/transformer.spec.ts`:
-  - Removed brittle transient `Generating...` visibility dependency.
-  - Added durable generation assertions: submit button disabled->enabled cycle and response container visibility/text after generation.
-  - Preserved OTEL request emission verification.
-- `__tests__/e2e/navigation.spec.ts`:
-  - No file change required.
-  - Verified as targeted regression check.
+  - Added CR-012 section/contract assertions for:
+    - `transformers-how`
+    - `transformers-try`
+    - `transformers-frontier`
+    - `transformers-issues`
+    - `transformers-next-stage`
+    - `transformers-comparison`
+    - frontier interaction contracts
+    - continuity contract to `/models/adaptation`
+  - Added tiny interaction continuity verification.
+  - Added explicit acceptance probe for same-prompt Tiny vs Frontier comparison artifact.
 
 ### [Verification Results]
+- Command: `pnpm test`
+  - Scope: full Jest suite
+  - Execution Mode: `sandboxed`
+  - Result: `PASS` (`16` suites, `104` tests)
+- Command: `pnpm lint`
+  - Scope: full lint suite
+  - Execution Mode: `sandboxed`
+  - Result: `PASS` (no ESLint errors; Next.js deprecation warning for `next lint`)
+- Command: `pnpm exec tsc --noEmit`
+  - Scope: full TypeScript check
+  - Execution Mode: `sandboxed`
+  - Result: `PASS`
+- Command: `pnpm build`
+  - Scope: production build
+  - Execution Mode: `sandboxed`
+  - Result: `PASS` (non-blocking OpenTelemetry bundling warnings)
 
 #### Reproduction Matrix
-| Command | Mode | Browsers | Result | Classification |
+| command | mode | browsers | result | classification note |
 |---|---|---|---|---|
-| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | CR-related assertions validated |
-| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`12 passed`) | regression check passed |
-| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | durable transformer assertions validated |
-| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`18 passed`) | suite baseline stable |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | sandboxed | N/A (startup failure) | FAIL (`Process from config.webServer exited early`) | environmental (constrained startup) |
+| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | FAIL (`3 failed`, `6 passed`) | CR-related blocker: missing same-prompt comparison artifact |
+| `pnpm test:e2e` | sandboxed | N/A (startup failure) | FAIL (`Process from config.webServer exited early`) | environmental (constrained startup) |
+| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | FAIL (`3 failed`, `21 passed`) | CR-related blocker reproduced in full suite |
 
 ### [Dependency Consumption]
-- No dependency or runtime config changes.
+- No package/dependency changes.
 
 ### [Failure Classification]
-- CR-related:
-  - Fixed landing CTA route assertion drift.
-  - Fixed landing selector strategy drift (removed structural dependency).
-  - Fixed transformer generation assertion drift (removed transient text dependence).
-- Environmental:
-  - Sandboxed runs consistently failed before test execution (`config.webServer exited early`).
-- Non-blocking warning:
-  - OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) observed in unsandboxed runs; expected under observability failure-boundary and did not affect user-visible flow/test pass.
+- `CR-related`:
+  - Same-prompt Tiny vs Frontier comparison artifact probe failed in all browsers.
+  - Evidence:
+    - `__tests__/e2e/transformer.spec.ts` assertion at line `28`.
+    - Browser artifact logs:
+      - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-chromium/error-context.md`
+      - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-firefox/error-context.md`
+      - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-webkit/error-context.md`
+- `environmental`:
+  - Sandboxed Playwright startup failed before browser execution (`config.webServer exited early`), reproduced on both targeted and full E2E commands.
+- `non-blocking warning`:
+  - OTEL upstream refusal logs (`ECONNREFUSED 127.0.0.1:4318`) during E2E runs; user flows continued.
+  - OpenTelemetry bundling warnings during `pnpm build`.
+  - Next.js lint deprecation warning during `pnpm lint`.
+
+### [BLOCKER / FEEDBACK]
+- Decision needed: CR-012 acceptance requires a visible same-prompt Tiny vs Frontier comparison artifact, but current UI provides a generic comparison template instead.
+- Impact:
+  - E2E acceptance probe fails deterministically across chromium/firefox/webkit.
+  - CR cannot be closed as complete under current acceptance contract.
 
 ### [Ready for Next Agent]
-- Yes.
+- `no` (awaiting Tech Lead direction on CR acceptance mismatch).
 
 ### [New Artifacts]
-- Updated test files:
-  - `__tests__/e2e/landing-page.spec.ts`
+- Added:
+  - `__tests__/api/frontier-base-generate.test.ts`
+  - `__tests__/components/FrontierBaseChat.test.tsx`
+- Updated:
+  - `__tests__/components/BaseLLMChat.test.tsx`
   - `__tests__/e2e/transformer.spec.ts`
-- Playwright artifacts from intermediate failed attempts exist under `test-results/navigation-*` and `test-results/landing-page-*`.
+- Playwright failure artifacts:
+  - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-chromium/`
+  - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-firefox/`
+  - `test-results/transformer-Transformer-Pa-7eaeb-frontier-contracts-critical-webkit/`
 
 ### [Follow-up Recommendations]
-- Keep CR verification evidence sourced from local-equivalent/unsandboxed E2E runs in this environment until sandbox webServer startup behavior is resolved.
+- Align frontend output with CR-012 same-prompt comparison requirement, then rerun:
+  - `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+  - `pnpm test:e2e`
 
+---
+
+## CR-012 Follow-up Update (User-Directed Scope Change)
+
+### [Status]
+- `updated`
+
+### [Change Applied]
+- Removed same-prompt comparison artifact assertion from:
+  - `__tests__/e2e/transformer.spec.ts`
+- Reason:
+  - User confirmed the frontend section was intentionally removed and requested matching test removal.
+
+### [Verification Results]
+- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+  - Scope: transformer spec only
+  - Execution Mode: `sandboxed`
+  - Browser Scope: N/A (startup failure)
+  - Result: `FAIL` (`Process from config.webServer exited early`) -> environmental
+- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+  - Scope: transformer spec only
+  - Execution Mode: `local-equivalent/unsandboxed`
+  - Browser Scope: `chromium`, `firefox`, `webkit`
+  - Result: `PASS` (`9 passed`)
+
+### [Failure Classification Update]
+- Prior CR-related blocker is cleared.
+- Remaining targeted-run failure in sandbox mode is environmental startup only.
+
+### [Ready for Next Agent]
+- `yes`

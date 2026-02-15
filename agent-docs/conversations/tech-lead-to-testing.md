@@ -1,69 +1,140 @@
 # Handoff: Tech Lead -> Testing Agent
 
 ## Subject
-`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
+`CR-012 - Transformers Narrative + Frontier Contract Test Sync`
 
 ## Status
 `issued`
 
 ## Objective
-Stabilize CR-010 E2E baseline by updating stale landing-page and transformer spec assertions to match the current app contract and durable behavioral signals.
+Update automated coverage for CR-012 contract changes (new transformers narrative sections, new frontier interaction contract, and backend frontier route behavior), then run full verification evidence.
 
 ## Rationale (Why)
-Current E2E failures are dominated by assertion drift and transient UI timing assumptions, which creates non-actionable noise and weakens release confidence. This handoff restores trust in route-level E2E signal without changing feature behavior.
+CR-012 expanded selector and accessibility contracts on `/foundations/transformers` and added a new backend API route (`/api/frontier/base-generate`). Per workflow testing matrix, same-CR testing updates are required to keep UI/API contracts verifiable and prevent silent drift.
 
 ## Constraints
 - Testing boundaries:
-  - Modify testing-owned files only under `__tests__/e2e/` unless escalation is explicitly approved by Tech Lead.
-  - Do not modify `app/`, `components/`, `hooks/`, or runtime config in this handoff.
+  - Modify testing-owned files under `__tests__/` only.
+  - Do not modify `app/`, `lib/`, runtime config, or docs outside testing artifacts.
+  - No dependency installation.
 - Verification boundaries:
   - Use `pnpm` commands only.
-  - Run required commands exactly as listed in Verification.
-  - Classify every failure as `CR-related`, `pre-existing`, `environmental`, or `non-blocking warning` with concrete evidence.
-- Security/architecture:
-  - Do not relax security controls to force test pass.
-  - Treat OTEL upstream refusal (`127.0.0.1:4318`) under observability failure-boundary intent unless it causes user-visible flow failure.
+  - Run final quality gates in sequence:
+    1. `pnpm test`
+    2. `pnpm lint`
+    3. `pnpm exec tsc --noEmit`
+    4. `pnpm build`
+  - E2E is required in this CR due selector/semantic contract changes.
+  - Classify each observed failure exactly once as:
+    - `CR-related`
+    - `pre-existing`
+    - `environmental`
+    - `non-blocking warning`
+
+## Stable Signals to Assert (Mandatory)
+- Transformers page section contracts:
+  - `transformers-how`
+  - `transformers-try`
+  - `transformers-frontier`
+  - `transformers-issues`
+  - `transformers-next-stage`
+  - `transformers-comparison`
+- Frontier interaction contracts:
+  - `frontier-form`
+  - `frontier-input`
+  - `frontier-submit`
+  - `frontier-status`
+  - `frontier-output`
+- Legacy continuity contracts must remain stable:
+  - `transformers-hero`
+  - `transformers-continuity-links`
+  - `transformers-link-home`
+  - `transformers-link-adaptation`
+- Backend contract signals:
+  - `POST /api/frontier/base-generate` validation behavior for invalid prompt (HTTP 400 + error payload)
+  - `mode: "live"` and `mode: "fallback"` response envelope handling
+
+## Prohibited Brittle Assertions (Mandatory)
+- Do not assert transient loading copy timing windows as the primary pass criterion.
+- Do not assert full paragraph copy equality for narrative text blocks.
+- Do not use layout-coupled selectors when `data-testid` and semantic signals exist.
+
+## Known Environmental Caveats (Mandatory)
+- Sandboxed E2E runs may fail at Playwright webServer startup (`Process from config.webServer exited early`).
+- If that occurs, perform local-equivalent/unsandboxed E2E verification and classify sandbox startup failures as `environmental` with command evidence.
 
 ## Assumptions To Validate (Mandatory)
-- Landing CTA canonical destination is `/foundations/transformers`.
-- Current home-page card structure can be asserted via stable locator strategy without `div.grid > a` dependency.
-- Transformer generation can be validated through durable user-visible behavior instead of strict `Generating...` transient text visibility.
+- New transformers section and frontier test-ids are present and unique.
+- Backend route is reachable from tests and returns stable JSON contract in both fallback and validation paths.
+- Existing tiny transformer E2E behavior remains functional after page restructure.
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
-- Any new route/content regressions discovered outside landing/navigation/transformer specs.
-- Any browser-specific environmental startup/runtime issues (port/server/Playwright webServer anomalies).
-- Any non-CR regressions revealed by full-suite run after assertion fixes.
+- Any request to change app code to satisfy tests in this handoff.
+- Any route renames or contract rewrites discovered during testing.
+- Any non-CR regressions uncovered by full-suite verification.
 
 ## Scope
 ### Files to Modify
-- `__tests__/e2e/landing-page.spec.ts`: replace stale selector/route expectations with canonical/stable assertions.
-- `__tests__/e2e/transformer.spec.ts`: replace brittle `Generating...` timing assertion with stable behavioral signal(s).
-- `__tests__/e2e/navigation.spec.ts`: no expected edit; run as targeted regression check and update only if contract drift is proven.
+- `__tests__/components/BaseLLMChat.test.tsx`
+  - Align heading/assertions with renamed tiny chat framing.
+- `__tests__/components/FrontierBaseChat.test.tsx` (new)
+  - Add unit/integration-style UI contract tests for status/output transitions (`live`, `fallback`, validation error).
+- `__tests__/api/frontier-base-generate.test.ts` (new)
+  - Add route-level tests for invalid prompt and fallback/live envelope behavior.
+- `__tests__/e2e/transformer.spec.ts`
+  - Update/expand to verify CR-012 page contracts and frontier interaction surface.
+- Optional: additional targeted test files under `__tests__/e2e/` if needed for stable CR-012 verification.
 
 ## Verification Depth
-- `baseline`
+- `baseline` (with explicit frontier route/contract coverage)
 
 ## Definition of Done
-- [ ] Landing page route assertion validates `/foundations/transformers`.
-- [ ] Landing page selectors no longer depend on stale `div.grid > a` structure.
-- [ ] Transformer spec no longer depends on brittle `Generating...` visibility window.
-- [ ] `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` passes (browser matrix).
-- [ ] `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` passes (browser matrix).
-- [ ] `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` passes (browser matrix).
-- [ ] `pnpm test:e2e` full suite result recorded with explicit classification for any remaining failures.
+- [ ] Updated tests cover new transformers section contracts and frontier selectors.
+- [ ] API tests cover at least:
+  - invalid prompt path (`400`, controlled error payload),
+  - fallback envelope path,
+  - live envelope path (mocked upstream path acceptable).
+- [ ] E2E transformers coverage validates:
+  - required section/test-id visibility,
+  - frontier interaction submit cycle and status/output visibility,
+  - continuity link to `/models/adaptation`.
+- [ ] Existing tiny transformer interaction test signal remains validated.
+- [ ] Explicit acceptance probe: verify whether a **same-prompt Tiny vs Frontier comparison artifact** is present as CR requires.
+  - If missing, classify as `CR-related` and report as blocker (do not patch app code).
+- [ ] `pnpm test` passes.
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
+- [ ] `pnpm build` passes.
+- [ ] `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` result recorded by browser.
+- [ ] `pnpm test:e2e` full-suite result recorded by browser.
 
 ## Clarification Loop (Mandatory)
 - Post preflight assumptions/risks/questions in `agent-docs/conversations/testing-to-tech-lead.md` before implementation.
-- Tech Lead responds in the same file.
-- Repeat until concerns are resolved or status becomes `blocked`.
+- Pause if any question could change contract interpretation or failure classification.
 
 ## Verification
-1. Update scoped E2E assertion files.
-2. Run `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts`.
-3. Run `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`.
-4. Run `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`.
-5. Run `pnpm test:e2e`.
-6. Record pass/fail summary by browser and classify all failures once.
+Use command evidence format for each:
+- Command
+- Scope
+- Execution Mode (`sandboxed` or `local-equivalent/unsandboxed`)
+- Browser Scope (for E2E)
+- Result
+
+Minimum command set:
+1. `pnpm test`
+2. `pnpm lint`
+3. `pnpm exec tsc --noEmit`
+4. `pnpm build`
+5. `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+6. `pnpm test:e2e`
+
+## Reference Files
+- `agent-docs/requirements/CR-012-transformers-tiny-to-frontier-bridge.md`
+- `agent-docs/plans/CR-012-plan.md`
+- `agent-docs/conversations/frontend-to-tech-lead.md`
+- `app/foundations/transformers/page.tsx`
+- `app/foundations/transformers/components/FrontierBaseChat.tsx`
+- `app/api/frontier/base-generate/route.ts`
 
 ## Report Back
 Write completion report to `agent-docs/conversations/testing-to-tech-lead.md` including:
@@ -76,7 +147,5 @@ Write completion report to `agent-docs/conversations/testing-to-tech-lead.md` in
 - [New Artifacts]
 - [Follow-up Recommendations]
 
-Reference plan: `agent-docs/plans/CR-010-plan.md`
-
-*Handoff created: 2026-02-14*
+*Handoff created: 2026-02-15*
 *Tech Lead Agent*

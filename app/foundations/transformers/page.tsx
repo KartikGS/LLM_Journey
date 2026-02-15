@@ -1,201 +1,203 @@
 import BaseLLMChat from './components/BaseLLMChat';
-import Link from 'next/link';
+import FrontierBaseChat from './components/FrontierBaseChat';
 import { GlowBackground } from '@/app/ui/components/GlowBackground';
 import { GlassCard } from '@/app/ui/components/GlassCard';
 import { JourneyStageHeader } from '@/app/ui/components/JourneyStageHeader';
 import { JourneyContinuityLinks } from '@/app/ui/components/JourneyContinuityLinks';
-import { BookOpen, Cpu, Database, Play, Layers, Activity } from 'lucide-react';
+import { BookOpen, CircleAlert, Compass, Sparkles } from 'lucide-react';
 
 export default function BaseLLMPage() {
   return (
-    <div className="w-full flex-1 flex flex-col gap-8 sm:gap-12 md:gap-16 p-4 sm:p-8 md:p-12 overflow-y-auto relative">
+    <div className="relative flex w-full flex-1 flex-col gap-8 overflow-y-auto p-4 sm:gap-12 sm:p-8 md:gap-16 md:p-12">
       <GlowBackground />
 
       <JourneyStageHeader
         testId="transformers-hero"
         title="Decoder-Only Transformer"
-        description="A small, character-level GPT-style model trained on Tiny Shakespeare and running fully in the browser."
+        description="Start with tiny transformer mechanics, then bridge to frontier base behavior to see why adaptation is the next stage."
       />
 
-      <BaseLLMChat />
-
-      <section className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
-              <Layers className="w-5 h-5" />
+      <section data-testid="transformers-how" className="w-full">
+        <GlassCard className="flex flex-col gap-6 p-6 sm:p-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600 dark:text-blue-400">
+              <Compass className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Overview</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">What Are Transformers?</h2>
           </div>
 
-          <div className="flex flex-col gap-4 flex-1">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Specs</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <SpecTag label="Ctx" value="32" />
-                <SpecTag label="Heads" value="4" />
-                <SpecTag label="Layers" value="4" />
-                <SpecTag label="Embed" value="64" />
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-              This model predicts the next character given the previous ones using causal self-attention (no future peeking).
+          <div className="space-y-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            <p>
+              A Transformer is a neural-network architecture introduced in 2017 in the paper{' '}
+              <a
+                href="https://arxiv.org/abs/1706.03762"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Attention Is All You Need
+              </a>
+              . The key idea is attention: each token can focus on other relevant tokens in the same input.
             </p>
-
-            <div className="mt-auto pt-4">
-              <a
-                href="https://jalammar.github.io/illustrated-gpt2/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
-              >
-                <BookOpen className="w-4 h-4" /> Learn more
-              </a>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
-              <Activity className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Self-Attention</h2>
-          </div>
-
-          <div className="flex flex-col gap-4 flex-1">
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-              <li className="flex gap-2">
-                <span className="text-blue-500">•</span>
-                <span>Characters look at past context only</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-500">•</span>
-                <span>Attention scores weight relevance</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-500">•</span>
-                <span>Causal mask blocks future tokens</span>
-              </li>
-            </ul>
-
-            <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
-              <p className="text-xs text-gray-600 dark:text-gray-400 italic">
-                <strong>Key idea:</strong> Allows autoregressive generation one token at a time.
-              </p>
-            </div>
-
-            <div className="mt-auto pt-4">
-              <a
-                href="https://jalammar.github.io/illustrated-transformer/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
-              >
-                <BookOpen className="w-4 h-4" /> Visual Guide
-              </a>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
-              <Database className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Training</h2>
-          </div>
-
-          <div className="flex flex-col gap-4 flex-1">
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Dataset</span>
-                <span className="font-medium text-gray-900 dark:text-white">Tiny Shakespeare</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Objective</span>
-                <span className="font-medium text-gray-900 dark:text-white">Next-Char Pred</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Optimizer</span>
-                <span className="font-medium text-gray-900 dark:text-white">AdamW</span>
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-white/5 p-3 rounded-lg border border-black/5 dark:border-white/5">
-              Goal: Learn character-level structure and rhythm, not just memorization.
+            <p>
+              The tiny demo below is intentionally small so you can inspect the mechanics directly. It uses a short context window and predicts the next character,
+              which makes the generation process easy to see step by step.
             </p>
-
-            <div className="mt-auto pt-4">
+            <p>
+              If you want to train one yourself, start with{' '}
               <a
-                href="https://github.com/karpathy/char-rnn"
+                href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
-                <Database className="w-4 h-4" /> Dataset Source
+                this YouTube walkthrough
+              </a>{' '}
+              and{' '}
+              <a
+                href="https://colab.research.google.com/drive/1B6ZeJNR0eiDCEUbexOj6beXZ-qMiH-3B?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                this Colab notebook
               </a>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard variant="default" className="p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Browser Runtime</h2>
-          </div>
-
-          <div className="flex flex-col gap-4 flex-1">
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-              <li className="flex gap-2">
-                <span className="text-orange-500">✓</span>
-                <span><strong>ONNX Runtime Web</strong></span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-orange-500">✓</span>
-                <span>No Server / API</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-orange-500">✓</span>
-                <span>WASM Accelerated</span>
-              </li>
-            </ul>
-
-            <div className="mt-auto pt-4">
+              . The in-browser model below runs with{' '}
               <a
                 href="https://onnxruntime.ai/docs/get-started/with-javascript.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
-                <Cpu className="w-4 h-4" /> ONNX Docs
+                ONNX Runtime Web
               </a>
-            </div>
+              .
+            </p>
+          </div>
+
+          <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-black/[0.08] bg-black/[0.02] px-3 py-2 text-sm text-gray-700 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-300">
+            <BookOpen className="h-4 w-4" />
+            Try the tiny transformer demo below.
           </div>
         </GlassCard>
       </section>
 
-      <section className="w-full flex flex-col sm:flex-row gap-6 justify-center items-center py-8">
-        <Link
-          href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
-          target="_blank"
-          className="group flex items-center gap-3 px-6 py-3 bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-        >
-          <Play className="w-5 h-5 text-red-600 group-hover:scale-110 transition-transform" />
-          <span className="text-gray-900 dark:text-white font-medium">Watch on YouTube</span>
-        </Link>
+      <section data-testid="transformers-try" className="w-full">
+        <BaseLLMChat />
+      </section>
 
-        <Link
-          href="https://colab.research.google.com/drive/1B6ZeJNR0eiDCEUbexOj6beXZ-qMiH-3B?usp=sharing"
-          target="_blank"
-          className="group flex items-center gap-3 px-6 py-3 bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors"
-        >
-          <div className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-600 text-xs font-bold">C</div>
-          <span className="text-gray-900 dark:text-white font-medium">Open Colab</span>
-        </Link>
+      <section data-testid="transformers-frontier" className="w-full space-y-4">
+        <div className="rounded-xl border border-black/[0.08] bg-white/70 p-5 dark:border-white/[0.08] dark:bg-[#111111]/70 sm:p-6">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">What Happens When You Scale the Transformer Architecture?</h2>
+          <div className="mt-3 space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            <p>
+              When you scale the same architecture with more parameters, more training data, and more compute, the model can store much more general knowledge and produce richer answers.
+            </p>
+            <p>
+              These larger base models are usually trained on internet-scale text corpora. If you want deeper context, see{' '}
+              <a
+                href="https://arxiv.org/abs/2001.08361"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Scaling Laws for Neural Language Models
+              </a>{' '}
+              and{' '}
+              <a
+                href="https://arxiv.org/abs/2005.14165"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                GPT-3 (Language Models are Few-Shot Learners)
+              </a>
+              .
+            </p>
+            <p>You can interact with a base-model endpoint in the chat below.</p>
+          </div>
+        </div>
+
+        <FrontierBaseChat />
+
+        <GlassCard data-testid="transformers-comparison" className="space-y-4 p-5 sm:p-6">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-600 dark:text-indigo-400">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Model Comparison Template</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Use this template when you lock concrete model choices.</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-black/[0.08] dark:border-white/[0.08]">
+            <table className="w-full min-w-[620px] text-sm">
+              <thead className="bg-black/[0.03] dark:bg-white/[0.03] text-left">
+                <tr>
+                  <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Dimension</th>
+                  <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Tiny Transformer Demo</th>
+                  <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Scaled Base Model</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Tokenization method</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Character-level</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD (depends on selected model)</td>
+                </tr>
+                <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Context window</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">32 characters</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD</td>
+                </tr>
+                <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Model size</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">~0.2M parameters</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD</td>
+                </tr>
+                <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Training data scope</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Tiny Shakespeare subset</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Internet-scale corpus</td>
+                </tr>
+                <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Runtime</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Browser via ONNX Runtime Web</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Remote inference API</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section data-testid="transformers-issues" className="w-full">
+        <GlassCard className="space-y-4 p-6 sm:p-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-500/10 p-2 text-amber-600 dark:text-amber-400">
+              <CircleAlert className="h-5 w-5" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">What we don&apos;t have yet?</h2>
+          </div>
+
+          <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300 sm:text-base">
+            <li className="rounded-lg border border-black/[0.08] bg-black/[0.02] p-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              Reliable instruction-following every single time. Ask for five constraints and the model may still miss one.
+            </li>
+            <li className="rounded-lg border border-black/[0.08] bg-black/[0.02] p-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              Stable tone and safety behavior by default. Tone can drift between responses without adaptation.
+            </li>
+            <li className="rounded-lg border border-black/[0.08] bg-black/[0.02] p-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              Consistent task formatting. For example, strict JSON or schema-shaped output can still break.
+            </li>
+          </ul>
+
+          <div data-testid="transformers-next-stage" className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4 text-sm text-gray-700 dark:text-gray-300 sm:text-base">
+            Next up, we fix these gaps with adaptation methods (instruction tuning, task tuning, and alignment workflows) so behavior becomes more reliable, not just more fluent.
+            The continuation card below takes you there.
+          </div>
+        </GlassCard>
       </section>
 
       <JourneyContinuityLinks
@@ -212,20 +214,11 @@ export default function BaseLLMPage() {
           href: '/models/adaptation',
           eyebrow: 'Next Stage',
           title: 'Model Adaptation',
-          description: 'Move from baseline mechanics to specialization trade-offs and strategy selection.',
+          description: 'Bridge unresolved base-model issues into alignment and specialization strategies.',
           cta: 'Continue to Stage 2',
           testId: 'transformers-link-adaptation',
         }}
       />
-    </div>
-  );
-}
-
-function SpecTag({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col items-center p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">{label}</span>
-      <span className="font-mono font-semibold text-gray-900 dark:text-white">{value}</span>
     </div>
   );
 }

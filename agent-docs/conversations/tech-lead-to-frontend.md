@@ -1,96 +1,167 @@
 # Handoff: Tech Lead -> Frontend Agent
 
 ## Subject
-`CR-011 - Server-First Rendering Boundary Refactor for UI Pages`
+`CR-012 - Transformers Narrative Restructure + Frontier UI Integration`
 
 ## Status
 `issued`
 
+## Execution Mode (Mandatory)
+`feature-ui`
+
 ## Objective
-Refactor rendering boundaries so `/`, `/foundations/transformers`, and `/models/adaptation` are server-first page compositions, while preserving all required interactive behavior through targeted client islands only.
+Restructure the Stage 1 Transformers page into the required educational sequence:
+`How -> Try (Optional) -> Frontier -> Issues -> Next Stage`,
+while preserving tiny ONNX interaction and integrating the new backend frontier contract with resilient UI behavior.
 
 ## Rationale (Why)
-CR-011 corrects architectural drift from broad page-level client rendering. The project invariant requires content-heavy pages to remain Server Components, with Client Components reserved for user-input/stateful interaction surfaces. This reduces unnecessary client surface area without changing learning flow or visual quality.
+CR-012 is a narrative-completeness change for Stage 1. Learners must see:
+1) what tiny models teach,
+2) what frontier base models add,
+3) what still fails without adaptation,
+4) why Stage 2 (`/models/adaptation`) is the next step.
+
+The backend route now exists to support live-when-configured frontier interaction with deterministic fallback when unavailable.
 
 ## Constraints
 - UI/UX constraints:
-  - Preserve current visual quality (glassmorphism, gradients, hierarchy, spacing).
-  - No redesign or content rewrite; this is a rendering-boundary refactor only.
-  - Preserve current responsive behavior across mobile and desktop.
+  - Keep current visual language consistent with existing journey pages.
+  - Preserve mobile and desktop usability.
+  - Keep dual-theme readability (light/dark).
+  - Loading, fallback, and error states must be text-visible (not color-only).
+- Performance/interaction constraints:
+  - Frontier submit must show visible loading state immediately on action.
+  - Frontier failure must resolve into user-visible non-blocking fallback state.
 - Semantic/testability constraints:
-  - Preserve existing route contracts: `/`, `/foundations/transformers`, `/models/adaptation`.
-  - Preserve existing `data-testid` contracts already used by tests (including adaptation selectors and continuity links).
-  - Keep continuity link href contracts unchanged.
+  - Preserve existing transformers continuity contracts:
+    - `transformers-hero`
+    - `transformers-continuity-links`
+    - `transformers-link-home`
+    - `transformers-link-adaptation`
+  - Add deterministic selectors for new narrative and frontier surfaces (listed below).
+  - Keep all interactive controls keyboard accessible.
 - Ownership constraints:
-  - Frontend-owned files in `app/` and UI components are in scope.
-  - Do not modify tests in this handoff unless Tech Lead explicitly issues a Testing handoff.
+  - Frontend-owned files only.
+  - Do not modify backend route contract.
+  - Do not modify tests in this handoff (Testing Agent owns test updates).
   - No package installation.
+
+## Contracts Inventory (Mandatory)
+- Route contracts:
+  - `/foundations/transformers`
+  - `/models/adaptation` (continuity target)
+  - `/` (previous-stage continuity target)
+- Existing selector/accessibility contracts to preserve:
+  - `transformers-hero`
+  - `transformers-continuity-links`
+  - `transformers-link-home`
+  - `transformers-link-adaptation`
+  - Tiny chat input remains label-associated and keyboard usable.
+- New selector contracts to add (required):
+  - `transformers-how`
+  - `transformers-try`
+  - `transformers-frontier`
+  - `transformers-issues`
+  - `transformers-next-stage`
+  - `transformers-comparison`
+  - `frontier-form`
+  - `frontier-input`
+  - `frontier-submit`
+  - `frontier-status`
+  - `frontier-output`
+- Critical interactive contracts:
+  - Frontier request uses `POST /api/frontier/base-generate` with `{ prompt }`.
+  - Live response: `mode: "live"` + output.
+  - Fallback response: `mode: "fallback"` + reason + output.
+  - Validation error: HTTP `400` with `error.code`.
 
 ## Design Intent (Mandatory for UI)
 - Target aesthetic:
-  - Keep existing premium look and feel unchanged to users.
+  - Keep the existing premium educational look and hierarchy; no redesign detour.
+  - Emphasize stage progression clarity over decorative complexity.
 - Animation budget:
-  - Keep meaningful interaction animation where state/input exists.
-  - For non-interactive presentational blocks, use server-compatible styling patterns and avoid forcing page-level client rendering.
+  - Keep meaningful motion only where it supports interaction/state clarity.
+  - Avoid introducing animation that obscures fallback/error readability.
 - Explicit anti-patterns:
-  - Do not keep `'use client'` at page level solely for decorative animation.
-  - Do not convert non-interactive presentational components to client without direct state/input need.
+  - Do not present frontier output as assistant-grade behavior.
+  - Do not hide fallback mode behind subtle color-only indicators.
+  - Do not remove continuity links or rewrite route flow.
 
 ## Assumptions To Validate (Mandatory)
-- `BaseLLMChat` remains a client component and can be embedded in a server-rendered transformers page.
-- Adaptation strategy selector behavior can be isolated into a client island while parent page remains server-rendered.
-- `app/ui/navbar.tsx` remains client-rendered by user decision (2026-02-14).
-- Shared presentational components can be refactored to avoid forcing client boundaries.
+- Existing `BaseLLMChat` can remain as the Try (Optional) block with minimal adaptation.
+- Backend response contract from `app/api/frontier/base-generate/route.ts` is consumable as-is.
+- New section-level selector additions will not conflict with current test-id namespace.
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
-- Any route rename or navigation information architecture change.
-- New feature additions beyond rendering-boundary extraction.
-- Security/telemetry/middleware behavior changes.
+- Any change to backend API route contract.
+- Any changes to adaptation page layout/content beyond continuity wording strictly needed for linkage (default: no adaptation page edits).
+- Any route renames or nav-IA changes.
 
 ## Scope
 ### Files to Modify
-- `app/page.tsx`: Remove page-level `'use client'`; keep server-first composition.
-- `app/foundations/transformers/page.tsx`: Remove page-level `'use client'`; preserve chat interactivity via client module usage.
-- `app/models/adaptation/page.tsx`: Remove page-level `'use client'`; extract stateful selector/interaction into client island component(s).
-- `app/ui/components/GlassCard.tsx`: Refactor so presentational usage does not force client rendering.
-- `app/ui/components/JourneyStageHeader.tsx`: Refactor to server-compatible presentational component.
-- `app/ui/components/JourneyContinuityLinks.tsx`: Refactor to server-compatible presentational component while preserving link contracts.
-- `app/models/adaptation/components/*` (new files allowed): Client island extraction for strategy selector/interactive region, if needed.
+- `app/foundations/transformers/page.tsx`
+  - Implement five-part narrative flow and keep continuity links.
+  - Add explicit bridge rationale to `/models/adaptation`.
+- `app/foundations/transformers/components/BaseLLMChat.tsx` (optional)
+  - Only if needed to align tiny block framing with "Try (Optional)" purpose.
+- `app/foundations/transformers/components/*` (new file(s) expected)
+  - Add a dedicated frontier interaction component.
+  - Add reusable narrative section/template component(s) if helpful.
+
+## Backend Contract Reference (for integration)
+- Endpoint: `POST /api/frontier/base-generate`
+- Request:
+  - `{ "prompt": string }`
+- Response modes:
+  - Live:
+    - `{ mode: "live", output: string, metadata: { assistantTuned: false, adaptation: "none", ... } }`
+  - Fallback:
+    - `{ mode: "fallback", output: string, reason: { code, message }, metadata: { ... } }`
+- Validation error:
+  - HTTP `400` with `{ error: { code: "invalid_json" | "invalid_prompt", message } }`
 
 ## Definition of Done
-- [ ] `app/page.tsx` no longer has page-level `'use client'`.
-- [ ] `app/foundations/transformers/page.tsx` no longer has page-level `'use client'`.
-- [ ] `app/models/adaptation/page.tsx` no longer has page-level `'use client'`.
-- [ ] Interactive behavior remains functional for:
-  - chat input/generation controls (transformers),
-  - adaptation strategy selector interaction,
-  - mobile nav behavior (unchanged via existing navbar client component).
-- [ ] Shared presentational components no longer force client rendering unless directly handling input/state.
-- [ ] Existing route and selector contracts remain stable; if changed, mark `scope extension requested`.
+- [ ] Transformers page renders required 5-part flow in order:
+  - `How`, `Try (Optional)`, `Frontier`, `Issues`, `Next Stage`
+- [ ] `How` section explicitly states tiny model is for mechanics and includes Colab link.
+- [ ] `Try (Optional)` keeps tiny ONNX interaction available.
+- [ ] Frontier section:
+  - submits prompt to backend contract,
+  - shows immediate loading state on submit,
+  - renders live/fallback outcomes with explicit mode messaging,
+  - labels model behavior as base-model, not assistant fine-tuned.
+- [ ] Issues section shows at least 3 concrete unresolved base-model limitations.
+- [ ] Next Stage section explicitly links limitations to adaptation and links to `/models/adaptation`.
+- [ ] Same-prompt comparison artifact (Tiny vs Frontier Base) is visible on-page.
+- [ ] Required new selectors are present and stable.
 - [ ] `pnpm exec tsc --noEmit` passes.
 - [ ] `pnpm lint` passes.
 
 ## Clarification Loop (Mandatory)
-- Post preflight assumptions/risks/questions in `agent-docs/conversations/frontend-to-tech-lead.md` before implementation.
-- Wait for Tech Lead response if any open question materially affects implementation validity.
+- Before implementation, post preflight assumptions/risks/questions to `agent-docs/conversations/frontend-to-tech-lead.md`.
+- If any open question can change contracts/scope, pause and wait for Tech Lead response.
 
 ## Verification
-- Execute and report:
+- Run and report:
   - `pnpm exec tsc --noEmit`
   - `pnpm lint`
-- Manual contract checks (and report evidence lines):
-  - `/`, `/foundations/transformers`, `/models/adaptation` render correctly.
-  - adaptation selector still updates displayed strategy output.
-  - continuity links preserve expected href relationships.
-  - no user-visible styling regressions in light/dark mode.
+- Manual checks to report with concise evidence:
+  - five-section order present on `/foundations/transformers`
+  - frontier live/fallback status rendering behavior
+  - comparison artifact visibility
+  - continuity link to `/models/adaptation`
+  - keyboard accessibility of frontier form controls
 
 ## Scope Extension Control (Mandatory)
-- If implementation requires changing route structure, test-id names, or continuity link contracts, mark `scope extension requested` and pause for explicit approval.
+- If implementation requires route changes, selector renames, or adaptation-page redesign, mark `scope extension requested` and pause.
 
 ## Report Back
-Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` with:
+Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` including:
 - status (`complete` or `blocked`)
-- changes made (file list)
-- verification results
-- failure classification for any issue (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
-- readiness for next agent.
+- file list and scope compliance
+- verification command evidence
+- failure classification (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
+- readiness for Testing handoff
+
+*Handoff created: 2026-02-15*
+*Tech Lead Agent*

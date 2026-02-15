@@ -45,7 +45,7 @@ describe('Integration: BaseLLMChat UI', () => {
         await waitForReady();
 
         // Initial state content check
-        expect(screen.getByText(/Try the Model/i)).toBeInTheDocument();
+        expect(screen.getByText(/Tiny Transformer Playground/i)).toBeInTheDocument();
     });
 
     it('should handle user input, call generate, and display response', async () => {

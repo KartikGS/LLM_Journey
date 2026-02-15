@@ -1,83 +1,127 @@
 # Handoff: Tech Lead -> BA Agent
 
 ## Subject
-CR-011 - Server-First Rendering Boundary for UI Pages
+CR-012 - Transformers Stage Narrative Upgrade (Tiny -> Frontier -> Adaptation Bridge)
 
 ## Status
 `verified`
 
 ## Technical Summary
-- CR-011 is implemented and technically verified.
-- Rendering boundaries were corrected from page-level client rendering to server-first composition on:
-  - `app/page.tsx`
-  - `app/foundations/transformers/page.tsx`
-  - `app/models/adaptation/page.tsx`
-- Stateful interaction was preserved via targeted client islands:
-  - existing client chat module remains in `app/foundations/transformers/components/BaseLLMChat.tsx`
-  - adaptation selector interaction extracted into `app/models/adaptation/components/AdaptationStrategySelector.tsx`
-- Shared presentational components no longer force client rendering:
-  - `app/ui/components/GlassCard.tsx`
-  - `app/ui/components/JourneyStageHeader.tsx`
-  - `app/ui/components/JourneyContinuityLinks.tsx`
-- Route structure and key selector/href contracts were preserved; no Testing handoff was required.
+- CR-012 implementation is complete and integrated across backend, frontend, and testing scopes.
+- Backend added a secure frontier failure-boundary route:
+  - `POST /api/frontier/base-generate` with validated prompt input, bounded timeout, live/fallback envelope, and no secret exposure (`app/api/frontier/base-generate/route.ts:277`).
+- Frontend restructured Stage 1 into the required narrative flow with deterministic contracts:
+  - `transformers-how`, `transformers-try`, `transformers-frontier`, `transformers-issues`, `transformers-next-stage`, `transformers-comparison` (`app/foundations/transformers/page.tsx:20`, `app/foundations/transformers/page.tsx:85`, `app/foundations/transformers/page.tsx:89`, `app/foundations/transformers/page.tsx:175`, `app/foundations/transformers/page.tsx:196`, `app/foundations/transformers/page.tsx:123`).
+- Frontier interaction UI was added with explicit live/fallback status and resilient output rendering:
+  - `frontier-form`, `frontier-input`, `frontier-submit`, `frontier-status`, `frontier-output` (`app/foundations/transformers/components/FrontierBaseChat.tsx:232`, `app/foundations/transformers/components/FrontierBaseChat.tsx:238`, `app/foundations/transformers/components/FrontierBaseChat.tsx:250`, `app/foundations/transformers/components/FrontierBaseChat.tsx:205`, `app/foundations/transformers/components/FrontierBaseChat.tsx:266`).
+- Existing continuity contracts were preserved:
+  - `transformers-continuity-links`, `transformers-link-home`, `transformers-link-adaptation` (`app/foundations/transformers/page.tsx:203`, `app/foundations/transformers/page.tsx:211`, `app/foundations/transformers/page.tsx:219`).
+- Tests were updated in the same CR for changed contracts:
+  - API: `__tests__/api/frontier-base-generate.test.ts`
+  - Component: `__tests__/components/FrontierBaseChat.test.tsx`
+  - E2E: `__tests__/e2e/transformer.spec.ts`
 
 ## Evidence of AC Fulfillment
-- [x] AC-1: `app/page.tsx` no longer requires page-level `'use client'` and is composed as server-first with client islands only where required. — Evidence: `app/page.tsx:1` (no `'use client'`; server component imports only), `app/page.tsx:30`
-- [x] AC-2: `app/foundations/transformers/page.tsx` no longer requires page-level `'use client'`; interactive chat experience remains functional. — Evidence: `app/foundations/transformers/page.tsx:1` (no `'use client'`), `app/foundations/transformers/page.tsx:20` (`<BaseLLMChat />` retained)
-- [x] AC-3: `app/models/adaptation/page.tsx` no longer requires page-level `'use client'`; strategy selector interaction remains functional. — Evidence: `app/models/adaptation/page.tsx:1` (no `'use client'`), `app/models/adaptation/page.tsx:41` (`<AdaptationStrategySelector />`), `app/models/adaptation/components/AdaptationStrategySelector.tsx:1` (`'use client';`)
-- [x] AC-4: Shared presentational components no longer force client rendering unless they directly handle user input/state. — Evidence: `app/ui/components/GlassCard.tsx:1`, `app/ui/components/JourneyStageHeader.tsx:1`, `app/ui/components/JourneyContinuityLinks.tsx:1` (all without `'use client'`)
-- [x] AC-5: Core quality checks pass after refactor: `pnpm lint`, `pnpm test`, `pnpm build`. — Evidence: command results below all `PASS`
-- [x] AC-6: If page structure or `data-testid` contracts change, matching E2E updates are included in same CR. — Evidence: contract stability preserved (`app/models/adaptation/page.tsx:12`, `app/models/adaptation/page.tsx:24`, `app/models/adaptation/components/AdaptationStrategySelector.tsx:44`, `app/ui/components/JourneyContinuityLinks.tsx:22`); no contract delta detected, so no E2E test update required.
+- [x] AC-1: Transformers page renders clear 5-part flow (`How`, `Try`, `Frontier`, `Issues`, `Next Stage`). — Evidence: `app/foundations/transformers/page.tsx:20`, `app/foundations/transformers/page.tsx:85`, `app/foundations/transformers/page.tsx:89`, `app/foundations/transformers/page.tsx:175`, `app/foundations/transformers/page.tsx:196`
+- [x] AC-2: `How` section states tiny-model purpose and includes working Colab link. — Evidence: `app/foundations/transformers/page.tsx:43`, `app/foundations/transformers/page.tsx:58`
+- [x] AC-3: Frontier interaction exists and is labeled as base-model without assistant fine-tuning. — Evidence: `app/foundations/transformers/components/FrontierBaseChat.tsx:81`, `app/foundations/transformers/components/FrontierBaseChat.tsx:131`, `app/foundations/transformers/components/FrontierBaseChat.tsx:260`
+- [x] AC-4: Missing-config/quota-unavailable path handled gracefully with explanatory fallback UI. — Evidence: `app/api/frontier/base-generate/route.ts:327`, `app/api/frontier/base-generate/route.ts:390`, `app/foundations/transformers/components/FrontierBaseChat.tsx:139`, `app/foundations/transformers/components/FrontierBaseChat.tsx:151`
+- [x] AC-5: Issues section includes at least 3 concrete base-model limitations. — Evidence: `app/foundations/transformers/page.tsx:184`, `app/foundations/transformers/page.tsx:188`, `app/foundations/transformers/page.tsx:191`
+- [x] AC-6: Next-stage bridge links unresolved issues to adaptation and links to `/models/adaptation`. — Evidence: `app/foundations/transformers/page.tsx:196`, `app/foundations/transformers/page.tsx:214`
+- [x] AC-7: Comparison artifact present on-page. — Evidence: `app/foundations/transformers/page.tsx:123`
+  - Deviation note: original wording targeted a same-prompt Tiny vs Frontier artifact; on 2026-02-15 this was user-directed to a generalized comparison template and matching E2E assertion removal (captured in testing report).
+- [x] AC-8: Quality checks and required testing sync complete. — Evidence: verification commands below + updated tests in `__tests__/api/frontier-base-generate.test.ts:58`, `__tests__/components/FrontierBaseChat.test.tsx:16`, `__tests__/e2e/transformer.spec.ts:4`
 
 ## Verification Commands
 - Command: `pnpm test`
+- Scope: `full suite`
 - Execution Mode: `sandboxed`
-- Result: `PASS` (14 suites, 96 tests)
+- Result: `PASS` (16 suites, 104 tests)
 
 - Command: `pnpm lint`
+- Scope: `full suite`
 - Execution Mode: `sandboxed`
-- Result: `PASS` (no ESLint warnings/errors)
+- Result: `PASS` (no ESLint errors)
 
 - Command: `pnpm exec tsc --noEmit`
+- Scope: `full TypeScript check`
 - Execution Mode: `sandboxed`
 - Result: `PASS`
 
 - Command: `pnpm build`
+- Scope: `production build`
 - Execution Mode: `sandboxed`
-- Result: `PASS` (production build succeeds; static generation complete)
+- Result: `PASS`
+
+- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+- Scope: `targeted transformer E2E`
+- Execution Mode: `sandboxed`
+- Browser Scope (if E2E): `N/A (startup failed before browser execution)`
+- Result: `FAIL` (`Process from config.webServer exited early`)
+
+- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
+- Scope: `targeted transformer E2E`
+- Execution Mode: `local-equivalent/unsandboxed`
+- Browser Scope (if E2E): `chromium/firefox/webkit`
+- Result: `PASS` (`9 passed`)
+
+- Command: `pnpm test:e2e`
+- Scope: `full E2E suite`
+- Execution Mode: `sandboxed`
+- Browser Scope (if E2E): `N/A (startup failed before browser execution)`
+- Result: `FAIL` (`Process from config.webServer exited early`)
+
+- Command: `pnpm test:e2e`
+- Scope: `full E2E suite`
+- Execution Mode: `local-equivalent/unsandboxed`
+- Browser Scope (if E2E): `chromium/firefox/webkit`
+- Result: `PASS` (`24 passed`)
 
 ## Failure Classification Summary
-- CR-related: `none`
-- Pre-existing: `none`
-- Environmental: `none`
+- CR-related:
+  - `none` (after user-directed scope adjustment on comparison assertion)
+- Pre-existing:
+  - `none observed`
+- Environmental:
+  - Sandboxed Playwright startup failure for both targeted and full E2E:
+    - `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` -> `Process from config.webServer exited early`
+    - `pnpm test:e2e` -> `Process from config.webServer exited early`
 - Non-blocking warning:
-  - `pnpm lint`: Next.js deprecation notice for `next lint` command.
-  - `pnpm build`: known webpack critical dependency warnings from OTel dependency chain (`require-in-the-middle`); build still passes.
+  - `pnpm lint`: Next.js deprecation notice for `next lint`
+  - `pnpm build` / E2E webserver logs: OpenTelemetry bundling warnings (`require-in-the-middle` critical dependency)
+  - E2E runtime logs: OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) with no user-flow failure
 
 ## Adversarial Diff Review
-- Reviewed all frontend-modified files against CR-011 scope and AC boundaries.
-- Verified no route URI changes and no test contract drift for adaptation and continuity selectors/links.
-- Verified interactivity boundary remains explicit:
-  - chat remains in client component (`BaseLLMChat`)
-  - adaptation selector state/keyboard behavior remains in dedicated client island.
+- Verified backend security boundary:
+  - API key remains server-side only, request input is validated, and fallback responses are deterministic (`app/api/frontier/base-generate/route.ts:20`, `app/api/frontier/base-generate/route.ts:95`, `app/api/frontier/base-generate/route.ts:348`).
+- Verified frontend contract and continuity stability:
+  - route/href continuity preserved to `/models/adaptation` (`app/foundations/transformers/page.tsx:214`)
+  - required `data-testid` contracts added and exercised by tests (`__tests__/e2e/transformer.spec.ts:7`, `__tests__/components/FrontierBaseChat.test.tsx:19`)
+- Verified testing synchronization for changed contracts in same CR:
+  - API/component/E2E coverage added for new frontier behavior.
 - Residual risk:
-  - Decorative framer-motion entrance effects were removed from server-rendered page shells by design; visual styling remains preserved via CSS transitions.
+  - Comparison artifact semantics are now template-based rather than same-prompt live comparison due explicit user direction; BA should record this deviation formally in CR closure.
 
 ## Technical Retrospective
-- The refactor achieved architectural correction without expanding scope into redesign or route changes.
-- Splitting adaptation data (`strategy-data.ts`) from client interaction logic reduced client surface area while preserving deterministic selector contracts.
-- Converting `GlassCard` to a server-compatible component removed a central source of rendering-boundary leakage.
+- The Stage 1 narrative now cleanly bridges tiny mechanics to frontier limits and adaptation continuity without introducing new infrastructure dependencies.
+- The frontier backend contract is provider-agnostic and resilient, enabling live-when-configured behavior with deterministic fallback.
+- User-directed scope change was applied late in testing: same-prompt comparison requirement was intentionally relaxed to a template artifact; this requires BA-level deviation acknowledgment for historical correctness.
 
 ## Deployment Notes
-- No dependency changes.
-- No config/security/telemetry/middleware changes.
-- Rollback: revert CR-011 rendering-boundary refactor commits on affected page and shared UI component files.
+- Added environment template keys for frontier integration:
+  - `FRONTIER_API_URL`, `FRONTIER_MODEL_ID`, `FRONTIER_API_KEY`, `FRONTIER_TIMEOUT_MS` (`.env.example:13`)
+- No package additions.
+- No middleware/CSP/security-boundary regressions detected.
 
 ## Link to Updated Docs
-- `agent-docs/requirements/CR-011-server-first-rendering-boundary.md`
-- `agent-docs/plans/CR-011-plan.md`
+- `agent-docs/requirements/CR-012-transformers-tiny-to-frontier-bridge.md`
+- `agent-docs/plans/CR-012-plan.md`
+- `agent-docs/conversations/tech-lead-to-backend.md`
+- `agent-docs/conversations/backend-to-tech-lead.md`
 - `agent-docs/conversations/tech-lead-to-frontend.md`
 - `agent-docs/conversations/frontend-to-tech-lead.md`
+- `agent-docs/conversations/tech-lead-to-testing.md`
+- `agent-docs/conversations/testing-to-tech-lead.md`
 
-*Report created: 2026-02-14*
+*Report created: 2026-02-15*
 *Tech Lead Agent*

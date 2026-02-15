@@ -1,75 +1,102 @@
 # Handoff: Tech Lead -> Backend Agent
 
-## Subject: Health Check Follow-up - Middleware Rate-Limit Hardening
+## Subject
+`CR-012 - Frontier Base Inference API + Fallback Contract`
 
 ## Status
 `issued`
 
 ## Objective
-Fix the middleware rate-limit state update so configured limits are actually enforced for protected API routes.
+Implement a secure server endpoint for Stage 1 frontier interaction that returns live base-model output when provider config is available, and deterministic fallback output when it is not.
+
+## Contract Delta
+- New route contract:
+  - `POST /api/frontier/base-generate`
+- New response-state contract for frontend consumer:
+  - Live mode: `mode: "live"` with generated output and explicit base-model labeling metadata.
+  - Fallback mode: `mode: "fallback"` with explanation + curated output for unavailable config/quota/timeout/upstream failures.
+- No changes to existing telemetry routes or existing page routes.
 
 ## Rationale (Why)
-Current middleware logic updates the in-memory map without adding the current request timestamp. This makes rate limiting effectively non-functional and weakens a core security boundary before upcoming major CRs.
-
----
+CR-012 requires the Transformers stage to bridge from tiny local mechanics to frontier-scale behavior. That requires a backend failure boundary for provider calls so secrets stay server-side and the user experience remains stable under missing config or quota pressure.
 
 ## Constraints
+- Technical constraints:
+  - Use `pnpm` only.
+  - No dependency installation.
+  - Keep provider credentials server-side only (never in client bundle or response payload).
+  - Validate request payload (`prompt`) and reject invalid input with controlled response.
+  - Use bounded timeout behavior for upstream provider requests.
+  - Use graceful fallback mode for recoverable provider/config failures.
+- Security/architecture constraints:
+  - Do not modify CSP/middleware/security-header behavior.
+  - Do not alter telemetry proxy/token routes.
+  - Do not log secrets.
+- Ownership constraints:
+  - Backend-owned code only in this handoff.
+  - Do not modify UI/page code.
+  - Do not create/modify tests in this handoff (Testing Agent owns test work unless separately delegated).
 
-### Technical
-- Use `pnpm` only.
-- No dependency additions.
-- Preserve current per-route limits and environment bypass behavior (`isE2E`, localhost).
-- Keep change minimal and reversible.
-- Do not create or modify tests in this handoff (Testing Agent owns test changes unless explicitly delegated).
+## Assumptions To Validate (Mandatory)
+- Provider endpoint can be called from server via API key and JSON payload.
+- Fallback response can be deterministic without external network dependency.
+- Response contract can be kept provider-agnostic for frontend reuse.
 
-### Security/Behavior
-- Do not relax CSP/HSTS logic while fixing rate limiting.
-- Negative-space check is mandatory:
-  - Verify blocked behavior still blocks when threshold is exceeded.
-  - Verify normal behavior still allows requests below threshold.
-
----
+## Out-of-Scope But Must Be Flagged (Mandatory)
+- Any UI redesign or narrative-copy rewrite in `app/foundations/transformers/page.tsx`.
+- Any request to install provider SDK packages.
+- Any route rename or changes to existing continuity-link contracts.
 
 ## Scope
-
 ### Files to Modify
-
-#### `middleware.ts`
-- Correct rate-limit state mutation to include current request timestamp.
-- Keep existing route config and request validation flow intact.
-
----
+- `app/api/frontier/base-generate/route.ts`
+  - Implement endpoint, request validation, provider call, timeout handling, fallback handling, and stable response shape.
+- `.env.example`
+  - Add `FRONTIER_*` configuration keys with concise usage notes.
+- Optional backend utility/config file(s) as needed for clean parsing:
+  - `lib/config.ts` and/or backend utility module under `lib/` for env/timeouts/response mapping.
 
 ## Definition of Done
-- [ ] Rate-limit map stores rolling timestamps including current request.
-- [ ] Requests exceeding configured route thresholds return `429`.
-- [ ] Requests below thresholds continue to pass.
+- [ ] `POST /api/frontier/base-generate` exists with typed, validated request handling.
+- [ ] Valid prompt + configured provider success path returns `mode: "live"` and non-empty output.
+- [ ] Missing config/quota/timeout/upstream failure paths return `mode: "fallback"` with explanatory reason and safe output.
+- [ ] Base-model (non-adapted/non-assistant) label metadata is included in response contract for frontend display.
+- [ ] Secrets are not returned to client and not logged.
+- [ ] `.env.example` documents required `FRONTIER_*` variables.
 - [ ] `pnpm lint` passes.
 - [ ] `pnpm exec tsc --noEmit` passes.
 
+## Clarification Loop (Mandatory)
+- Before implementation, post preflight assumptions/risks/questions in `agent-docs/conversations/backend-to-tech-lead.md`.
+- If open questions can alter API contract or scope validity, pause and wait for Tech Lead response.
+
 ## Verification
-1. Implement middleware rate-limit fix.
+1. Implement backend route and env contract updates.
 2. Run `pnpm lint`.
 3. Run `pnpm exec tsc --noEmit`.
-4. Provide concise behavior evidence for:
-   - Allowed request flow under threshold.
-   - Blocked request flow at/over threshold.
-   - Evidence may come from code-path analysis, existing tests, or runtime checks; do not add new tests for this task.
+4. Provide behavioral evidence for:
+   - Live success path (when config is present),
+   - Fallback path (when config missing or provider failure simulated),
+   - Invalid prompt path (input validation).
+
+## Reference Files
+- `agent-docs/requirements/CR-012-transformers-tiny-to-frontier-bridge.md`
+- `agent-docs/plans/CR-012-plan.md`
+- `app/foundations/transformers/page.tsx`
+- `agent-docs/architecture.md`
+- `agent-docs/technical-context.md`
 
 ## Report Back
-Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` including:
-- [Status]
-- [Scope Check]
-- [Changes Made]
-- [Verification Results]
-- [Out-of-Scope Requests Detected]
-- [Blockers]
-- [Failure Classification]
-- [Ready for Next Agent]
+Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using:
+- `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
 
-Use `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md` as the report structure.
+Include:
+- status (`complete` or `blocked`)
+- scope compliance
+- changed files
+- verification command results
+- failure classification (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
+- readiness for next agent
 
----
-
-*Handoff created: 2026-02-13*
+*Handoff created: 2026-02-15*
 *Tech Lead Agent*
