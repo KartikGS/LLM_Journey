@@ -2,6 +2,12 @@
 
 This document outlines the cognitive framework agents must use to ensure high-quality problem analysis and solution design.
 
+> [!NOTE]
+> Principle layering:
+> - Cross-project principles: `/agent-docs/coordination/general-principles.md`
+> - LLM Journey-specific principles: `/agent-docs/project-principles.md`
+> - This file: execution-time reasoning behavior for agent decision-making.
+
 ## 🛑 IT IS OKAY TO DISAGREE (The "Talk Back" Rule)
 *   **The User is Not Always Right**: If a User or another Agent provides a requirement that adds volume but lacks value, describes a feature without a "Why," or contradicts the Project Vision, it is your duty to disagree.
 *   **Conversation > Compliance**: We want an argument/conversation, not a blind "yes man." If anything seems insensible, challenge it immediately.
@@ -56,4 +62,3 @@ If you identify a better pattern (e.g., stricter naming, safer config) during ex
 1.  **Minor/Safe**: Implement it, but you **MUST** list it in the "Deviations" section of your final report.
 2.  **Major/Risky**: Stop and ask the User/Tech Lead.
 3.  **Prohibited**: Never silently change a requirement and hide it.
-

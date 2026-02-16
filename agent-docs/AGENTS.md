@@ -8,6 +8,16 @@ This file helps gather the necessary context for a role-specific agent to perfor
 ## What is this project?
 LLM Journey is an educational platform built with Next.js that demonstrates the evolution of Large Language Models. It is a reference implementation for advanced agentic patterns, RAG, and model fine-tuning.
 
+## Terminology (Mandatory)
+
+To avoid ambiguity, use these terms consistently:
+- **Human User**: The person directing the agent session (the requester in chat).
+- **Product End User**: The person using the LLM Journey website experience.
+
+Default rule:
+- If a document says "user" without context, it means **Human User**.
+- For website audience, explicitly say **Product End User**.
+
 ## Required Reading
 
 > [!IMPORTANT]
@@ -18,7 +28,9 @@ LLM Journey is an educational platform built with Next.js that demonstrates the 
 > Your role file is NOT just a job description—it has its own "Required Readings" section with context you MUST load before starting work.
 
 ### Layer 1: Universal Standards (ALL agents)
-- **How to think:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
+- **General Engineering Principles (cross-project):** [General Principles](/agent-docs/coordination/general-principles.md)
+- **Project-Specific Principles (LLM Journey):** [Project Principles](/agent-docs/project-principles.md)
+- **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
 - **Tooling & Environment:** [Tooling Standard](/agent-docs/tooling-standard.md)
 - **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
 - **How we work:** [Workflow](/agent-docs/workflow.md)
@@ -41,7 +53,9 @@ Failed coordination kills projects. Stick to these contracts:
 - If a rule is not written in `agent-docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
 - Treat closed CRs in `/agent-docs/requirements/` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
-- Agents may propose process improvements, but process/policy changes are not effective until Tech Lead verification is recorded.
+- Agents may propose process improvements. Process/policy changes become effective when either:
+  - Tech Lead verification is recorded, or
+  - The Human User explicitly approves an override in-session.
 
 ## Authority & Conflict Resolution
 
@@ -67,7 +81,7 @@ If intent is unclear, stop and ask the user.
 
 - **Mandatory Output Check**: You MUST publish an explicit early-session message listing the files you have read.
    - This requirement is tooling-agnostic. Use whatever communication primitive is available in your runtime.
-   - *Example*: "I have read `AGENTS.md`, `technical-context.md`, `roles/ba.md`, and `reasoning-principles.md`."
+   - *Example*: "I have read `AGENTS.md`, `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `technical-context.md`, and `roles/ba.md`."
    - **Failure to do this implies you have not loaded context.**
 
 - **Verify your task is clear**
@@ -95,4 +109,4 @@ Yes. For the purpose of authority:
 - **Requirements (`/agent-docs/requirements/`)**: Owned by **BA**.
 - **System Docs (`/README.md`, `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
 - **Role Docs (`/agent-docs/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
-- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared, but modifications require **Tech Lead** verification.
+- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.

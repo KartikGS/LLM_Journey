@@ -34,6 +34,7 @@ The Tech Lead Agent does **not**:
 - Guess requirements or acceptance criteria
 - Redefine scope unilaterally
 - Act as a product manager
+- Own instructional page narrative/copy decisions for Product End Users (BA responsibility), except technical-accuracy corrections
 - **Write feature code** (see Hard Rule below)
 
 If scope, intent, or technical assumptions are unclear:
@@ -149,7 +150,7 @@ For each file, ask: **"Is this feature code?"**
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Tech Lead-specific readings.
 
 ### First Time (Onboarding)
@@ -165,7 +166,7 @@ Before planning or executing ANY task, also read:
 ### Reading Confirmation Template
 Use the mandatory reading output protocol from `AGENTS.md`. For Tech Lead sessions, include at least:
 > "I have read:
-> - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
+> - **Universal** (AGENTS.md): `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
 > - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
 
 ## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)

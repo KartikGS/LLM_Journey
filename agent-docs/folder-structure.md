@@ -12,7 +12,7 @@ LLM-Journey/
 │   ├── llm/                # Core inference logic
 │   └── utils.ts            # Helpers
 ├── public/                 # Static Assets & Models
-├── docs/                   # Documentation (You are here)
+├── agent-docs/             # Documentation (You are here)
 └── __tests__/              # Tests (Mirrors source structure)
 ```
 

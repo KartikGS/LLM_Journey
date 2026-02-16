@@ -15,7 +15,7 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Frontend-specific readings.
 
 ### Role-Specific Readings (Frontend)
@@ -29,6 +29,7 @@ Before executing any task, also read:
 
 - Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/conversations/tech-lead-to-frontend.md)
 - Use [Frontend To Tech Lead Report Template](/agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md) when drafting the active CR report in [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
+- Treat instructional/content intent as BA-owned. If page narrative goals for Product End Users are unclear or conflicting, raise clarification before implementation.
 
 ## Architecture-Only Refactor Mode (Conditional)
 

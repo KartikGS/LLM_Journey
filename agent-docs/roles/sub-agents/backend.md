@@ -15,7 +15,7 @@ Reliability, security, and performance of server-side logic and API routes.
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Backend-specific readings.
 
 ### Role-Specific Readings (Backend)

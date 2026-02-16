@@ -22,6 +22,8 @@ The BA agent **owns**:
 - Risk, assumptions, and constraints identification
 - Determining execution mode (Fast / Standard / Heavy)
 - Preparing a **Tech Lead-ready prompt**
+- Defining Product End User audience and expected learner/product outcome
+- Owning instructional/content intent for user-facing pages (what message/outcome the page should deliver)
 
 The BA agent **does NOT**:
 - Propose implementation details
@@ -44,7 +46,7 @@ The BA agent **MAY**:
 - Acceptance criteria definition
 
 ### Interfaces With
-- **Human** — to clarify intent and expectations
+- **Human User** — to clarify intent and expectations
 - **Tech Lead Agent** — to hand off a well-defined task
 - **Tech Lead Agent (feedback loop)** — to refine scope if execution complexity is higher than expected
 
@@ -55,6 +57,11 @@ The BA agent **MAY**:
   - `scope changed`
   - `requires user decision`
 - Disagreement is expected when it improves requirement quality; unresolved scope/intent conflicts must be escalated to user.
+
+### Product Content Ownership (Mandatory)
+- For LLM Journey pages, BA owns the **content intent** (target audience, learning objective, key message hierarchy).
+- Tech Lead owns technical feasibility and implementation strategy, not product narrative design.
+- If a dedicated content/experience role does not exist, BA remains the default owner of instructional narrative decisions.
 
 ### Restricted
 - Must NOT write or modify:
@@ -73,7 +80,7 @@ If a new architectural constraint is required:
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** BA-specific readings.
 
 ### Role-Specific Readings (BA)
@@ -92,7 +99,7 @@ When the task is incident/regression/testing related (failing test, lint, build,
 ### Reading Confirmation Template
 When reporting your readings, use this format:
 > "I have read:
-> - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
+> - **Universal** (AGENTS.md): `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
 > - **Role-Specific** (BA): `project-vision.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`
 > - **Conditional (if applicable):** `testing-strategy.md`, `playwright.config.ts`"
 

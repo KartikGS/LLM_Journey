@@ -5,16 +5,20 @@
 ## Multi-Agent Workflow
 
 ### Requirement Analysis Phase (BA Agent)
-1. User provides rough CR.
+1. Human User provides rough CR.
 2. BA clarifies through Q&A.
-3. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
-4. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
-5. BA creates structured requirement document.
-6. BA assesses business complexity.
-7. **Output:** `/agent-docs/requirements/CR-XXX-<slug>.md` + prompt for Tech Lead.
-8. BA reports back to user for review and approval.
-9. User approves or requests changes.
-10. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the User, and issue a revised handoff.
+3. **Audience & Outcome Check (Mandatory):** BA explicitly identifies:
+   - Human User intent (session-level request),
+   - Product End User audience (website learner/persona),
+   - expected learner or product outcome.
+4. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
+5. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
+6. BA creates structured requirement document.
+7. BA assesses business complexity.
+8. **Output:** `/agent-docs/requirements/CR-XXX-<slug>.md` + prompt for Tech Lead.
+9. BA reports back to Human User for review and approval.
+10. Human User approves or requests changes.
+11. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the Human User, and issue a revised handoff.
 
 ### Technical Planning & Delegation Phase (Tech Lead Agent)
 1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
@@ -93,7 +97,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 - This section intentionally avoids repeating the full checklist to prevent policy drift.
 
 ### Code & Git Standards
-- All contributions must follow the rules defined in `CONTRIBUTING.md` (root directory).
+- All contributions must follow the rules defined in `agent-docs/development/contribution-guidelines.md`.
 
 
 
@@ -118,6 +122,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
    - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
 6. Sub-agent executes within role boundaries.
    - If user or Tech Lead feedback introduces changes outside the approved handoff scope (for example cross-route refactors or shared component extraction), mark this as a **scope extension** and get explicit Tech Lead or user confirmation before implementing.
+   - **Human User Override Rule (Mandatory):** Direct scope-changing instruction from the Human User in active session is considered immediate scope-extension approval. Implementation may proceed immediately, but the agent MUST record `scope extension approved by user` in the active conversation/report artifact.
 7. Sub-agent completes and verifies work.
 8. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
    - **Testing Ownership Rule**: Creating/modifying tests is owned by the Testing Agent unless the Tech Lead handoff explicitly delegates test work to another role.
@@ -186,6 +191,7 @@ Closed CRs are immutable records and must not be normalized retroactively.
 
 ### 4. Scope Extension Invariant
 When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).
+- Direct in-session Human User instruction qualifies as explicit approval when recorded as `scope extension approved by user`.
 
 ### 5. Shared Component Blast-Radius Invariant
 If a CR modifies shared UI under `app/ui/**`:
