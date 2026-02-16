@@ -17,6 +17,7 @@
 ## [Verification Results]
 - `pnpm lint`: `pass|fail` (+ short evidence)
 - `pnpm exec tsc --noEmit`: `pass|fail` (+ short evidence)
+- If order differs by explicit handoff instruction, note the reason.
 - Behavioral evidence mapped to handoff DoD:
   - Allowed-path evidence:
   - Blocked/error-path evidence:

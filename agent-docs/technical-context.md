@@ -2,6 +2,9 @@
 
 This document provide quick access to key technical configurations and endpoints for the LLM Journey project.
 
+> [!NOTE]
+> This file is a summary cheat sheet. If any rule here conflicts with policy language, `agent-docs/tooling-standard.md` and role docs are canonical.
+
 ## Network & Endpoints
 | Component | Value | Description |
 | :--- | :--- | :--- |
@@ -12,7 +15,7 @@ This document provide quick access to key technical configurations and endpoints
 ## Infrastructure & Tooling
 | Tool | Target | Notes |
 | :--- | :--- | :--- |
-| **pnpm** | Package Manager | **Mandatory.** Do not use npm/yarn. |
+| **pnpm** | Package Manager | Mandatory (canonical policy in `tooling-standard.md`). |
 | **Playwright** | E2E Testing | Use tags: `@critical`, `@smoke`. |
 | **WASM Path** | `/onnx-runtime/` | Location of ONNX Web binaries. |
 

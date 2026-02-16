@@ -18,7 +18,7 @@
 - `clear-to-implement` | `blocked`
 
 ## [Status]
-- `complete` | `blocked` | `partial`
+- `completed` | `blocked` | `partial`
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
@@ -32,8 +32,8 @@
 - Concise list of implemented changes.
 
 ## [Verification Results]
-1. `pnpm exec tsc --noEmit` -> `PASS|FAIL` (+ short evidence)
-2. `pnpm lint` -> `PASS|FAIL` (+ short evidence)
+1. `pnpm lint` -> `PASS|FAIL` (+ short evidence)
+2. `pnpm exec tsc --noEmit` -> `PASS|FAIL` (+ short evidence)
 
 ## [Contract Evidence]
 - Route contracts:

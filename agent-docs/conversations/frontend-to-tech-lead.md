@@ -20,7 +20,7 @@
 *Frontend Agent*
 
 ## [Status]
-- `complete`
+- `completed`
 
 ## [Changes Made]
 - Applied requested refinement pass to improve learner-facing copy and UI framing while preserving test/route contracts.
@@ -109,8 +109,8 @@
 - Minor/safe (user-directed): Replaced explicit standalone next-stage section with merged bridge copy in “What we don&apos;t have yet?” while preserving continuity navigation card (`transformers-link-adaptation`).
 
 ## [Verification Results]
-1. `pnpm exec tsc --noEmit` -> `PASS`
-2. `pnpm lint` -> `PASS`
+1. `pnpm lint` -> `PASS`
+2. `pnpm exec tsc --noEmit` -> `PASS`
 
 ## [Failure Classification]
 - `non-blocking warning`: Next.js CLI deprecation notice for `next lint` displayed during lint run; no ESLint warnings/errors.

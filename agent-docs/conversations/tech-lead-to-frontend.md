@@ -134,8 +134,8 @@ The backend route now exists to support live-when-configured frontier interactio
 - [ ] Next Stage section explicitly links limitations to adaptation and links to `/models/adaptation`.
 - [ ] Same-prompt comparison artifact (Tiny vs Frontier Base) is visible on-page.
 - [ ] Required new selectors are present and stable.
-- [ ] `pnpm exec tsc --noEmit` passes.
 - [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
 
 ## Clarification Loop (Mandatory)
 - Before implementation, post preflight assumptions/risks/questions to `agent-docs/conversations/frontend-to-tech-lead.md`.
@@ -143,8 +143,8 @@ The backend route now exists to support live-when-configured frontier interactio
 
 ## Verification
 - Run and report:
-  - `pnpm exec tsc --noEmit`
   - `pnpm lint`
+  - `pnpm exec tsc --noEmit`
 - Manual checks to report with concise evidence:
   - five-section order present on `/foundations/transformers`
   - frontier live/fallback status rendering behavior
@@ -157,7 +157,7 @@ The backend route now exists to support live-when-configured frontier interactio
 
 ## Report Back
 Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` including:
-- status (`complete` or `blocked`)
+- status (`completed`, `blocked`, or `partial`)
 - file list and scope compliance
 - verification command evidence
 - failure classification (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)

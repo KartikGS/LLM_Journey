@@ -208,9 +208,10 @@ Before marking work complete:
 ## Verification & Reporting Protocol
 
 - Run verification commands in this exact order:
-  1. `pnpm exec tsc --noEmit`
-  2. `pnpm lint`
+  1. `pnpm lint`
+  2. `pnpm exec tsc --noEmit`
 - In the frontend handoff report, include raw pass/fail outcome for both commands in the same order.
+- Full pipeline verification order remains defined in `/agent-docs/testing-strategy.md` for Tech Lead closure (`test -> lint -> tsc -> build`).
 - Include contract evidence using file references for: route contract checks, selector/accessibility contract checks, and shared-component blast-radius checks (when `app/ui/**` changed).
 - Add a behavioral sanity check section mapped to Tech Lead handoff DoD (for example open/close flow, reduced-motion behavior, or interaction semantics called out in DoD).
 - If a command fails due to a pre-existing issue, record it explicitly and stop scope expansion unless Tech Lead updates the handoff.

@@ -18,6 +18,7 @@
   - [No dependency additions unless approved]
 - Ownership constraints:
   - [Files in backend scope]
+  - [Any explicitly delegated non-backend file(s), if needed, e.g. `.env.example`]
   - [Test scope delegated? yes/no + reason]
 
 ## Assumptions To Validate (Mandatory)
@@ -35,6 +36,7 @@
 ## Definition of Done
 - [ ] [Behavioral backend DoD 1]
 - [ ] [Behavioral backend DoD 2]
+- [ ] Route contract created/updated under `/agent-docs/api/` if API contract changed.
 - [ ] `pnpm lint` passes
 - [ ] `pnpm exec tsc --noEmit` passes
 
@@ -45,8 +47,11 @@
 
 ## Verification
 [Exact commands and evidence expectations.]
+- Default sub-agent command order: `pnpm lint` -> `pnpm exec tsc --noEmit` unless this handoff explicitly overrides.
 
 ## Report Back
 Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using:
 - `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
 
+Status vocabulary for backend reports:
+- `completed` | `blocked` | `partial`

@@ -33,7 +33,7 @@ CR-012 requires the Transformers stage to bridge from tiny local mechanics to fr
   - Do not alter telemetry proxy/token routes.
   - Do not log secrets.
 - Ownership constraints:
-  - Backend-owned code only in this handoff.
+  - Backend-owned code only in this handoff, plus explicit delegated files listed in Scope.
   - Do not modify UI/page code.
   - Do not create/modify tests in this handoff (Testing Agent owns test work unless separately delegated).
 
@@ -91,7 +91,7 @@ Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` us
 - `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
 
 Include:
-- status (`complete` or `blocked`)
+- status (`completed`, `blocked`, or `partial`)
 - scope compliance
 - changed files
 - verification command results

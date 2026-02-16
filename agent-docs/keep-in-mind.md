@@ -8,7 +8,7 @@
 ### [Date Added: 2026-01-26] OTEL Proxy Token Validation
 **Issue**: Agents were creating tokens without proper expiry
 **Constraint**: Always set `expiresIn: '5m'` in token generation
-**Root Cause**: Not documented in `docs/api/telemetry.md`
+**Root Cause**: Not documented in `/agent-docs/api/` contracts at the time
 **Action**: Update API contract, then remove this warning
 
 ## Active Warnings

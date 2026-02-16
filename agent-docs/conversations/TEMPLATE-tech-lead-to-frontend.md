@@ -64,8 +64,8 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 - [ ] [Accessibility semantic contract satisfied]
 - [ ] [Deterministic selector contract satisfied]
 - [ ] [If architecture-only] visual/copy/IA contracts unchanged unless explicitly approved
-- [ ] `pnpm exec tsc --noEmit` passes
 - [ ] `pnpm lint` passes
+- [ ] `pnpm exec tsc --noEmit` passes
 
 ## Clarification Loop (Mandatory)
 - Frontend posts preflight concerns/questions in `agent-docs/conversations/frontend-to-tech-lead.md`.
@@ -81,3 +81,6 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 
 ## Report Back
 Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`.
+
+Status vocabulary for frontend reports:
+- `completed` | `blocked` | `partial`

@@ -61,10 +61,11 @@ Failed coordination kills projects. Stick to these contracts:
 
 When sources of truth conflict, resolve in this order:
 
-**Scope & Intent Conflicts**
+1. **Scope & Intent ownership**
 - BA Agent owns requirement clarity and scope
 - Tech Lead Agent owns technical feasibility and execution
 
+2. **Technical truth precedence**
 - Tests (define expected behavior)
 - Code (current implementation)
 - Architecture & Vision docs (define intent)

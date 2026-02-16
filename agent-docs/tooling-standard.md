@@ -14,6 +14,10 @@ This document defines the mandatory tools and environment configurations for thi
 - **Theme Support**: Dual-theme (Light and Dark mode) mandatory.
 - **Browser Support**: Modern browsers with `wasm-unsafe-eval` support (Chrome 95+, FF 102+, Safari 17.4+).
 
+### Runtime Preflight (Mandatory)
+- Run `node -v` once per execution session before verification commands.
+- If runtime is below the documented minimum, classify as an **environmental mismatch** in the role report instead of silently downgrading requirements.
+
 ## Testing Stack
 - **Unit/Integration**: Jest + React Testing Library
 - **E2E**: Playwright (in implementation)
