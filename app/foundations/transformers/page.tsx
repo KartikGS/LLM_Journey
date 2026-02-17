@@ -14,7 +14,7 @@ export default function BaseLLMPage() {
       <JourneyStageHeader
         testId="transformers-hero"
         title="Decoder-Only Transformer"
-        description="Start with tiny transformer mechanics, then bridge to frontier base behavior to see why adaptation is the next stage."
+        description="Start with transformer, understand scaling and pretraining to see why adaptation is the next stage."
       />
 
       <section data-testid="transformers-how" className="w-full">
@@ -38,10 +38,6 @@ export default function BaseLLMPage() {
                 Attention Is All You Need
               </a>
               . The key idea is attention: each token can focus on other relevant tokens in the same input.
-            </p>
-            <p>
-              The tiny demo below is intentionally small so you can inspect the mechanics directly. It uses a short context window and predicts the next character,
-              which makes the generation process easy to see step by step.
             </p>
             <p>
               If you want to train one yourself, start with{' '}
@@ -91,10 +87,19 @@ export default function BaseLLMPage() {
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">What Happens When You Scale the Transformer Architecture?</h2>
           <div className="mt-3 space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
             <p>
-              When you scale the same architecture with more parameters, more training data, and more compute, the model can store much more general knowledge and produce richer answers.
+              When you scale the same architecture with more parameters, more training data, and more compute, the model can store much more general knowledge and produce richer answers. Now we are entering the Large Language Model (LLM) paradigm.
             </p>
             <p>
-              These larger base models are usually trained on internet-scale text corpora. If you want deeper context, see{' '}
+              These large language models are usually trained on internet-scale text corpora. If you want general context, start with{' '}
+              <a
+                href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                this YouTube walkthrough
+              </a>{' '}
+              , for deeper context see {' '}
               <a
                 href="https://arxiv.org/abs/2001.08361"
                 target="_blank"
@@ -114,7 +119,7 @@ export default function BaseLLMPage() {
               </a>
               .
             </p>
-            <p>You can interact with a base-model endpoint in the chat below.</p>
+            <p>You can interact with a LLM in the chat below.</p>
           </div>
         </div>
 

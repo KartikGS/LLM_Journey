@@ -13,3 +13,5 @@ Multimodalities
 Stack specific agents
 
 Using gRPC for servers telemetry
+
+Common chat interface

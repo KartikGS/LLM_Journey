@@ -8,7 +8,7 @@ type FrontierStatus = 'idle' | 'live' | 'fallback' | 'error';
 type FrontierRequestErrorCode = 'invalid_json' | 'invalid_prompt';
 
 const DEFAULT_STATUS =
-  'Ready. This endpoint returns either a live frontier-base response or a deterministic fallback.';
+  'Ready. This endpoint returns either a live LLM response or a deterministic fallback.';
 
 const sampleInputs = [
   'Explain in simple terms why eclipses happen.',
@@ -176,8 +176,8 @@ export default function FrontierBaseChat() {
             <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Frontier Transformer Playground</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Explore what larger base models can do with broader world knowledge</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">LLM Playground</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Explore what large language models can do with broader world knowledge</p>
           </div>
         </div>
 

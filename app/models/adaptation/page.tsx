@@ -16,7 +16,7 @@ export default function ModelAdaptationPage() {
       <JourneyStageHeader
         testId="adaptation-hero"
         title="Model Adaptation"
-        description="Base transformers understand language broadly. Adaptation is how we make them reliable for a specific domain, policy, or tone without rebuilding everything from scratch."
+        description="Base LLMs understand language broadly. Adaptation is how we make them reliable for a specific domain, policy, or tone without rebuilding everything from scratch."
       />
 
       <section
