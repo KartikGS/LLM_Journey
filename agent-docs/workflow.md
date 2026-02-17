@@ -123,6 +123,12 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 6. Sub-agent executes within role boundaries.
    - If user or Tech Lead feedback introduces changes outside the approved handoff scope (for example cross-route refactors or shared component extraction), mark this as a **scope extension** and get explicit Tech Lead or user confirmation before implementing.
    - **Human User Override Rule (Mandatory):** Direct scope-changing instruction from the Human User in active session is considered immediate scope-extension approval. Implementation may proceed immediately, but the agent MUST record `scope extension approved by user` in the active conversation/report artifact.
+   - **Artifact Sync Rule (Mandatory):** Before continuing implementation after any scope-extension approval (Tech Lead or Human User), sync all active artifacts:
+     - Update CR artifact with the approved delta.
+     - Update plan artifact with delegation/verification impact.
+     - Update active handoff/report with the same decision context.
+     Resume work only after this sync is complete.
+   - **Ownership Clarification:** Scope extension approval does not transfer file ownership. If requested changes cross role-owned boundaries, delegation or explicit role reassignment is still required.
 7. Sub-agent completes and verifies work.
 8. **Output:** Implementation + role-appropriate verification evidence + updated docs (if in scope) + report for Tech Lead.
    - **Testing Ownership Rule**: Creating/modifying tests is owned by the Testing Agent unless the Tech Lead handoff explicitly delegates test work to another role.
@@ -163,13 +169,24 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
    - Any such update must be logged in an `Amendment Log` section with date + reason.
    - Do **not** retroactively change acceptance intent or silently rewrite AC history.
 5. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
-   - **Minor/Safe deviations**: Log acceptance in the CR's "Deviations Accepted" section.
-   - **Major deviations**: Escalate to User before closing the CR.
+   - Classify each deviation using the **Deviation Severity Rubric (Canonical)** below.
+   - **Minor deviations**: Log acceptance in the CR's "Deviations Accepted" section.
+   - **Major deviations**: Escalate to Human User before closing the CR.
 6. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
 7. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
 8. BA updates `agent-docs/project-log.md` with the final entry.
 9. BA notifies the human of completion.
 10. **Output:** Closed CR, updated project log.
+
+#### Deviation Severity Rubric (Canonical)
+Use this rubric during BA acceptance closure:
+
+| Severity | Classification Signal | Required BA Action |
+| :--- | :--- | :--- |
+| Minor | No acceptance-criteria intent change; no route/API/test-id/accessibility contract change; no security/architecture invariant impact | Accept and log in CR "Deviations Accepted" with rationale/evidence reference |
+| Major | Changes acceptance-criteria intent/semantics, or changes route/API/test-id/accessibility contracts, or affects security/architecture constraints | Escalate to Human User before closure; record decision outcome in CR |
+
+If uncertain between minor and major, treat as major and escalate.
 
 ---
 
@@ -192,6 +209,8 @@ Closed CRs are immutable records and must not be normalized retroactively.
 ### 4. Scope Extension Invariant
 When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).
 - Direct in-session Human User instruction qualifies as explicit approval when recorded as `scope extension approved by user`.
+- Direct Human User approval does not bypass role ownership; cross-owned edits still require delegation or role reassignment.
+- Before implementation resumes, artifact sync is required in CR + plan + active handoff/report to preserve traceability of the approved delta.
 
 ### 5. Shared Component Blast-Radius Invariant
 If a CR modifies shared UI under `app/ui/**`:

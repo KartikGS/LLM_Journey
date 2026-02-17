@@ -13,6 +13,7 @@ Ensuring system stability and preventing regression.
     - **CRITICAL**: If an application component lacks necessary testing hooks (e.g., missing `id`, `data-testid`, or accessibility labels), or if an environmental assumption is found to be false, you **MUST STOP** immediately. 
     - **No Workarounds**: Do not use brittle alternative selectors (e.g., text-based search) to "get the test to pass" if a unique ID was expected.
     - **Priority**: Resolving the discrepancy via the [Feedback Protocol](/agent-docs/coordination/feedback-protocol.md) is your top priority.
+    - **Scope Override Clarification**: Human User scope overrides can approve additional test work, but they do **not** transfer ownership of non-testing files (`/app/**`, `/lib/**`, configs). Those still require Tech Lead delegation or role reassignment.
 
 ## Context Loading
 
@@ -23,6 +24,7 @@ Ensuring system stability and preventing regression.
 ### Role-Specific Readings (Testing)
 Before executing any task, also read:
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Contract Baseline:** [Testing Contract Registry](/agent-docs/testing-contract-registry.md)
 - **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
 - **Task Instructions:** [Tech Lead To Testing](/agent-docs/conversations/tech-lead-to-testing.md)
 
@@ -48,13 +50,13 @@ If the codebase prevents you from writing a required test OR you discover an ass
 - **No Silent Scope Fill**: If you notice a meaningful adjacent gap (for example, untested boundary behavior) that is not explicitly requested, report it as a risk and ask for scope confirmation before adding it.
 
 ### Blocker Declaration Gate (Mandatory)
-Before setting task status to `Blocked` for E2E/runtime issues, you MUST provide reproducibility evidence:
+Before setting task status to `blocked` for E2E/runtime issues, you MUST provide reproducibility evidence:
 1. One run using the exact handoff command.
 2. One run using explicit spec targeting.
 3. One local-equivalent/unsandboxed confirmation if constrained execution affects server startup/runtime.
 4. At least one Playwright artifact reference (`error-context.md`, screenshot, or video).
 
-If this evidence set is incomplete, classify as `Needs Environment Verification` instead of `Blocked`.
+If this evidence set is incomplete, classify as `needs_environment_verification` instead of `blocked`.
 
 ### Reporting Format Addendum (Mandatory for E2E Issues)
 When reporting E2E failures in `/agent-docs/conversations/testing-to-tech-lead.md`, include a `Reproduction Matrix` table with:
@@ -64,10 +66,16 @@ When reporting E2E failures in `/agent-docs/conversations/testing-to-tech-lead.m
 - result,
 - short classification note.
 
+Use `agent-docs/conversations/TEMPLATE-testing-to-tech-lead.md` as the canonical report structure.
+
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):
 - Document the mismatch in the `/agent-docs/conversations/testing-to-tech-lead.md` report.
 - Update `/agent-docs/testing-strategy.md` if the quirk represents a permanent system constraint.
+
+### Runtime Preflight (Mandatory)
+- Run `node -v` once per execution session before verification commands.
+- Record the observed version in the testing report if it impacts classification.
 
 ## Checklist
 

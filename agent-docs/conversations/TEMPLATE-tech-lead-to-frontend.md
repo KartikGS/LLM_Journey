@@ -83,4 +83,4 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`.
 
 Status vocabulary for frontend reports:
-- `completed` | `blocked` | `partial`
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

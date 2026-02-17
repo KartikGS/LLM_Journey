@@ -1,7 +1,24 @@
 # Template: Backend -> Tech Lead Report
 
+## Subject
+`[CR-ID] - [Backend Report Title]`
+
+## [Preflight: Assumptions]
+- [Assumption 1]
+- [Assumption 2]
+
+## [Preflight: Adjacent Risks]
+- [Risk 1]
+- [Risk 2]
+
+## [Preflight: Open Questions]
+- [Question or `none`]
+
+## [Preflight Status]
+- `clear-to-implement` | `blocked`
+
 ## [Status]
-- `completed` | `blocked` | `partial`
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
@@ -30,8 +47,10 @@
 - If blocker exists, include required next handoff role (for example `Testing`, `Infra`, `Frontend`).
 
 ## [Failure Classification]
-- CR-related failures:
-- Pre-existing failures:
+- `CR-related`:
+- `pre-existing`:
+- `environmental`:
+- `non-blocking warning`:
 
 ## [Deviations]
 - `none` OR list deviations with rationale per `agent-docs/coordination/reasoning-principles.md`.

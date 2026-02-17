@@ -27,5 +27,5 @@ These principles are intended to work across projects, not just LLM Journey.
 - Escalate when requests cross scope or decision authority.
 
 ## 7) Failure Transparency
-- Classify failures clearly (`CR-related`, `pre-existing`, `environmental`, `warning`).
+- Classify failures clearly (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`).
 - Do not hide blockers; report early with evidence.

@@ -9,8 +9,8 @@ This document provide quick access to key technical configurations and endpoints
 | Component | Value | Description |
 | :--- | :--- | :--- |
 | **Dev Server Port** | `3001` | Local development port. |
-| **OTel Trace Endpoint** | `/app/api/otel/trace` | Proxy for exporting browser traces. |
-| **OTel Token Endpoint** | `/app/api/telemetry-token` | Fetches short-lived telemetry tokens. |
+| **OTel Trace Endpoint** | `/api/otel/trace` | Proxy for exporting browser traces. |
+| **OTel Token Endpoint** | `/api/telemetry-token` | Fetches short-lived telemetry tokens. |
 
 ## Infrastructure & Tooling
 | Tool | Target | Notes |
@@ -21,7 +21,7 @@ This document provide quick access to key technical configurations and endpoints
 
 ## Standard Kit (Version 1.0)
 > [!WARNING]
-> **Governance Invariant**: Sub-agents are FORBIDDEN from installing packages. Only the Tech Lead may approve and run install commands.
+> **Governance Invariant**: Sub-agents are FORBIDDEN from installing packages. Dependency installation and related `package.json`/`pnpm-lock.yaml` updates are Tech Lead-owned unless explicitly delegated.
 
 | Category | Library | Purpose |
 | :--- | :--- | :--- |

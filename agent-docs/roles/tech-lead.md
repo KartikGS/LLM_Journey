@@ -64,10 +64,13 @@ The Tech Lead may **only** directly modify:
 | Category | Files | Examples |
 |----------|-------|----------|
 | **Project Config** | Root config files | `tsconfig.json`, `next.config.js`, `jest.config.ts`, `tailwind.config.ts` |
+| **Dependency Governance** | Dependency manifest + lockfile | `package.json`, `pnpm-lock.yaml` (install/update operations only) |
 | **Environment** | Env templates | `.env.example`, `.env.local.example` |
 | **Documentation** | Agent docs, README | `README.md`, `agent-docs/*.md` |
 | **CI/CD** | Workflow files | `.github/workflows/*` |
 | **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*` (generic utilities only) |
+
+Dependency installation approval and execution is Tech Lead-owned. Sub-agents must request delegation when dependency changes are required.
 
 ### Everything Else → DELEGATE
 
@@ -153,7 +156,7 @@ For each file, ask: **"Is this feature code?"**
 > You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Tech Lead-specific readings.
 
-### First Time (Onboarding)
+### First Time (Onboarding or New Session)
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
 
 ### Every Task (Role-Specific)

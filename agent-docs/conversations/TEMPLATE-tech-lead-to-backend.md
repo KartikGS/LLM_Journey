@@ -54,4 +54,4 @@ Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` us
 - `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
 
 Status vocabulary for backend reports:
-- `completed` | `blocked` | `partial`
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

@@ -21,7 +21,7 @@ If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they 
         - What was expected (per plan).
         - What was found (reality).
         - Impact on the task.
-    4. Notify the USER that a coordination check is required.
+    4. Notify the USER (directly in-session or via Tech Lead relay in the active conversation artifact) that a coordination check is required.
     5. For environment/E2E blockers, include a minimal reproduction matrix (exact command, execution mode, browser scope, result) and at least one artifact reference.
 
 ### Tech Lead → BA Agent

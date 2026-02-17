@@ -11,7 +11,7 @@ LLM Journey is a Next.js application (App Router) integrating client-side infere
 
 ## Data Flow
 -   **Chat**: User Input -> `ChatInput` -> `useLLM` Hook -> Web Worker -> ONNX Runtime -> Response.
--   **Telemetry**: App -> OTel SDK -> `/app/api/otel/trace` (Proxy) -> OTel Collector.
+-   **Telemetry**: App -> OTel SDK -> `/api/otel/trace` (Proxy) -> OTel Collector.
 
 ## Architectural Invariants
 

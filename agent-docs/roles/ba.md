@@ -137,7 +137,7 @@ Every BA task **must** produce:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?
    - **AC Evidence Annotation**: When verifying each AC, mark it `[x]` in the CR document with a one-line evidence reference (e.g., `[x] Gradient glows — Verified: page.tsx L62-68`). This creates an audit trail of what was checked.
-   - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. For Minor/Safe deviations, log acceptance in the CR's "Deviations Accepted" section. For Major deviations, escalate to the User before closing.
+   - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `agent-docs/workflow.md` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
    - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
    - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
    - Update `/agent-docs/project-log.md` with closure entry.

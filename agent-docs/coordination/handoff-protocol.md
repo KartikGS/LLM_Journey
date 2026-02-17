@@ -3,12 +3,16 @@
 This protocol defines the mandatory communication and documentation flow between agents to ensure process integrity and role accountability. For handling discrepancies and errors in handoffs, see the [Feedback Protocol](./feedback-protocol.md).
 
 ## Universal Handoff Status Model (MANDATORY)
-Every active handoff/report should declare one status:
+Every active handoff/report should declare one status from this canonical set:
 - `issued` - Handoff created, execution not started
 - `in_progress` - Agent is actively working
 - `blocked` - Execution cannot continue due to blocker
-- `complete` - Agent finished implementation and local verification
+- `needs_environment_verification` - Blocked in constrained execution until local-equivalent verification is run
+- `partial` - Some scoped work is complete; remaining work is unresolved or deferred
+- `completed` - Agent finished implementation and local verification for assigned scope
 - `verified` - Tech Lead completed adversarial review and integration verification
+
+Status tokens above are exact; templates and live handoffs must use this vocabulary.
 
 ## Bidirectional Clarification Loop (MANDATORY)
 Handoffs are not single-message contracts by default. Iterative discussion is allowed and expected:
@@ -26,7 +30,9 @@ Protocol requirements:
 ## BA → Tech Lead (Requirement Handoff)
 - **File**: `agent-docs/conversations/ba-to-tech-lead.md`
 - **Trigger**: CR is "Clarified" and approved by User.
+- **Template (Mandatory)**: `agent-docs/conversations/TEMPLATE-ba-to-tech-lead.md`
 - **Content**:
+    - [Status] (`issued`, `in_progress`, `blocked`, or `completed`)
     - [Objective]
     - [Linked CR] (e.g., `agent-docs/requirements/CR-XXX.md`)
     - [Acceptance Criteria]
@@ -54,7 +60,7 @@ Protocol requirements:
 - **File**: `agent-docs/conversations/<role>-to-tech-lead.md`
 - **Trigger**: Implementation and local verification are complete.
 - **Content**:
-    - [Status] (`complete` or `blocked`)
+    - [Status] (`in_progress`, `completed`, `blocked`, `partial`, or `needs_environment_verification`)
     - [Changes Made]
     - [Verification Results] (Tests passed)
     - [Dependency Consumption] (Which upstream handoff/report this work depends on)
@@ -66,7 +72,10 @@ Protocol requirements:
 
 ## Tech Lead → BA Agent (Verification Completion)
 - **File**: `agent-docs/conversations/tech-lead-to-ba.md`
-- **Trigger**: Integration and verification (all tests pass) complete.
+- **Trigger**: Integration and verification for CR scope are complete.
+- **Required completion condition**:
+    - CR-related failures are resolved.
+    - Any pre-existing/environmental/non-blocking items are classified with concrete evidence.
 - **Content**:
     - [Status] (`verified`)
     - [Technical Summary]
@@ -86,6 +95,19 @@ When reporting failures or warnings, classify each item exactly once:
 - **Non-blocking warning**: Warning that does not fail required quality gates.
 
 If classified as **environmental**, include concrete evidence (command + error line) and avoid framing it as a product regression.
+
+## Scope Override Synchronization (MANDATORY)
+When scope changes mid-CR after handoffs are issued, do not continue implementation until artifact sync is complete:
+1. Update the active CR artifact with the approved scope delta.
+2. Update the active plan (`agent-docs/plans/CR-XXX-plan.md`) with delegation/verification impact.
+3. Update the active role handoff/report file with the same decision context.
+
+Record all three fields in the synced artifacts:
+- scope delta summary,
+- decision owner (`Tech Lead` or `Human User override`),
+- approval evidence (in-session instruction or handoff response reference).
+
+If approved directly by the Human User, include the exact marker: `scope extension approved by user`.
 
 ## BA Agent → User (Acceptance Notification)
 - **Trigger**: Acceptance Phase (Acceptance) complete.

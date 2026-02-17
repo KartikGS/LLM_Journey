@@ -71,8 +71,14 @@ When sources of truth conflict, resolve in this order:
 - Architecture & Vision docs (define intent)
 - Workflow & Style docs (define process)
 
-If documentation and tests disagree, tests win.
+If documentation and tests disagree, treat tests as primary behavioral evidence and investigate whether the failure reflects product behavior, stale test premise, or scope mismatch.
+Do not force implementation changes to satisfy an invalid test premise.
 If intent is unclear, stop and ask the user.
+
+### Human User Override Clarification
+- Human User in-session overrides can approve scope/process changes.
+- Such overrides do **not** automatically transfer role ownership of files/systems.
+- If an override crosses ownership boundaries, delegate to the owning role or get explicit role reassignment.
 
 ## After Reading - What Now?
 

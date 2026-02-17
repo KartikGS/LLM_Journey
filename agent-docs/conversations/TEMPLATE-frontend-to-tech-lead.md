@@ -18,7 +18,7 @@
 - `clear-to-implement` | `blocked`
 
 ## [Status]
-- `completed` | `blocked` | `partial`
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
@@ -50,10 +50,10 @@
 - [DoD behavior 2 + evidence]
 
 ## [Failure Classification]
-- CR-related failures:
-- Pre-existing failures:
-- Environmental failures:
-- Non-blocking warnings:
+- `CR-related`:
+- `pre-existing`:
+- `environmental`:
+- `non-blocking warning`:
 
 ## [Scope Extension]
 - `none` OR `scope extension requested` (+ reason and decision owner)

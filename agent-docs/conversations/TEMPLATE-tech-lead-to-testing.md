@@ -71,3 +71,6 @@
 
 ## Report Back
 Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.
+
+Status vocabulary for testing reports:
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

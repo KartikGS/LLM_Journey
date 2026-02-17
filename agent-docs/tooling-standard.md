@@ -20,7 +20,7 @@ This document defines the mandatory tools and environment configurations for thi
 
 ## Testing Stack
 - **Unit/Integration**: Jest + React Testing Library
-- **E2E**: Playwright (in implementation)
+- **E2E**: Playwright
 - **Mocking**: Custom mocks for ONNX and OTel as defined in `/agent-docs/testing-strategy.md`.
 
 ## E2E Command Canon
@@ -33,6 +33,7 @@ This document defines the mandatory tools and environment configurations for thi
 - `test:e2e` script sets `E2E=true` and should be preferred over raw `playwright test` for project verification.
 - Playwright expects local server on port `3001` from project config.
 - If constrained execution prevents binding/starting webServer, local-equivalent execution is required for valid E2E classification.
+- Detailed triage/classification policy is canonical in `/agent-docs/testing-strategy.md`.
 
 ## Quality & Linting
 - **Linter**: ESLint

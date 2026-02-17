@@ -74,6 +74,11 @@ Configuration lives in:
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
 
+Note: `agent-docs/tooling-standard.md` includes a quick command canon, but this file is canonical for E2E triage/classification policy.
+
+### Runtime Preflight
+Before verification commands, run `node -v` once per session and classify any version mismatch against `/agent-docs/tooling-standard.md` as `environmental`.
+
 ### E2E Reproducibility Rule
 When reporting E2E outcomes for handoff evidence, always include:
 - exact command string used,
@@ -89,13 +94,20 @@ If E2E fails, classify using this sequence:
 3. Confirm there is no stale server/process conflict on port `3001`.
 4. If startup/runtime differs in constrained execution, run a local-equivalent/unsandboxed verification.
 5. Inspect Playwright artifacts (`error-context.md`, screenshots, video) before classifying root cause.
-6. Declare `Blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
+6. Declare `blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
 
 ### E2E Failure Classification Heuristics
 - `Process from config.webServer exited early`: environment/process startup class until reproduced in local-equivalent run.
 - Selector missing while app is clearly rendered: likely contract or test regression.
 - Selector missing while app is stuck on compatibility/guard screen: environment/runtime gate until proven persistent across contexts.
 - Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
+
+### Provider-Backed E2E Determinism
+For E2E flows that can hit external model providers:
+- Default policy: prefer deterministic local behavior (for example fallback-mode path) unless the CR explicitly requires live-provider verification.
+- If live-provider behavior is required by CR:
+  - document environment prerequisites in handoff/report, and
+  - classify provider/network flakiness separately from UI contract regressions.
 
 ### E2E Selector Reliability Ladder (Mandatory)
 Use the highest reliable contract available for assertions:
@@ -105,6 +117,9 @@ Use the highest reliable contract available for assertions:
 4. Raw structural CSS selectors only when no explicit contract exists.
 
 If level 4 is used, report why levels 1-3 were unavailable in the testing handoff report.
+
+### Contract Registry
+- Prefer documenting durable route/selector/semantic contracts in `agent-docs/testing-contract-registry.md` so CR handoffs can reference a stable baseline.
 
 ### Prohibited Brittle Assertions (Default)
 - Hard dependency on transient loading copy (for example exact `"Generating..."` visibility windows) unless the CR explicitly defines that copy as product contract.
@@ -184,7 +199,7 @@ To support CI/CD and debugging, the E2E suite follows these policies:
 
 ### Observability Testing Policy
 
-E2E tests that assert on observability signals (e.g., intercepting `/app/api/otel/trace`) should be:
+E2E tests that assert on observability signals (e.g., intercepting `/api/otel/trace`) should be:
 - **Rare**: Only implemented for high-value integration boundaries.
 - **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
 - **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
