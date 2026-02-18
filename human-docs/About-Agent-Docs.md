@@ -1,15 +1,14 @@
-agent-docs/AGENTS.md is the entry point for all agents. It contains the following:
-1. What is this project?
-2. Required Read Order
-3. Interfaces & Contracts
-4. Operational Memory
-5. Authority & Conflict Resolution
-6. After Reading - What Now?
+# Idea
 
-workflow.md is the workflow for all agents. It contains the following:
-1. Multi-Agent Workflow
-2. Phase 1: Requirement Analysis (BA Agent)
-3. Phase 2: Technical Planning (Senior Developer Agent)
-4. Phase 3: Implementation (Sub-Agents)
-5. Phase 4: Verification (Senior Developer Agent)
-6. Phase 5: Acceptance (BA Agent)
+Agent docs aims to create documentation that agents can easily accessible to gather appropriate context depending on the task at hand. Attempt is to have a modularized representation of the project so that non overlaping responsibilities can be assigned to different agents.
+
+# Refinement
+
+The docs are refined by conducting a feedback / meta analysis session after the agents have completed the workflow. 
+
+# Issues
+
+No concrete metric to measure whether agent docs are being approved or not.
+
+# Future Plans
+
