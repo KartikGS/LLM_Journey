@@ -1,6 +1,6 @@
 # Welcome
 
-Hi, welcome to LLM Journey, this, as the name of the folder suggests is documentation for humans, written by a human (atleast some of it). It feels weird writing anything on my own, calming for some reason. Although, this folder will also probably be parsed through some LLM (I will try my best to resist the temptation).
+Hi, welcome to LLM Journey, this, as the name of the folder suggests is documentation for humans, written by a human (atleast this file). It feels weird writing anything on my own, calming for some reason. Although, this folder will also probably be parsed through some LLM (I will try my best to resist the temptation).
 
 To know more about the project you can read the main [README](/README.md). This file documents the agentic flow you can use to develop various features in this project. The agent documentation is not Project Agnostic yet, so this flow may not necessary work in other project just my moving the agent docs folder.
 

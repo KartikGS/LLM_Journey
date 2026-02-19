@@ -192,11 +192,10 @@ function buildProviderRequestBody(
 ): Record<string, unknown> {
     if (provider === 'huggingface') {
         return {
-            inputs: prompt,
-            parameters: {
-                max_new_tokens: HF_MAX_NEW_TOKENS,
-                temperature: 0.4
-            },
+            model: modelId,
+            prompt,
+            max_tokens: HF_MAX_NEW_TOKENS,
+            temperature: 0.4,
         };
     }
 

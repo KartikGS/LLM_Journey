@@ -132,7 +132,6 @@ export default function BaseLLMPage() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Model Comparison Template</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Use this template when you lock concrete model choices.</p>
             </div>
           </div>
 
@@ -142,24 +141,24 @@ export default function BaseLLMPage() {
                 <tr>
                   <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Dimension</th>
                   <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Tiny Transformer Demo</th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Scaled Base Model</th>
+                  <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">Meta-Llama-3-8B</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Tokenization method</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Character-level</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD (depends on selected model)</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">BPE (byte-pair encoding), 128K vocabulary</td>
                 </tr>
                 <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Context window</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">32 characters</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">8,192 tokens</td>
                 </tr>
                 <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Model size</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">~0.2M parameters</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">TBD</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">8B parameters</td>
                 </tr>
                 <tr className="border-t border-black/[0.08] dark:border-white/[0.08]">
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">Training data scope</td>

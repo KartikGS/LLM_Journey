@@ -1,7 +1,7 @@
 # Handoff: Tech Lead → BA Agent
 
 ## Subject
-`CR-013 — Hugging Face Inference API Provider Support`
+`CR-014 — HF Router Migration and Comparison Table Concretization`
 
 ## Status
 `verified`
@@ -10,110 +10,107 @@
 
 ## Technical Summary
 
-CR-013 adds HF Inference API provider support to the existing `POST /api/frontier/base-generate` route via a new `FRONTIER_PROVIDER` env var. The implementation is a surgical extension to a single backend file; no UI changes, no new dependencies, no route or selector contract changes.
+CR-014 delivers two connected fixes in parallel:
 
-**Changes delivered:**
-- `app/api/frontier/base-generate/route.ts` — added `FRONTIER_PROVIDER` config reading + validation, `buildProviderRequestBody()` helper (OpenAI vs HF formats), extended `extractProviderOutput()` to handle HF array-at-root `[{ generated_text }]`, added `frontier.provider` span attribute on all code paths
-- `__tests__/api/frontier-base-generate.test.ts` — 7 new HF-specific test cases; 3 existing tests unchanged; `FRONTIER_PROVIDER` cleanup added to `beforeEach`
-- `.env.example` — `FRONTIER_PROVIDER` entry with usage notes for both providers (Tech Lead direct edit)
+1. **HF Router migration** (`app/api/frontier/base-generate/route.ts`): `buildProviderRequestBody()` for the `huggingface` provider now emits OpenAI-compatible text completions format (`{ model, prompt, max_tokens, temperature }`) instead of the old HF Inference API format (`{ inputs, parameters }`), targeting `router.huggingface.co/featherless-ai/v1/completions`. Provider type `'huggingface'` is unchanged — same env var, new format and endpoint. `extractProviderOutput()` left untouched (already handled `choices[].text`).
+
+2. **Comparison table concretization** (`app/foundations/transformers/page.tsx`): Three TBD cells filled with concrete `meta-llama/Meta-Llama-3-8B` values; column header updated from `Scaled Base Model` to `Meta-Llama-3-8B`; developer-facing subtitle removed. `data-testid="transformers-comparison"` unchanged.
+
+3. **Unit tests** (`__tests__/api/frontier-base-generate.test.ts`): HF test `HF_ENV` URL, mock responses, and body assertions updated to reflect the router format. All 10 HF-path tests and 111 full suite tests pass.
+
+4. **`.env.example`** (Tech Lead direct): HuggingFace comment and example URL updated to the router endpoint.
 
 ---
 
 ## Evidence of AC Fulfillment
 
-- [x] HF Inference API format supported: `POST {FRONTIER_API_URL}` with `{ inputs: prompt, parameters: { max_new_tokens: 256, temperature: 0.4 } }` request and `[{ generated_text }]` response parsed. — Verified: `app/api/frontier/base-generate/route.ts:188-208` (`buildProviderRequestBody`, `extractProviderOutput`); test: `__tests__/api/frontier-base-generate.test.ts:130` ("should send HF request body format")
-
-- [x] Provider selection via configuration: `FRONTIER_PROVIDER=huggingface` enables HF path; absent or `=openai` preserves OpenAI path; unknown value triggers `invalid_config` fallback. — Verified: `app/api/frontier/base-generate/route.ts:102-116` (`loadFrontierConfig`); tests: `__tests__/api/frontier-base-generate.test.ts:111,223`
-
-- [x] Existing OpenAI-compatible flow unchanged: all 3 pre-existing tests pass without modification. — Verified: `pnpm test` → 111/111 passed; existing `'should return live envelope when upstream provider succeeds'` test at line 240 passes unchanged
-
-- [x] Fallback mechanism triggers appropriately for HF-specific errors (401, 429, 5xx, timeout): `mapProviderFailure()` is format-agnostic and handles HF HTTP status codes identically to OpenAI. — Verified: tests at `__tests__/api/frontier-base-generate.test.ts:153,169,185`
-
-- [x] Span attributes include provider type: `frontier.provider` set at `app/api/frontier/base-generate/route.ts:378`, before all branching paths (covers configured, unconfigured, and invalid-config paths). — Verified: `app/api/frontier/base-generate/route.ts:375-378`
-
-- [x] `pnpm lint` passes — Evidence below
-
-- [x] `pnpm build` passes — Evidence below
-
-- [x] Unit tests updated/added for HF response parsing: 7 new tests in `describe('HF Provider Path')`. — Verified: `__tests__/api/frontier-base-generate.test.ts:99-237`
+- [x] **AC-1**: `FRONTIER_PROVIDER=huggingface` + router URL + valid HF token → `mode: "live"`, non-empty, non-echoing output. — Evidence: `buildProviderRequestBody()` HF branch at `route.ts:193-200` emits completions format; `extractProviderOutput()` handles `choices[].text` at `route.ts:236-239`; code path exercised by mock-based test "should return live envelope when HF upstream succeeds" — PASS. Live credentials not available in local env; fallback path in place if token absent.
+- [x] **AC-2**: `buildProviderRequestBody()` for `huggingface` emits `{ model, prompt, max_tokens, temperature }`. — Evidence: `route.ts:193-200`; confirmed by test "should send HF request body format" — PASS.
+- [x] **AC-3**: `return_full_text` absent from all active HF request paths. — Evidence: not present anywhere in `route.ts`; confirmed in backend preflight and adversarial review.
+- [x] **AC-4**: Comparison table at `data-testid="transformers-comparison"` shows `BPE (byte-pair encoding), 128K vocabulary` / `8,192 tokens` / `8B parameters`; column header reads `Meta-Llama-3-8B`. — Evidence: `page.tsx:144` (header), `:151` (BPE), `:156` (context window), `:161` (model size).
+- [x] **AC-5**: Subtitle `"Use this template when you lock concrete model choices."` removed. — Evidence: absent from `page.tsx`; adversarial review confirmed `<div>` at line 129 now contains only `<h3>` with no following `<p>`.
+- [x] **AC-6**: `.env.example` HF comment and example URL reflect router endpoint. — Evidence: `.env.example` lines 16–21, updated directly by Tech Lead.
+- [x] **AC-7**: `pnpm lint`, `pnpm build`, `pnpm test` all pass with no new failures. — Evidence: verification commands below.
 
 ---
 
 ## Verification Commands
 
 - Command: `pnpm test`
-- Scope: full suite (16 suites)
-- Execution Mode: local-equivalent/unsandboxed (Node v18.19.0 via nvm; system Node v16 is below pnpm minimum)
+- Scope: Full suite (16 suites, 111 tests)
+- Execution Mode: local-equivalent/unsandboxed (Node v18.19.0 via nvm; system Node v16 is below documented minimum)
 - Result: **PASS** — 111 tests, 16 suites, 0 failures
 
 - Command: `pnpm lint`
-- Scope: full suite
+- Scope: Full project
 - Execution Mode: local-equivalent/unsandboxed
 - Result: **PASS** — `✔ No ESLint warnings or errors`
 
 - Command: `pnpm exec tsc --noEmit`
-- Scope: full TypeScript check
+- Scope: Full TypeScript check
 - Execution Mode: local-equivalent/unsandboxed
 - Result: **PASS** — exit code 0, no output
 
 - Command: `pnpm build`
-- Scope: production build
+- Scope: Production build
 - Execution Mode: local-equivalent/unsandboxed
-- Result: **PASS** — all 6 routes compiled; `ƒ /api/frontier/base-generate` present
+- Result: **PASS** — all 6 routes compiled; pre-existing OTel webpack warning only (classified below)
 
 ---
 
 ## Failure Classification Summary
 
 - **CR-related**: none
-- **Pre-existing**: none observed in this CR's scope
-- **Environmental**: System Node.js v16.20.1 is below the pnpm minimum (>=18.12) and the project minimum (>=20.x); verified using Node v18.19.0 via nvm. Not a CR regression — confirmed pre-existing from CR-012 Backend report.
+- **Pre-existing**: none
+- **Environmental**: System Node.js v16.20.1 below documented minimum (>=20.x); verified using Node v18.19.0 via nvm. Not a CR regression — pre-existing from CR-013.
 - **Non-blocking warning**:
-  - `pnpm lint`: `next lint` deprecation notice (pre-existing)
-  - `pnpm build`: OTel `require-in-the-middle` critical dependency warning (pre-existing)
+  - `pnpm lint`: `next lint` deprecation notice — pre-existing, unrelated to CR-014.
+  - `pnpm build`: OTel `require-in-the-middle` webpack critical dependency warning — pre-existing, unrelated to CR-014.
 
 ---
 
 ## Adversarial Diff Review
 
-- **Backward compatibility**: `FRONTIER_PROVIDER` absent → defaults to `'openai'` (line 116). No env change required for existing deployments. Verified by 3 pre-existing tests passing unchanged.
-- **Security boundary**: `FRONTIER_API_KEY` remains server-side only. No provider-format information leaked in the response envelope (same `LiveModeResponse | FallbackModeResponse` contract).
-- **HF parser placement**: `extractProviderOutput()` array check placed before OpenAI/Anthropic object checks — prevents false-positive matches on OpenAI/Anthropic shaped payloads. Correct.
-- **Unknown provider gate**: `loadFrontierConfig()` returns `configured: false, issueCode: 'invalid_config'` before URL validation or upstream call for any unrecognised `FRONTIER_PROVIDER` value. Correct.
-- **Span coverage**: `frontier.provider` set on line 378 before the `!frontierConfig.configured` branch — covers all code paths including invalid-config and missing-config early returns. Correct.
+**`route.ts` — `buildProviderRequestBody()`:**
+- HF branch verified: `{ model: modelId, prompt, max_tokens: HF_MAX_NEW_TOKENS, temperature: 0.4 }`. No debug artifacts, no `return_full_text`, no leftover `inputs`/`parameters` fields.
+- OpenAI branch: unchanged `{ model, messages, temperature }`.
+- `extractProviderOutput()`: untouched. HF array path retained per constraint. No regression risk.
+
+**`page.tsx` — comparison table:**
+- All five required text changes confirmed at correct lines. `data-testid="transformers-comparison"` at `:128` — unchanged. All row labels, table structure, continuity links, and other selectors unchanged.
+- **Minor deviation (accepted)**: Frontend Agent updated TBD cell CSS from `text-gray-500 dark:text-gray-400` to `text-gray-600 dark:text-gray-300` alongside content changes. Matches visual weight of adjacent row label cells — improves consistency. No AC impact, no contract change. Frontend Agent did not explicitly report this deviation; classified as minor and accepted here.
 
 ---
 
 ## Technical Retrospective
 
-**One open product quality issue (not an AC blocker, recommend follow-up CR):**
+**Trade-offs:**
+- Reusing `'huggingface'` provider type (vs. a new `'huggingface-router'` type) keeps the env contract stable but creates a slight semantic mismatch between the type string and the actual endpoint format. Mitigated by `.env.example` documentation.
+- `extractProviderOutput()`'s HF array path is now dead code for live traffic (router uses completions format). Retained per CR-014 constraint — removal deferred to a future cleanup CR.
 
-HF text-generation API defaults to `return_full_text: true`. This means `generated_text` in the API response includes the input prompt concatenated with the generated continuation. The current implementation does not include `return_full_text: false` in the HF request `parameters` — a decision deferred per the handoff protocol (Backend correctly flagged and did not implement without approval).
-
-Effect: Product End Users see the full prompt echoed back at the start of the output when using the HF provider.
-
-**Recommendation**: Open a follow-up CR to add `return_full_text: false` to `buildProviderRequestBody()` for the HF branch (single-line change, no new tests required — the existing HF tests mock the response). This should be done before the User does live testing with an HF token.
-
-The User's manual validation step (configure HF provider, send a prompt via Transformers page, observe response) will surface this behavior directly — flagging here to set expectations.
+**Tech Lead Recommendations (non-AC concerns, follow-up candidates):**
+1. **`<h3>` heading "Model Comparison Template"**: Still developer-facing language on the learner page. The subtitle was removed (AC-5), but the card heading remains. Frontend Agent correctly flagged this but left it unchanged (out of scope). Recommend renaming to learner-facing language (e.g., "Tiny vs Frontier: By the Numbers") in a content polish CR.
+2. **HF array dead code in `extractProviderOutput()`**: The `Array.isArray(payload)` branch is now unreachable for the `huggingface` provider. Candidate for removal in a future cleanup CR once confirmed no other code path exercises it.
+3. **Node.js runtime**: System v16.20.1 is below documented minimum (>=20.x). Recommend environment upgrade to v20+.
 
 ---
 
 ## Deployment Notes
 
-- New env var: `FRONTIER_PROVIDER='openai'` | `'huggingface'` — documented in `.env.example`
-- When switching to HF: set `FRONTIER_PROVIDER=huggingface`, `FRONTIER_API_URL=https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B`, `FRONTIER_API_KEY=<HF_TOKEN>`
-- No package additions. No middleware, CSP, or security-boundary changes.
+- **To enable live HF inference**: set `FRONTIER_PROVIDER=huggingface`, `FRONTIER_API_URL=https://router.huggingface.co/featherless-ai/v1/completions`, `FRONTIER_MODEL_ID=meta-llama/Meta-Llama-3-8B`, `FRONTIER_API_KEY=<hf-token>`. Without these, the route falls back gracefully — no crash risk.
+- No new packages. No infrastructure, middleware, or CSP changes. All changes backwards-compatible.
 
 ---
 
-## Link to Updated Artifacts
+## Link to Updated Docs
 
-- `agent-docs/requirements/CR-013-huggingface-inference-provider.md`
-- `agent-docs/plans/CR-013-plan.md`
-- `agent-docs/conversations/tech-lead-to-backend.md`
-- `agent-docs/conversations/backend-to-tech-lead.md`
-- `.env.example`
+- Plan: `agent-docs/plans/CR-014-plan.md`
+- CR: `agent-docs/requirements/CR-014-hf-router-migration-and-comparison-table.md`
+- Backend handoff: `agent-docs/conversations/tech-lead-to-backend.md`
+- Frontend handoff: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Backend report: `agent-docs/conversations/backend-to-tech-lead.md`
+- Frontend report: `agent-docs/conversations/frontend-to-tech-lead.md`
 
 ---
-*Report created: 2026-02-19*
+*Verified: 2026-02-20*
 *Tech Lead Agent*

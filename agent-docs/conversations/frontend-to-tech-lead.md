@@ -1,122 +1,78 @@
-## Subject: CR-012 - Transformers Narrative Restructure + Frontier UI Integration
+# Handoff: Frontend Agent → Tech Lead
+
+## Subject
+`CR-014 - Comparison Table Concretization: Fill Meta-Llama-3-8B values, remove developer subtitle`
 
 ## [Preflight: Assumptions]
-- `app/api/frontier/base-generate/route.ts` response contract can be consumed as documented without backend changes.
-- Existing continuity selectors (`transformers-hero`, continuity link IDs) will remain untouched while adding required CR-012 selectors.
-- `BaseLLMChat` can remain the tiny-model interaction surface and be reframed as the `Try (Optional)` block without changing its core behavior.
+- Assumption 1: The subtitle `<p>` at `app/foundations/transformers/page.tsx:135` is inside a `<div>` alongside the `<h3>` at line 134. Removing it leaves the `<div>` with just `<h3>` — no fixed height or adjacent spacing depends on the `<p>` presence, so no layout regression expected.
+- Assumption 2: The three `TBD` cells (lines 152, 157, 162) and the `Scaled Base Model` column header (line 145) are confirmed standalone text nodes replaceable without structural changes.
 
 ## [Preflight: Adjacent Risks]
-- Frontier provider/network failure modes can produce ambiguous UX unless `live` vs `fallback` status is explicitly rendered as text.
-- Adding new narrative sections and comparison artifact can cause selector drift if wrappers are not placed at section boundaries.
-- If `BaseLLMChat` input/output state is not exposed, comparison artifact may need static/example framing rather than live shared-state comparison.
+- The `<h3>` text reads "Model Comparison Template" (line 134) — this remains after removing the subtitle and may still read as developer-facing. Flagging only; not in scope per handoff constraints.
 
 ## [Preflight: Open Questions]
-- None blocking implementation.
+- none
 
 ## [Preflight Status]
 - `clear-to-implement`
 
-*Preflight created: 2026-02-15*
-*Frontend Agent*
+---
 
 ## [Status]
 - `completed`
 
-## [Changes Made]
-- Applied requested refinement pass to improve learner-facing copy and UI framing while preserving test/route contracts.
-- Centered hero header text in shared component:
-  - `app/ui/components/JourneyStageHeader.tsx`
-- Rewrote Stage 1 educational narrative:
-  - Replaced “How” copy with “What Are Transformers?” and added links for new terms/resources.
-  - Removed visible dev-only guidance headers above tiny/frontier chat sections.
-  - Replaced frontier guidance with scaled-transformer explanation and references.
-  - Replaced same-prompt block with model-comparison template table.
-  - Merged next-stage explanation into “What we don&apos;t have yet?” and removed extra in-section adaptation link.
-- Updated chat naming and frontier chat structure:
-  - Tiny chat renamed to “Tiny Transformer Playground”.
-  - Frontier chat rebuilt to match tiny chat interaction pattern (sample prompts + terminal-style output + status panel).
-
-## [Scope Compliance]
-- Frontend-only file edits:
-  - `app/ui/components/JourneyStageHeader.tsx`
+## [Scope Check]
+- Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Files modified:
   - `app/foundations/transformers/page.tsx`
-  - `app/foundations/transformers/components/BaseLLMChat.tsx`
-  - `app/foundations/transformers/components/FrontierBaseChat.tsx`
-  - `agent-docs/conversations/frontend-to-tech-lead.md`
-- No backend/API contract changes.
-- No package install.
-- No test file changes (per handoff constraint).
+- Scope compliance:
+  - [x] All modified files are in Frontend ownership or explicitly delegated.
+  - [x] No test files modified unless explicitly delegated.
 
-## [Definition of Done Evidence]
-- Hero text centered:
-  - `app/ui/components/JourneyStageHeader.tsx:14`
-- “What Are Transformers?” section with reference links:
-  - section heading: `app/foundations/transformers/page.tsx:26`
-  - Transformer paper link: `app/foundations/transformers/page.tsx:33`
-  - YouTube walkthrough link: `app/foundations/transformers/page.tsx:49`
-  - Colab link: `app/foundations/transformers/page.tsx:58`
-  - ONNX Runtime docs link: `app/foundations/transformers/page.tsx:67`
-- Tiny model chat preserved (without visible dev-only guidance text):
-  - section wrapper: `app/foundations/transformers/page.tsx:85`
-  - tiny chat render: `app/foundations/transformers/page.tsx:86`
-- Frontier section integrates backend contract and resilient states:
-  - scaled-transformer framing section: `app/foundations/transformers/page.tsx:89`
-  - POST request to `/api/frontier/base-generate`: `app/foundations/transformers/components/FrontierBaseChat.tsx:81`
-  - immediate loading status: `app/foundations/transformers/components/FrontierBaseChat.tsx:76`
-  - live mode handling: `app/foundations/transformers/components/FrontierBaseChat.tsx:131`
-  - fallback mode handling + explicit reason text: `app/foundations/transformers/components/FrontierBaseChat.tsx:139`
-  - validation error (HTTP 400 payload) handling: `app/foundations/transformers/components/FrontierBaseChat.tsx:100`
-  - base-model profile text: `app/foundations/transformers/components/FrontierBaseChat.tsx:260`
-- Model comparison template visible:
-  - template container: `app/foundations/transformers/page.tsx:123`
-  - comparison table: `app/foundations/transformers/page.tsx:135`
-- “What we don&apos;t have yet?” includes casual limitations and merged next-stage bridge:
-  - section heading: `app/foundations/transformers/page.tsx:181`
-  - merged next-stage bridge block: `app/foundations/transformers/page.tsx:196`
-
-## [Contract Evidence]
-- Existing continuity selectors preserved:
-  - `transformers-hero`: `app/foundations/transformers/page.tsx:15`
-  - `transformers-continuity-links`: `app/foundations/transformers/page.tsx:204`
-  - `transformers-link-home`: `app/foundations/transformers/page.tsx:211`
-  - `transformers-link-adaptation`: `app/foundations/transformers/page.tsx:219`
-- New selector contracts added:
-  - `transformers-how`: `app/foundations/transformers/page.tsx:20`
-  - `transformers-try`: `app/foundations/transformers/page.tsx:85`
-  - `transformers-frontier`: `app/foundations/transformers/page.tsx:89`
-  - `transformers-issues`: `app/foundations/transformers/page.tsx:175`
-  - `transformers-next-stage`: `app/foundations/transformers/page.tsx:196`
-  - `transformers-comparison`: `app/foundations/transformers/page.tsx:123`
-  - `frontier-form`: `app/foundations/transformers/components/FrontierBaseChat.tsx:232`
-  - `frontier-input`: `app/foundations/transformers/components/FrontierBaseChat.tsx:238`
-  - `frontier-submit`: `app/foundations/transformers/components/FrontierBaseChat.tsx:250`
-  - `frontier-status`: `app/foundations/transformers/components/FrontierBaseChat.tsx:205`
-  - `frontier-output`: `app/foundations/transformers/components/FrontierBaseChat.tsx:266`
-- Accessibility/keyboard contracts:
-  - frontier label association: `app/foundations/transformers/components/FrontierBaseChat.tsx:233`
-  - tiny chat label association preserved: `app/foundations/transformers/components/BaseLLMChat.tsx:136`
-- Shared component blast-radius:
-  - Changed shared component: `app/ui/components/JourneyStageHeader.tsx`
-  - Impacted routes:
-    - `app/foundations/transformers/page.tsx:14`
-    - `app/models/adaptation/page.tsx:16`
-  - Sanity evidence:
-    - prop contract unchanged in `JourneyStageHeader` (`title`, `description`, `testId`) and only alignment classes changed (`items-center`, `text-center`): `app/ui/components/JourneyStageHeader.tsx:4`, `app/ui/components/JourneyStageHeader.tsx:14`
-    - no route/selector contract changes in impacted pages.
-
-## [Deviations]
-- Minor/safe (user-directed): Removed visible “Try (Optional)” and “Frontier” instructional labels while keeping delegated selector contracts (`transformers-try`, `transformers-frontier`) and section order semantics.
-- Minor/safe (user-directed): Replaced explicit standalone next-stage section with merged bridge copy in “What we don&apos;t have yet?” while preserving continuity navigation card (`transformers-link-adaptation`).
+## [Changes Made]
+- Removed subtitle `<p>` element: `"Use this template when you lock concrete model choices."`
+- Updated column header `<th>`: `Scaled Base Model` → `Meta-Llama-3-8B`
+- Updated tokenization `<td>`: `TBD (depends on selected model)` → `BPE (byte-pair encoding), 128K vocabulary`
+- Updated context window `<td>`: `TBD` → `8,192 tokens`
+- Updated model size `<td>`: `TBD` → `8B parameters`
 
 ## [Verification Results]
-1. `pnpm lint` -> `PASS`
-2. `pnpm exec tsc --noEmit` -> `PASS`
+1. `pnpm lint` -> `PASS` (non-blocking: `next lint` deprecation notice only; no ESLint warnings or errors)
+2. `pnpm exec tsc --noEmit` -> `PASS` (clean, no output)
+
+## [Contract Evidence]
+- Route contracts:
+  - `preserved` - `/foundations/transformers` — no route modifications
+- Selector/accessibility contracts:
+  - `preserved` - `app/foundations/transformers/page.tsx:128` - `data-testid="transformers-comparison"` unchanged
+  - `preserved` - all other `data-testid` attributes on the page unchanged
+- Continuity/navigation href contracts:
+  - `preserved` - `app/foundations/transformers/page.tsx:208-226` - `JourneyContinuityLinks` hrefs unchanged
+- Shared-component blast-radius checks:
+  - N/A — no `app/ui/**` files modified
+
+## [Behavioral Sanity Check]
+- Column header reads `Meta-Llama-3-8B` — `app/foundations/transformers/page.tsx:145`
+- Tokenization cell reads `BPE (byte-pair encoding), 128K vocabulary` — `app/foundations/transformers/page.tsx:152`
+- Context window cell reads `8,192 tokens` — `app/foundations/transformers/page.tsx:157`
+- Model size cell reads `8B parameters` — `app/foundations/transformers/page.tsx:162`
+- Subtitle `"Use this template when you lock concrete model choices."` is absent — removed from `page.tsx`
+- `data-testid="transformers-comparison"` present and unchanged — `app/foundations/transformers/page.tsx:128`
 
 ## [Failure Classification]
-- `non-blocking warning`: Next.js CLI deprecation notice for `next lint` displayed during lint run; no ESLint warnings/errors.
+- `CR-related`: none
+- `pre-existing`: none
+- `environmental`: Node.js runtime is v18.19.0 (documented minimum is >=20.x); v20 not installed in nvm. Switched to v18.19.0 which satisfies pnpm and all verification commands. No verification failures resulted. Classifying as environmental mismatch — recommend Tech Lead note for runtime upgrade.
+- `non-blocking warning`: `next lint` deprecation notice (pre-existing, not CR-related)
+
+## [Scope Extension]
+- `none`
+
+## [Deviations]
+- `none`
 
 ## [Ready for Next Agent]
-- `yes` (ready for Testing handoff updates against new selectors/contracts)
+- `yes`
 
-*Report updated: 2026-02-15*
+*Report created: 2026-02-20*
 *Frontend Agent*

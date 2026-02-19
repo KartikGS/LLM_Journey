@@ -1,7 +1,7 @@
-# Handoff: Tech Lead -> Frontend Agent
+# Handoff: Tech Lead → Frontend Agent
 
 ## Subject
-`CR-012 - Transformers Narrative Restructure + Frontier UI Integration`
+`CR-014 - Comparison Table Concretization: Fill Meta-Llama-3-8B values, remove developer subtitle`
 
 ## Status
 `issued`
@@ -9,159 +9,146 @@
 ## Execution Mode (Mandatory)
 `feature-ui`
 
+---
+
 ## Objective
-Restructure the Stage 1 Transformers page into the required educational sequence:
-`How -> Try (Optional) -> Frontier -> Issues -> Next Stage`,
-while preserving tiny ONNX interaction and integrating the new backend frontier contract with resilient UI behavior.
+
+Update the comparison table on the Transformers page (`app/foundations/transformers/page.tsx`) with concrete `meta-llama/Meta-Llama-3-8B` values and remove the developer-facing subtitle. No structural, route, or selector contract changes.
+
+---
 
 ## Rationale (Why)
-CR-012 is a narrative-completeness change for Stage 1. Learners must see:
-1) what tiny models teach,
-2) what frontier base models add,
-3) what still fails without adaptation,
-4) why Stage 2 (`/models/adaptation`) is the next step.
 
-The backend route now exists to support live-when-configured frontier interaction with deterministic fallback when unavailable.
+The comparison table currently shows `TBD` placeholders and an internal developer instruction ("Use this template when you lock concrete model choices.") that is visible to learners. This is the core educational comparison artifact of Stage 1 — learners are meant to anchor the Tiny vs Frontier comparison on concrete facts (model size, context window, tokenization). Without real values, the comparison is abstract and the educational moment is lost.
+
+---
 
 ## Constraints
-- UI/UX constraints:
-  - Keep current visual language consistent with existing journey pages.
-  - Preserve mobile and desktop usability.
-  - Keep dual-theme readability (light/dark).
-  - Loading, fallback, and error states must be text-visible (not color-only).
-- Performance/interaction constraints:
-  - Frontier submit must show visible loading state immediately on action.
-  - Frontier failure must resolve into user-visible non-blocking fallback state.
-- Semantic/testability constraints:
-  - Preserve existing transformers continuity contracts:
-    - `transformers-hero`
-    - `transformers-continuity-links`
-    - `transformers-link-home`
-    - `transformers-link-adaptation`
-  - Add deterministic selectors for new narrative and frontier surfaces (listed below).
-  - Keep all interactive controls keyboard accessible.
-- Ownership constraints:
-  - Frontend-owned files only.
-  - Do not modify backend route contract.
-  - Do not modify tests in this handoff (Testing Agent owns test updates).
-  - No package installation.
+
+**UI/UX:**
+- Do not change `data-testid="transformers-comparison"` or any other `data-testid` on the page.
+- Do not change row labels or table structure — only the Scaled Base Model column header and the three cell values in that column.
+- No visual redesign. The table renders as-is; only text content changes.
+- No new components, no layout changes, no animation changes.
+
+**Ownership:**
+- Only `app/foundations/transformers/page.tsx` is in scope.
+- Do not modify any other file.
+- No package installation.
+- No test file changes (no route/testid/accessibility contract changes — existing tests unaffected).
+
+---
 
 ## Contracts Inventory (Mandatory)
-- Route contracts:
-  - `/foundations/transformers`
-  - `/models/adaptation` (continuity target)
-  - `/` (previous-stage continuity target)
-- Existing selector/accessibility contracts to preserve:
-  - `transformers-hero`
-  - `transformers-continuity-links`
-  - `transformers-link-home`
-  - `transformers-link-adaptation`
-  - Tiny chat input remains label-associated and keyboard usable.
-- New selector contracts to add (required):
-  - `transformers-how`
-  - `transformers-try`
-  - `transformers-frontier`
-  - `transformers-issues`
-  - `transformers-next-stage`
-  - `transformers-comparison`
-  - `frontier-form`
-  - `frontier-input`
-  - `frontier-submit`
-  - `frontier-status`
-  - `frontier-output`
-- Critical interactive contracts:
-  - Frontier request uses `POST /api/frontier/base-generate` with `{ prompt }`.
-  - Live response: `mode: "live"` + output.
-  - Fallback response: `mode: "fallback"` + reason + output.
-  - Validation error: HTTP `400` with `error.code`.
+
+- Route contracts: `/foundations/transformers` — **unchanged**
+- Selector/accessibility contracts — **all unchanged**:
+  - `transformers-comparison` (the table wrapper) — do not touch
+  - All other existing `data-testid` attributes on the page — do not touch
+- No new selector contracts being added
+- No continuity/navigation contracts change
+
+---
 
 ## Design Intent (Mandatory for UI)
-- Target aesthetic:
-  - Keep the existing premium educational look and hierarchy; no redesign detour.
-  - Emphasize stage progression clarity over decorative complexity.
-- Animation budget:
-  - Keep meaningful motion only where it supports interaction/state clarity.
-  - Avoid introducing animation that obscures fallback/error readability.
+
+- Target aesthetic: existing table styling unchanged — this is a text content update only.
+- Animation budget: none — no new animations.
 - Explicit anti-patterns:
-  - Do not present frontier output as assistant-grade behavior.
-  - Do not hide fallback mode behind subtle color-only indicators.
-  - Do not remove continuity links or rewrite route flow.
+  - Do not rewrite table structure, row labels, or styling classes.
+  - Do not add new table rows or columns.
+  - Do not change the Tiny Transformer column content.
+
+---
 
 ## Assumptions To Validate (Mandatory)
-- Existing `BaseLLMChat` can remain as the Try (Optional) block with minimal adaptation.
-- Backend response contract from `app/api/frontier/base-generate/route.ts` is consumable as-is.
-- New section-level selector additions will not conflict with current test-id namespace.
+
+1. The subtitle `"Use this template when you lock concrete model choices."` at `page.tsx:135` is a standalone `<p>` element and can be removed without affecting surrounding layout.
+2. The three `TBD` cells and the `Scaled Base Model` column header are standalone text nodes replaceable without structural changes.
+
+---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
-- Any change to backend API route contract.
-- Any changes to adaptation page layout/content beyond continuity wording strictly needed for linkage (default: no adaptation page edits).
-- Any route renames or nav-IA changes.
+
+1. If removing the subtitle paragraph creates a layout regression (e.g., unexpected spacing collapse), flag it rather than adding compensating markup without Tech Lead approval.
+2. Any other `TBD` content elsewhere on the page is out of scope — do not change it.
+
+---
 
 ## Scope
-### Files to Modify
-- `app/foundations/transformers/page.tsx`
-  - Implement five-part narrative flow and keep continuity links.
-  - Add explicit bridge rationale to `/models/adaptation`.
-- `app/foundations/transformers/components/BaseLLMChat.tsx` (optional)
-  - Only if needed to align tiny block framing with "Try (Optional)" purpose.
-- `app/foundations/transformers/components/*` (new file(s) expected)
-  - Add a dedicated frontier interaction component.
-  - Add reusable narrative section/template component(s) if helpful.
 
-## Backend Contract Reference (for integration)
-- Endpoint: `POST /api/frontier/base-generate`
-- Request:
-  - `{ "prompt": string }`
-- Response modes:
-  - Live:
-    - `{ mode: "live", output: string, metadata: { assistantTuned: false, adaptation: "none", ... } }`
-  - Fallback:
-    - `{ mode: "fallback", output: string, reason: { code, message }, metadata: { ... } }`
-- Validation error:
-  - HTTP `400` with `{ error: { code: "invalid_json" | "invalid_prompt", message } }`
+### Files to Modify
+
+**`app/foundations/transformers/page.tsx`** — four targeted text changes:
+
+| Location | Current | Required |
+|---|---|---|
+| `page.tsx:135` — subtitle `<p>` | `Use this template when you lock concrete model choices.` | *(remove the entire `<p>` element)* |
+| `page.tsx:145` — column header `<th>` | `Scaled Base Model` | `Meta-Llama-3-8B` |
+| `page.tsx:152` — tokenization `<td>` | `TBD (depends on selected model)` | `BPE (byte-pair encoding), 128K vocabulary` |
+| `page.tsx:157` — context window `<td>` | `TBD` | `8,192 tokens` |
+| `page.tsx:162` — model size `<td>` | `TBD` | `8B parameters` |
+
+Line numbers are provided as navigation hints from last read. Confirm the actual content matches before editing.
+
+---
 
 ## Definition of Done
-- [ ] Transformers page renders required 5-part flow in order:
-  - `How`, `Try (Optional)`, `Frontier`, `Issues`, `Next Stage`
-- [ ] `How` section explicitly states tiny model is for mechanics and includes Colab link.
-- [ ] `Try (Optional)` keeps tiny ONNX interaction available.
-- [ ] Frontier section:
-  - submits prompt to backend contract,
-  - shows immediate loading state on submit,
-  - renders live/fallback outcomes with explicit mode messaging,
-  - labels model behavior as base-model, not assistant fine-tuned.
-- [ ] Issues section shows at least 3 concrete unresolved base-model limitations.
-- [ ] Next Stage section explicitly links limitations to adaptation and links to `/models/adaptation`.
-- [ ] Same-prompt comparison artifact (Tiny vs Frontier Base) is visible on-page.
-- [ ] Required new selectors are present and stable.
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
+
+- [ ] Column header reads `Meta-Llama-3-8B` (not `Scaled Base Model`)
+- [ ] Tokenization cell reads `BPE (byte-pair encoding), 128K vocabulary`
+- [ ] Context window cell reads `8,192 tokens`
+- [ ] Model size cell reads `8B parameters`
+- [ ] Subtitle `"Use this template when you lock concrete model choices."` is absent
+- [ ] `data-testid="transformers-comparison"` is unchanged
+- [ ] No other selectors, row labels, or table structure changed
+- [ ] `pnpm lint` passes
+- [ ] `pnpm exec tsc --noEmit` passes
+
+---
 
 ## Clarification Loop (Mandatory)
-- Before implementation, post preflight assumptions/risks/questions to `agent-docs/conversations/frontend-to-tech-lead.md`.
-- If any open question can change contracts/scope, pause and wait for Tech Lead response.
+
+Before implementation, post preflight note to `agent-docs/conversations/frontend-to-tech-lead.md`:
+- Confirm the subtitle element and TBD cells match expected content at stated line numbers.
+- Any open question that could affect scope.
+
+If any open question changes contracts or scope — pause and wait for Tech Lead response.
+
+---
 
 ## Verification
-- Run and report:
-  - `pnpm lint`
-  - `pnpm exec tsc --noEmit`
-- Manual checks to report with concise evidence:
-  - five-section order present on `/foundations/transformers`
-  - frontier live/fallback status rendering behavior
-  - comparison artifact visibility
-  - continuity link to `/models/adaptation`
-  - keyboard accessibility of frontier form controls
+
+Run and report:
+1. `pnpm lint` — must pass clean
+2. `pnpm exec tsc --noEmit` — must pass clean
+
+Manual check to report:
+- Comparison table renders with `Meta-Llama-3-8B` header and concrete values visible on `/foundations/transformers`
+- Developer subtitle is absent
+- `data-testid="transformers-comparison"` present and unchanged
+
+---
 
 ## Scope Extension Control (Mandatory)
-- If implementation requires route changes, selector renames, or adaptation-page redesign, mark `scope extension requested` and pause.
+
+If implementation reveals any adjacent change is needed beyond the four text edits above, mark it `scope extension requested` and pause. Do not implement expanded work without explicit Tech Lead approval.
+
+---
 
 ## Report Back
-Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` including:
-- status (`completed`, `blocked`, or `partial`)
-- file list and scope compliance
-- verification command evidence
-- failure classification (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
-- readiness for Testing handoff
 
-*Handoff created: 2026-02-15*
+Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md`.
+Use template: `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`
+
+---
+
+## Reference Files
+
+- Plan: `agent-docs/plans/CR-014-plan.md`
+- CR: `agent-docs/requirements/CR-014-hf-router-migration-and-comparison-table.md`
+- Transformers page: `app/foundations/transformers/page.tsx`
+
+---
+*Handoff created: 2026-02-20*
 *Tech Lead Agent*

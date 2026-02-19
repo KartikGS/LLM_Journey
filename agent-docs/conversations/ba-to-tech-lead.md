@@ -1,91 +1,99 @@
 # BA to Tech Lead Handoff
 
-## Subject: CR-013 — Hugging Face Inference API Provider Support
+## Subject: CR-014 — HF Router Migration and Comparison Table Concretization
 
-## Requirement Summary
+---
 
-**What:** Extend `/api/frontier/base-generate` to support Hugging Face's free Inference API format alongside the existing OpenAI-compatible format.
+## What & Why
 
-**Why:** The current endpoint only supports OpenAI-compatible chat completion APIs. The Human User wants to use Meta-Llama-3-8B via Hugging Face Inference API, which uses a different request/response contract. This enables Product End Users to experience a real 8B-parameter frontier base model, demonstrating scale differences from the tiny local model.
+**What:** Two connected fixes for the Transformers page frontier inference demo:
 
-**Who benefits:** Product End Users learning about frontier model behavior; Human User wanting HF provider flexibility.
+1. **Migrate the HF provider** from the traditional HF Inference API (`api-inference.huggingface.co`) to the HF Router / Featherless AI (`router.huggingface.co/featherless-ai/v1/completions`), which uses OpenAI-compatible completions format.
+2. **Fill the comparison table** with concrete `meta-llama/Meta-Llama-3-8B` values and remove a developer-facing subtitle that should not be visible to learners.
 
-## Current State Analysis
+**Why this order matters:** Without the provider fix, the frontier chat demo always falls back to a deterministic sample. The learner never sees a real LLM response. That is the educational core of Stage 1 — the comparison is meaningless without it.
 
-**Endpoint:** `app/api/frontier/base-generate/route.ts`
+---
 
-**Current Request Format (lines 354-358):**
-```typescript
-{
-  model: frontierConfig.modelId,
-  messages: [{ role: "user", content: prompt }],
-  temperature: 0.4
-}
+## Root Cause (confirmed)
+
+The traditional HF Inference API does not serve `Meta-Llama-3-8B` on the free tier — gated models at this scale require a paid HF subscription. The upstream error is a **tier limitation**, not a request format bug. The HF Router (Featherless AI) exposes the same model via free $0.10 credits using a different endpoint and format.
+
+---
+
+## Required Changes
+
+### Change 1: Provider request format (route.ts)
+
+The `huggingface` provider currently sends:
+```ts
+{ inputs: prompt, parameters: { max_new_tokens: 256, temperature: 0.4 } }
 ```
 
-**Current Response Parsing (extractProviderOutput, lines 168-207):**
-- OpenAI: `{ choices: [{ message: { content: "..." } }] }`
-- Anthropic: `{ content: [{ text: "..." }] }`
-
-**Required HF Format:**
-```typescript
-// Request
-POST https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B
-Authorization: Bearer {HF_TOKEN}
-{
-  inputs: "prompt text",
-  parameters: { max_new_tokens: N, temperature: T }
-}
-
-// Response
-[{ generated_text: "..." }]
+The HF Router requires OpenAI-compatible completions format:
+```ts
+{ model: modelId, prompt, max_tokens: 256, temperature: 0.4 }
 ```
 
-## Scope Boundaries
+The response format (`{ choices: [{ text }] }`) is already handled by `extractProviderOutput()` — no change needed there.
 
-**In Scope:**
-- Add HF Inference API adapter logic to route.ts
-- Add env configuration for provider type selection
-- Update response parser to handle HF format
-- Extend span attributes for provider identification
-- Update/add unit tests for HF path
+**Clean-up:** Remove `return_full_text` from any HF request path (dead code — it was missing `false`, and it's irrelevant in the router format).
 
-**Out of Scope:**
-- UI changes (FrontierBaseChat.tsx continues to work unchanged)
-- Changes to the tiny local model inference
-- HF Inference Endpoints (paid tier) support
-- Other HF models beyond what user configures
+**Implementation decision (Tech Lead owns):** Whether to repurpose the existing `huggingface` provider type or introduce a new type (e.g., `huggingface-router`). Product requirement: `FRONTIER_PROVIDER=huggingface` + `FRONTIER_API_URL=https://router.huggingface.co/featherless-ai/v1/completions` must produce `mode: "live"` output, not fallback.
 
-## Acceptance Criteria (from CR-013)
+**Risk to verify:** Confirm `meta-llama/Meta-Llama-3-8B` (base, not instruct) is available in the Featherless AI catalog before locking. If unavailable, escalate to BA before proceeding.
 
-1. HF Inference API format supported
-2. Provider selection via configuration
-3. Existing OpenAI-compatible flow unchanged
-4. Fallback mechanism works for HF-specific errors
-5. Span attributes include provider type
-6. `pnpm lint` passes
-7. `pnpm build` passes
-8. Unit tests updated/added
+### Change 2: `.env.example` update
 
-## Constraints & Risks
+Update the `huggingface` provider comment and example URL to reflect the router endpoint:
+- New example URL: `https://router.huggingface.co/featherless-ai/v1/completions`
+- Note that this endpoint uses OpenAI-compatible completions format (not HF Inference API format).
 
-1. **License Compliance:** Meta's Llama 3 Community License applies. No weight redistribution; proper attribution required. Implementation only calls HF API (no local weights).
+### Change 3: Comparison table content (page.tsx)
 
-2. **API Format Fragility:** HF Inference API format is less standardized than OpenAI's. Consider defensive parsing.
+File: `app/foundations/transformers/page.tsx`, section `data-testid="transformers-comparison"`.
 
-3. **Model Availability:** Meta-Llama-3-8B may have rate limits or availability issues on free tier. Existing fallback mechanism should handle this.
+| Cell | Current | Required |
+|---|---|---|
+| Column header (Scaled Base Model) | `Scaled Base Model` | `Meta-Llama-3-8B` |
+| Tokenization method (col 3) | `TBD (depends on selected model)` | `BPE (byte-pair encoding), 128K vocabulary` |
+| Context window (col 3) | `TBD` | `8,192 tokens` |
+| Model size (col 3) | `TBD` | `8B parameters` |
+| Card subtitle | `Use this template when you lock concrete model choices.` | *(remove entirely)* |
 
-## Requested Action
+Do not change row labels, table structure, or `data-testid="transformers-comparison"`.
 
-Please assess technical complexity and create an implementation plan. Key decisions needed:
+### Change 4: Unit tests
 
-1. **Provider detection strategy:** New env var (e.g., `FRONTIER_PROVIDER=huggingface|openai`) vs. URL-based detection?
-2. **Code organization:** Single route with conditionals vs. separate adapter modules?
-3. **Testing approach:** Mock HF responses in existing test file or separate test file?
+CR-013 added 7 HF-specific unit tests for `buildProviderRequestBody()` and `extractProviderOutput()`. These will need updating to assert the new completions format request body. This is expected scope for the implementing agent — no separate Testing handoff required (no route/testid/accessibility contract changes).
+
+---
+
+## Acceptance Criteria (from CR-014)
+
+- [ ] AC-1: `FRONTIER_PROVIDER=huggingface` + router URL + valid HF token → `mode: "live"`, non-empty, non-echoing output.
+- [ ] AC-2: `buildProviderRequestBody()` for `huggingface` emits `{ model, prompt, max_tokens, temperature }`.
+- [ ] AC-3: `return_full_text` does not appear in any active HF request path.
+- [ ] AC-4: Comparison table shows `BPE (byte-pair encoding), 128K vocabulary` / `8,192 tokens` / `8B parameters`; column header reads `Meta-Llama-3-8B`.
+- [ ] AC-5: Subtitle `"Use this template when you lock concrete model choices."` is removed.
+- [ ] AC-6: `.env.example` HF comment and example URL reflect router endpoint.
+- [ ] AC-7: `pnpm lint`, `pnpm build`, `pnpm test` pass with no new failures.
+
+---
+
+## Constraints
+
+- `data-testid="transformers-comparison"` must not change.
+- No new packages.
+- Do not remove either response extraction path in `extractProviderOutput()` unless confirmed unused.
+- No route renames; no accessibility contract changes → no E2E Testing handoff required.
+
+---
 
 ## Reference Files
 
-- Endpoint: `app/api/frontier/base-generate/route.ts`
-- Tests: `__tests__/api/frontier-base-generate.test.ts`
+- API route: `app/api/frontier/base-generate/route.ts`
+- Transformers page: `app/foundations/transformers/page.tsx`
+- Unit tests: `__tests__/api/frontier-base-generate.test.ts`
 - Env example: `.env.example`
-- CR: `agent-docs/requirements/CR-013-huggingface-inference-provider.md`
+- CR: `agent-docs/requirements/CR-014-hf-router-migration-and-comparison-table.md`

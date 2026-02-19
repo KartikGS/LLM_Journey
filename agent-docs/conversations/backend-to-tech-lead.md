@@ -1,122 +1,130 @@
-# Report: Backend -> Tech Lead
+# Backend → Tech Lead Report
 
 ## Subject
-`CR-013 - Add Hugging Face Inference API Provider Support`
+`CR-014 - HF Router Migration: Update buildProviderRequestBody() and unit tests`
+
+## Status
+`in_progress`
 
 ---
 
-## [Preflight: Assumptions]
+## Preflight: Assumptions
 
-1. **HF response shape `[{ "generated_text": "..." }]` confirmed** — The HF Serverless Inference API for text-generation tasks (`/models/{model_id}`) consistently returns a top-level JSON array with a single object containing `generated_text`. This is the documented format for the serverless endpoint and applies to `meta-llama/Meta-Llama-3-8B`. Implementation proceeded using this shape.
+1. **`extractProviderOutput()` handles `{ choices: [{ text }] }`** — CONFIRMED.
+   - Lines 226–239 of `route.ts`: function checks `root.choices`, gets `choices[0]`, attempts `firstChoice.message.content` (chat format path), then falls through to `firstChoice.text` (lines 236–239). The HF Router format `{ choices: [{ text: "..." }] }` maps directly to the `firstChoice.text` path. ✅
 
-2. **`mapProviderFailure()` is format-agnostic for status-code routing** — The function branches only on HTTP status codes (401/403 → `upstream_auth`, 429 → `quota_limited`, 5xx → `upstream_error`). HF error bodies will not surface a human-readable `providerMessage` via `extractProviderErrorMessage` because HF uses `{ "error": "string" }` (string value, not nested object), which the current parser cannot extract. Status code routing remains correct; the fallback message will be the generic one. Minor fidelity loss, not a blocker.
+2. **`mapProviderFailure()` is format-agnostic** — CONFIRMED.
+   - Lines 281–310 of `route.ts`: branches only on HTTP status codes (`429`, `401/403`, `>=500`, else). Accepts a pre-extracted `providerMessage` string with no inspection of response body shape. Router error responses (non-OK HTTP codes) will be handled identically. ✅
 
-## [Preflight: Adjacent Risks]
+3. **`return_full_text` absent from `route.ts`** — CONFIRMED. Not present anywhere in the file. AC-3 satisfied by default. ✅
 
-1. **HF 503 "model loading" response (flagged per handoff)** — HF free-tier returns `{ "error": "Model X is currently loading", "estimated_time": N }` with HTTP 503 on cold-start. The current `mapProviderFailure` maps 503 → `upstream_error`, which is technically correct. The `estimated_time` context is dropped. **Not implemented new handling — flagged for Tech Lead approval if desired.**
+## Preflight: Adjacent Risks
 
-2. **`generated_text` prefix echo (flagged per handoff)** — HF text-generation models default to `return_full_text=true`, causing `generated_text` to contain the input prompt concatenated with the generated continuation. This would surface the full string including the prompt to the Product End User. **Not stripping the prefix — flagged for Tech Lead approval before implementing any prefix removal.**
+- The HF array path in `extractProviderOutput()` (`Array.isArray(payload)`) is now dead code for live traffic (router uses `choices[].text`, not array format) but kept intentionally per the handoff freeze on `extractProviderOutput()`. Not a risk.
+- Test 3's mock currently uses old HF array format `[{ generated_text }]`. After the code change, this path still resolves correctly via `extractProviderOutput()`'s array branch — test will still pass. I will update the mock to completions format for self-consistency (minor deviation — noted in Deviations section).
 
-## [Preflight: Open Questions]
-- None that materially affected implementation validity or scope. Both flagged risks above were acknowledged in the handoff with clear guidance: flag, do not implement without approval.
+## Preflight: Open Questions
+none
 
-## [Preflight Status]
-- `clear-to-implement`
+## Preflight Status
+`clear-to-implement`
 
 ---
 
-## [Status]
-- `completed`
+## [CR-013 Historical Note]
+Prior CR-013 backend-to-tech-lead content replaced per Conversation File Freshness Rule. CR-013 status was `completed`. Artifacts preserved in `agent-docs/requirements/CR-013-huggingface-inference-provider.md` and `agent-docs/plans/CR-013-plan.md`.
 
-## [Scope Check]
+---
+
+## Status
+`completed`
+
+## Scope Check
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
 - Files modified:
   - `app/api/frontier/base-generate/route.ts`
   - `__tests__/api/frontier-base-generate.test.ts`
 - Scope compliance:
   - [x] All modified files are in Backend ownership or explicitly delegated.
-  - [x] Test files created/modified under explicit Tech Lead delegation for this CR.
+  - [x] Test files modified under explicit Tech Lead delegation for this CR.
 
-## [Changes Made]
+## Changes Made
 
 **`app/api/frontier/base-generate/route.ts`:**
-1. Added `const HF_MAX_NEW_TOKENS = 256` constant alongside existing timeout constants.
-2. Extended `FrontierConfig` type with `provider: 'openai' | 'huggingface'` field.
-3. Updated `loadFrontierConfig()` to read `FRONTIER_PROVIDER`: validates against `'openai'`/`'huggingface'` — unknown non-empty values return `configured: false, issueCode: 'invalid_config'` immediately; absent or `'openai'` defaults to `provider: 'openai'`.
-4. Added `buildProviderRequestBody()` pure helper — returns `{ inputs, parameters: { max_new_tokens: 256, temperature: 0.4 } }` for HF, or `{ model, messages, temperature: 0.4 }` for OpenAI.
-5. Replaced inline `JSON.stringify({...})` in `fetch()` call with `buildProviderRequestBody(frontierConfig.provider, prompt, frontierConfig.modelId)`.
-6. Extended `extractProviderOutput()` — added HF array-at-root check (`Array.isArray(payload)`) before existing OpenAI/Anthropic object checks; returns `generated_text` trimmed on success, `null` on empty (triggers `empty_provider_output` fallback).
-7. Added `span.setAttribute('frontier.provider', frontierConfig.provider)` immediately after `frontier.model_id` — covers all code paths including `!frontierConfig.configured`.
+- Updated the `huggingface` branch of `buildProviderRequestBody()` from HF Inference API format to OpenAI-compatible text completions format:
+  - Removed: `{ inputs: prompt, parameters: { max_new_tokens: HF_MAX_NEW_TOKENS, temperature: 0.4 } }`
+  - Added: `{ model: modelId, prompt, max_tokens: HF_MAX_NEW_TOKENS, temperature: 0.4 }`
+- No other changes. `extractProviderOutput()`, `loadFrontierConfig()`, span attributes, and error handling are untouched.
 
-**`__tests__/api/frontier-base-generate.test.ts`:**
-1. Added `delete process.env.FRONTIER_PROVIDER` to `beforeEach` cleanup block.
-2. Added `describe('HF Provider Path')` block with 7 test cases:
-   - HF live success → `mode: 'live'`, `output: 'HF output text'`
-   - HF request body format → fetch called with `{ inputs, parameters: { max_new_tokens: 256, temperature: 0.4 } }`; no `model`/`messages` fields
-   - HF 401 → `reason.code: 'upstream_auth'`
-   - HF 429 → `reason.code: 'quota_limited'`
-   - HF 503 → `reason.code: 'upstream_error'`
-   - HF empty `generated_text` → `mode: 'fallback'`, `reason.code: 'empty_provider_output'`
-   - Unknown `FRONTIER_PROVIDER` → `mode: 'fallback'`, `reason.code: 'invalid_config'`, `fetch` not called
+**`__tests__/api/frontier-base-generate.test.ts`** — `HF Provider Path` describe block only:
+1. `HF_ENV.FRONTIER_API_URL` → `https://router.huggingface.co/featherless-ai/v1/completions`
+2. `'should return live envelope when HF upstream succeeds'` → mock updated to `{ choices: [{ text: 'HF output text' }] }`
+3. `'should send HF request body format (inputs + parameters)'` → mock updated to completions format; assertions updated to `{ model, prompt, max_tokens: 256, temperature: 0.4 }` with `not.toHaveProperty('inputs')` and `not.toHaveProperty('parameters')`
+4. `'should return empty_provider_output fallback when HF generated_text is empty'` → mock updated to `{ choices: [{ text: '' }] }`
+5. Error case tests (401, 429, 503) and unknown-provider test — unchanged except URL update via `HF_ENV`.
 
-## [Verification Results]
+## Verification Results
 
-**Environmental note:** System Node.js is v16.20.1, below the documented minimum of >=20.x — classified as **environmental mismatch**. Verification commands were run using Node.js v18.19.0 via `~/.nvm/versions/node/v18.19.0` (nvm), which satisfies the `pnpm` minimum (>=18.12).
+**Environmental note:** System Node.js v16.20.1 — below documented minimum (>=20.x). Classified as **environmental mismatch**. Verification ran using Node.js v18.19.0 via `~/.nvm/versions/node/v18.19.0`.
 
-- `pnpm test` (scoped to frontier-base-generate): **pass** — 10 tests: 3 existing + 7 new, all green.
-  ```
-  PASS __tests__/api/frontier-base-generate.test.ts
-    Integration: Frontier Base Generate API
-      ✓ should return 400 with controlled error payload for invalid prompt (8 ms)
-      ✓ should return fallback envelope when provider config is missing (2 ms)
-      ✓ should return live envelope when upstream provider succeeds (2 ms)
-      HF Provider Path
-        ✓ should return live envelope when HF upstream succeeds (2 ms)
-        ✓ should send HF request body format (inputs + parameters) (2 ms)
-        ✓ should return upstream_auth fallback when HF returns 401 (2 ms)
-        ✓ should return quota_limited fallback when HF returns 429 (1 ms)
-        ✓ should return upstream_error fallback when HF returns 503 (1 ms)
-        ✓ should return empty_provider_output fallback when HF generated_text is empty (2 ms)
-        ✓ should return invalid_config fallback and not call fetch for unknown FRONTIER_PROVIDER (1 ms)
-  Tests: 10 passed, 10 total
-  ```
-- `pnpm lint`: **pass** — `✔ No ESLint warnings or errors`
-- `pnpm exec tsc --noEmit`: **pass** — exit code 0, no output
+**1. `pnpm test`** — PASS
+
+```
+PASS __tests__/api/frontier-base-generate.test.ts
+  Integration: Frontier Base Generate API
+    ✓ should return 400 with controlled error payload for invalid prompt (9 ms)
+    ✓ should return fallback envelope when provider config is missing (2 ms)
+    ✓ should return live envelope when upstream provider succeeds (2 ms)
+    HF Provider Path
+      ✓ should return live envelope when HF upstream succeeds (3 ms)
+      ✓ should send HF request body format (inputs + parameters) (2 ms)
+      ✓ should return upstream_auth fallback when HF returns 401 (2 ms)
+      ✓ should return quota_limited fallback when HF returns 429 (2 ms)
+      ✓ should return upstream_error fallback when HF returns 503 (5 ms)
+      ✓ should return empty_provider_output fallback when HF generated_text is empty (2 ms)
+      ✓ should return invalid_config fallback and not call fetch for unknown FRONTIER_PROVIDER (2 ms)
+
+Test Suites: 16 passed, 16 total
+Tests:       111 passed, 111 total
+```
+
+**2. `pnpm lint`** — PASS
+`✔ No ESLint warnings or errors` (pre-existing `next lint` deprecation notice — unrelated to CR)
+
+**3. `pnpm exec tsc --noEmit`** — PASS
+Exit code 0, no output.
 
 **DoD checklist:**
-- [x] `FRONTIER_PROVIDER=huggingface` sends `{ inputs, parameters: { max_new_tokens: 256, temperature: 0.4 } }` — verified by "HF request body format" test
-- [x] `FRONTIER_PROVIDER=openai` (or absent) sends `{ model, messages, temperature }` — existing "live envelope" test passes unchanged
-- [x] `FRONTIER_PROVIDER=<unknown>` triggers `invalid_config` fallback; `fetch` not called — verified by "Unknown FRONTIER_PROVIDER" test
-- [x] HF `[{ generated_text }]` parsed correctly as `mode: live` — verified by "HF live success" test
-- [x] HF empty `generated_text` triggers `empty_provider_output` fallback — verified by "HF empty generated_text" test
-- [x] `frontier.provider` span attribute set in all code paths after config load — set immediately after `frontier.model_id`, before `!frontierConfig.configured` branch
-- [x] All 7 new tests pass; all 3 existing tests pass unchanged — 10/10 tests green
+- [x] `buildProviderRequestBody()` for `huggingface` emits `{ model, prompt, max_tokens, temperature }` — verified by "HF request body format" test
+- [x] `buildProviderRequestBody()` for `openai` is unchanged — "live envelope when upstream provider succeeds" passes unchanged
+- [x] `return_full_text` does not appear anywhere in `route.ts` — confirmed absent; AC-3 satisfied by default
+- [x] `extractProviderOutput()` is unchanged — not touched
+- [x] All 7 HF tests pass with updated mocks; all 3 non-HF tests pass unchanged — 10/10 target spec, 111/111 full suite
+- [x] `pnpm test` passes — 111 tests, 16 suites, all green
 - [x] `pnpm lint` passes — ✔ No ESLint warnings or errors
 - [x] `pnpm exec tsc --noEmit` passes — exit code 0
 
-## [Out-of-Scope Requests Detected]
-- `none`
+## Out-of-Scope Requests Detected
+none
 
-## [Blockers]
-- `none`
+## Blockers
+none
 
-## [Failure Classification]
+## Failure Classification
 - `CR-related`: none
-- `pre-existing`: none observed in verification commands
-- `environmental`: System Node.js v16.20.1 is below the documented minimum (>=20.x); verified using Node v18.19.0 via nvm. Not a CR regression.
-- `non-blocking warning`: `next lint` deprecation notice (`next lint` replaced by ESLint CLI in Next.js 16) — pre-existing, unrelated to this CR.
+- `pre-existing`: none
+- `environmental`: System Node.js v16.20.1 below documented minimum (>=20.x); verified via Node v18.19.0 (nvm). Not a CR regression.
+- `non-blocking warning`: `next lint` deprecation notice — pre-existing, unrelated to this CR.
 
-## [Deviations]
-- `none`
+## Deviations
+- **Minor**: Updated test 3's mock response from `[{ generated_text: 'HF output text' }]` to `{ choices: [{ text: 'HF output text' }] }` for suite self-consistency. The handoff only specified assertion changes for test 3; the mock update was not required (old format still resolves via `extractProviderOutput()`'s array branch) but makes the test correctly represent the router format. No behavioral or contract impact.
 
-## [Ready for Next Agent]
-- `yes`
+## Ready for Next Agent
+yes
 
-## [Follow-up Recommendations]
-1. **HF 503 model loading**: Consider adding a distinct `model_loading` fallback reason code or surfacing `estimated_time` to the Product End User during cold starts. Requires Tech Lead decision.
-2. **`generated_text` prefix echo**: Consider passing `return_full_text: false` in HF request `parameters` to prevent the prompt from being echoed in output. Requires Tech Lead approval before implementing.
-3. **Node.js runtime**: System Node v16 is below project minimum (>=20.x). Recommend environment upgrade to avoid environmental mismatch on future verification runs.
+## Follow-up Recommendations
+none
 
 ---
-*Report created: 2026-02-19*
+*Report created: 2026-02-20*
 *Backend Agent*

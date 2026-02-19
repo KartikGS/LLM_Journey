@@ -98,7 +98,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
     describe('HF Provider Path', () => {
         const HF_ENV = {
-            FRONTIER_API_URL: 'https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B',
+            FRONTIER_API_URL: 'https://router.huggingface.co/featherless-ai/v1/completions',
             FRONTIER_MODEL_ID: 'meta-llama/Meta-Llama-3-8B',
             FRONTIER_API_KEY: 'hf-secret-key',
             FRONTIER_PROVIDER: 'huggingface',
@@ -113,7 +113,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
             (global.fetch as jest.Mock).mockResolvedValueOnce(
                 new Response(
-                    JSON.stringify([{ generated_text: 'HF output text' }]),
+                    JSON.stringify({ choices: [{ text: 'HF output text' }] }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 )
             );
@@ -132,7 +132,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
             (global.fetch as jest.Mock).mockResolvedValueOnce(
                 new Response(
-                    JSON.stringify([{ generated_text: 'HF output text' }]),
+                    JSON.stringify({ choices: [{ text: 'HF output text' }] }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 )
             );
@@ -143,11 +143,13 @@ describe('Integration: Frontier Base Generate API', () => {
 
             const calledBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body as string);
             expect(calledBody).toEqual({
-                inputs: prompt,
-                parameters: { max_new_tokens: 256, temperature: 0.4 },
+                model: 'meta-llama/Meta-Llama-3-8B',
+                prompt,
+                max_tokens: 256,
+                temperature: 0.4,
             });
-            expect(calledBody).not.toHaveProperty('model');
-            expect(calledBody).not.toHaveProperty('messages');
+            expect(calledBody).not.toHaveProperty('inputs');
+            expect(calledBody).not.toHaveProperty('parameters');
         });
 
         it('should return upstream_auth fallback when HF returns 401', async () => {
@@ -206,7 +208,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
             (global.fetch as jest.Mock).mockResolvedValueOnce(
                 new Response(
-                    JSON.stringify([{ generated_text: '' }]),
+                    JSON.stringify({ choices: [{ text: '' }] }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 )
             );
