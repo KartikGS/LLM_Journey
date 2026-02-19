@@ -10,6 +10,7 @@ const FRONTIER_OUTPUT_MAX_CHARS = 4000;
 const DEFAULT_TIMEOUT_MS = 8000;
 const MIN_TIMEOUT_MS = 1000;
 const MAX_TIMEOUT_MS = 20000;
+const HF_MAX_NEW_TOKENS = 256;
 
 const FALLBACK_SAMPLES = [
     'A frontier base model is strong at broad pattern recall but often inconsistent at instruction-following without adaptation.',
@@ -69,6 +70,7 @@ type FrontierConfig = {
     timeoutMs: number;
     configured: boolean;
     issueCode?: 'missing_config' | 'invalid_config';
+    provider: 'openai' | 'huggingface';
 };
 
 const metadataForModel = (modelId: string): BaseModelMetadata => ({
@@ -97,6 +99,21 @@ function loadFrontierConfig(): FrontierConfig {
     const modelId = process.env.FRONTIER_MODEL_ID?.trim() ?? '';
     const apiKey = process.env.FRONTIER_API_KEY?.trim() ?? '';
     const timeoutMs = parseTimeout(process.env.FRONTIER_TIMEOUT_MS);
+    const rawProvider = process.env.FRONTIER_PROVIDER?.trim();
+
+    if (rawProvider && rawProvider !== 'openai' && rawProvider !== 'huggingface') {
+        return {
+            apiUrl,
+            modelId,
+            apiKey,
+            timeoutMs,
+            configured: false,
+            issueCode: 'invalid_config',
+            provider: 'openai',
+        };
+    }
+
+    const provider: 'openai' | 'huggingface' = rawProvider === 'huggingface' ? 'huggingface' : 'openai';
 
     if (!apiUrl || !modelId || !apiKey) {
         return {
@@ -106,6 +123,7 @@ function loadFrontierConfig(): FrontierConfig {
             timeoutMs,
             configured: false,
             issueCode: 'missing_config',
+            provider,
         };
     }
 
@@ -120,6 +138,7 @@ function loadFrontierConfig(): FrontierConfig {
             timeoutMs,
             configured: false,
             issueCode: 'invalid_config',
+            provider,
         };
     }
 
@@ -129,6 +148,7 @@ function loadFrontierConfig(): FrontierConfig {
         apiKey,
         timeoutMs,
         configured: true,
+        provider,
     };
 }
 
@@ -165,7 +185,39 @@ function extractContentText(content: unknown): string | null {
     return null;
 }
 
+function buildProviderRequestBody(
+    provider: 'openai' | 'huggingface',
+    prompt: string,
+    modelId: string
+): Record<string, unknown> {
+    if (provider === 'huggingface') {
+        return {
+            inputs: prompt,
+            parameters: {
+                max_new_tokens: HF_MAX_NEW_TOKENS,
+                temperature: 0.4
+            },
+        };
+    }
+
+    return {
+        model: modelId,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4,
+    };
+}
+
 function extractProviderOutput(payload: unknown): string | null {
+    // HF: [{ generated_text: "..." }]
+    if (Array.isArray(payload) && payload.length > 0) {
+        const first = toRecord(payload[0]);
+        const text = first?.generated_text;
+        if (typeof text === 'string' && text.trim().length > 0) {
+            return text.trim();
+        }
+        return null; // HF array found but no usable text → empty_provider_output fallback
+    }
+
     const root = toRecord(payload);
     if (!root) {
         return null;
@@ -323,6 +375,7 @@ export async function POST(req: NextRequest) {
                 span.setAttribute('frontier.configured', frontierConfig.configured);
                 span.setAttribute('frontier.timeout_ms', frontierConfig.timeoutMs);
                 span.setAttribute('frontier.model_id', configuredModelId);
+                span.setAttribute('frontier.provider', frontierConfig.provider);
 
                 if (!frontierConfig.configured) {
                     const issueCode = frontierConfig.issueCode ?? 'missing_config';
@@ -351,13 +404,10 @@ export async function POST(req: NextRequest) {
                             'Content-Type': 'application/json',
                             Authorization: `Bearer ${frontierConfig.apiKey}`,
                         },
-                        body: JSON.stringify({
-                            model: frontierConfig.modelId,
-                            messages: [{ role: 'user', content: prompt }],
-                            temperature: 0.4,
-                        }),
+                        body: JSON.stringify(buildProviderRequestBody(frontierConfig.provider, prompt, frontierConfig.modelId)),
                         signal: controller.signal,
                     });
+                    console.log(upstreamResponse)
                 } catch (error) {
                     const isAbort = error instanceof Error && error.name === 'AbortError';
                     const reasonCode: FallbackReasonCode = isAbort ? 'timeout' : 'upstream_error';

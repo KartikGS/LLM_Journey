@@ -1,102 +1,198 @@
-# Handoff: Tech Lead -> Backend Agent
+# Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-012 - Frontier Base Inference API + Fallback Contract`
+`CR-013 - Add Hugging Face Inference API Provider Support`
 
 ## Status
 `issued`
 
-## Objective
-Implement a secure server endpoint for Stage 1 frontier interaction that returns live base-model output when provider config is available, and deterministic fallback output when it is not.
+---
 
-## Contract Delta
-- New route contract:
-  - `POST /api/frontier/base-generate`
-- New response-state contract for frontend consumer:
-  - Live mode: `mode: "live"` with generated output and explicit base-model labeling metadata.
-  - Fallback mode: `mode: "fallback"` with explanation + curated output for unavailable config/quota/timeout/upstream failures.
-- No changes to existing telemetry routes or existing page routes.
+## Objective
+
+Extend `app/api/frontier/base-generate/route.ts` to support the Hugging Face (HF) Inference API request/response format alongside the existing OpenAI-compatible format, controlled by a new `FRONTIER_PROVIDER` env var.
+
+---
 
 ## Rationale (Why)
-CR-012 requires the Transformers stage to bridge from tiny local mechanics to frontier-scale behavior. That requires a backend failure boundary for provider calls so secrets stay server-side and the user experience remains stable under missing config or quota pressure.
+
+The current endpoint only speaks OpenAI chat-completions format. The Human User wants to use `meta-llama/Meta-Llama-3-8B` via HF's free Inference API, which uses a different request body and response shape. Without this change, HF tokens cannot be used and Product End Users cannot experience a real 8B-parameter frontier model on the Transformers page.
+
+The UI (`FrontierBaseChat.tsx`) consumes only the response envelope (`mode`, `output`, `metadata`, `reason`) — it is **not touched by this CR**.
+
+---
 
 ## Constraints
-- Technical constraints:
-  - Use `pnpm` only.
-  - No dependency installation.
-  - Keep provider credentials server-side only (never in client bundle or response payload).
-  - Validate request payload (`prompt`) and reject invalid input with controlled response.
-  - Use bounded timeout behavior for upstream provider requests.
-  - Use graceful fallback mode for recoverable provider/config failures.
-- Security/architecture constraints:
-  - Do not modify CSP/middleware/security-header behavior.
-  - Do not alter telemetry proxy/token routes.
-  - Do not log secrets.
-- Ownership constraints:
-  - Backend-owned code only in this handoff, plus explicit delegated files listed in Scope.
-  - Do not modify UI/page code.
-  - Do not create/modify tests in this handoff (Testing Agent owns test work unless separately delegated).
+
+**Technical:**
+- No new npm dependencies. Use native `fetch` (already used in the route).
+- `FRONTIER_API_KEY` / `FRONTIER_API_URL` / `FRONTIER_MODEL_ID` env var names are unchanged.
+- New env var `FRONTIER_PROVIDER` defaults to `'openai'` when absent — existing deployments must be unaffected.
+- HF token must remain server-side only (same security boundary as existing `FRONTIER_API_KEY`).
+- `max_new_tokens` for HF requests is **256** (Tech Lead-specified constant; do not leave this as a magic number).
+- Temperature for HF requests is `0.4` (same as current OpenAI path).
+
+**Ownership:**
+- Files in scope: `app/api/frontier/base-generate/route.ts`, `__tests__/api/frontier-base-generate.test.ts`
+- `.env.example` has already been updated by Tech Lead — do not modify it.
+- Test work is **explicitly delegated to you** for this CR (Testing Agent not required).
+
+---
 
 ## Assumptions To Validate (Mandatory)
-- Provider endpoint can be called from server via API key and JSON payload.
-- Fallback response can be deterministic without external network dependency.
-- Response contract can be kept provider-agnostic for frontend reuse.
+
+1. HF Inference API always returns a top-level JSON array `[{ "generated_text": "..." }]` on success — confirm this matches the documented format before writing the parser.
+2. The existing `mapProviderFailure()` function (handling 401, 429, 5xx) is format-agnostic and applies unchanged to HF error responses — verify no HF-specific error shape is needed.
+
+---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
-- Any UI redesign or narrative-copy rewrite in `app/foundations/transformers/page.tsx`.
-- Any request to install provider SDK packages.
-- Any route rename or changes to existing continuity-link contracts.
+
+1. If HF's free-tier returns a 503 "model loading" response that doesn't fit the standard `mapProviderFailure` codes, flag this in your preflight note. Do not add new handling without Tech Lead approval.
+2. If the HF response includes the original prompt concatenated with the generated text in `generated_text` (a known HF behaviour for some models), flag it — do not silently strip a prompt prefix without Tech Lead approval.
+
+---
 
 ## Scope
+
 ### Files to Modify
-- `app/api/frontier/base-generate/route.ts`
-  - Implement endpoint, request validation, provider call, timeout handling, fallback handling, and stable response shape.
-- `.env.example`
-  - Add `FRONTIER_*` configuration keys with concise usage notes.
-- Optional backend utility/config file(s) as needed for clean parsing:
-  - `lib/config.ts` and/or backend utility module under `lib/` for env/timeouts/response mapping.
+
+**`app/api/frontier/base-generate/route.ts`**
+
+Implement these changes in the order listed:
+
+**1. Add constant** at the top (alongside `DEFAULT_TIMEOUT_MS` etc.):
+```typescript
+const HF_MAX_NEW_TOKENS = 256;
+```
+
+**2. Extend `FrontierConfig` type** — add `provider` field:
+```typescript
+type FrontierConfig = {
+    // ...existing fields...
+    provider: 'openai' | 'huggingface';
+};
+```
+
+**3. Update `loadFrontierConfig()`** — read and validate `FRONTIER_PROVIDER`:
+- Read `process.env.FRONTIER_PROVIDER?.trim()`.
+- If absent or `'openai'` → `provider: 'openai'`.
+- If `'huggingface'` → `provider: 'huggingface'`.
+- Any other non-empty value → return `configured: false, issueCode: 'invalid_config'` (no upstream call).
+- Default `provider: 'openai'` must be present in the `configured: true` return path.
+
+**4. Add `buildProviderRequestBody()` helper** (pure function, no side effects):
+```typescript
+// OpenAI format: { model, messages, temperature }
+// HF format:     { inputs, parameters: { max_new_tokens, temperature } }
+function buildProviderRequestBody(
+    provider: 'openai' | 'huggingface',
+    prompt: string,
+    modelId: string
+): Record<string, unknown>
+```
+
+**5. Replace the inline `JSON.stringify({...})` in the `fetch()` call** with:
+```typescript
+JSON.stringify(buildProviderRequestBody(frontierConfig.provider, prompt, frontierConfig.modelId))
+```
+
+**6. Extend `extractProviderOutput()`** — add HF array-at-root handling **before** the existing OpenAI/Anthropic checks (to prevent false-positives from the object-shape checks):
+```typescript
+// HF: [{ generated_text: "..." }]
+if (Array.isArray(payload) && payload.length > 0) {
+    const first = toRecord(payload[0]);
+    const text = first?.generated_text;
+    if (typeof text === 'string' && text.trim().length > 0) {
+        return text.trim();
+    }
+    return null; // HF array found but no usable text → empty_provider_output fallback
+}
+```
+
+**7. Add `frontier.provider` span attribute** in the `POST` handler, alongside the existing `frontier.model_id` set:
+```typescript
+span.setAttribute('frontier.provider', frontierConfig.provider);
+```
+Set this on every code path that reaches the `frontierConfig` (after config is loaded). Include it in the `!frontierConfig.configured` path too.
+
+---
+
+**`__tests__/api/frontier-base-generate.test.ts`**
+
+1. Add `delete process.env.FRONTIER_PROVIDER` to the `beforeEach` cleanup block alongside the existing deletes.
+
+2. Add a new `describe` block: `'HF Provider Path'`. Add these test cases:
+
+   - **HF live success** — `FRONTIER_PROVIDER=huggingface`, mock returns `[{ generated_text: 'HF output text' }]`, assert `body.mode === 'live'` and `body.output === 'HF output text'`.
+
+   - **HF request body format** — verify `global.fetch` was called with body containing `{ inputs: prompt, parameters: { max_new_tokens: 256, temperature: 0.4 } }` (not OpenAI format).
+
+   - **HF fallback on 401** — mock returns HTTP 401, assert `body.reason.code === 'upstream_auth'`.
+
+   - **HF fallback on 429** — mock returns HTTP 429, assert `body.reason.code === 'quota_limited'`.
+
+   - **HF fallback on 503** — mock returns HTTP 503, assert `body.reason.code === 'upstream_error'`.
+
+   - **HF empty generated_text** — mock returns `[{ generated_text: '' }]`, assert `body.mode === 'fallback'` and `body.reason.code === 'empty_provider_output'`.
+
+   - **Unknown FRONTIER_PROVIDER** — `FRONTIER_PROVIDER=unknown_provider`, assert `body.mode === 'fallback'`, `body.reason.code === 'invalid_config'`, and `global.fetch` was **not** called.
+
+3. The existing 3 tests (`invalid prompt`, `missing config`, `OpenAI live success`) must pass unchanged.
+
+---
 
 ## Definition of Done
-- [ ] `POST /api/frontier/base-generate` exists with typed, validated request handling.
-- [ ] Valid prompt + configured provider success path returns `mode: "live"` and non-empty output.
-- [ ] Missing config/quota/timeout/upstream failure paths return `mode: "fallback"` with explanatory reason and safe output.
-- [ ] Base-model (non-adapted/non-assistant) label metadata is included in response contract for frontend display.
-- [ ] Secrets are not returned to client and not logged.
-- [ ] `.env.example` documents required `FRONTIER_*` variables.
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
+
+- [ ] `FRONTIER_PROVIDER=huggingface` sends `{ inputs, parameters: { max_new_tokens: 256, temperature: 0.4 } }` to configured URL
+- [ ] `FRONTIER_PROVIDER=openai` (or absent) sends `{ model, messages, temperature }` — existing behavior unchanged
+- [ ] `FRONTIER_PROVIDER=<unknown>` triggers `invalid_config` fallback; `fetch` is not called
+- [ ] HF `[{ generated_text }]` parsed correctly as `mode: live` output
+- [ ] HF empty `generated_text` triggers `empty_provider_output` fallback
+- [ ] `frontier.provider` span attribute set in all code paths after config load
+- [ ] All 7 new tests pass; all 3 existing tests pass unchanged
+- [ ] `pnpm lint` passes
+- [ ] `pnpm exec tsc --noEmit` passes
+
+---
 
 ## Clarification Loop (Mandatory)
-- Before implementation, post preflight assumptions/risks/questions in `agent-docs/conversations/backend-to-tech-lead.md`.
-- If open questions can alter API contract or scope validity, pause and wait for Tech Lead response.
+
+Before implementation, post your preflight note (assumptions, risks, open questions) to:
+`agent-docs/conversations/backend-to-tech-lead.md`
+
+Pay special attention to the two flagged assumptions above. If the HF `generated_text` prefix-echo or 503 model-loading behaviors are confirmed risks, pause and report before writing any handling for them.
+
+---
 
 ## Verification
-1. Implement backend route and env contract updates.
-2. Run `pnpm lint`.
-3. Run `pnpm exec tsc --noEmit`.
-4. Provide behavioral evidence for:
-   - Live success path (when config is present),
-   - Fallback path (when config missing or provider failure simulated),
-   - Invalid prompt path (input validation).
 
-## Reference Files
-- `agent-docs/requirements/CR-012-transformers-tiny-to-frontier-bridge.md`
-- `agent-docs/plans/CR-012-plan.md`
-- `app/foundations/transformers/page.tsx`
-- `agent-docs/architecture.md`
-- `agent-docs/technical-context.md`
+Run in this order (do not run concurrently):
+1. `pnpm test` — full suite; all tests must pass
+2. `pnpm lint` — must pass clean
+3. `pnpm exec tsc --noEmit` — must pass clean
+
+Report results using the Command Evidence Standard from `agent-docs/testing-strategy.md`.
+
+---
 
 ## Report Back
-Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using:
-- `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
 
-Include:
-- status (`completed`, `blocked`, or `partial`)
-- scope compliance
-- changed files
-- verification command results
-- failure classification (`CR-related`, `pre-existing`, `environmental`, `non-blocking warning`)
-- readiness for next agent
+Write your completion report to:
+`agent-docs/conversations/backend-to-tech-lead.md`
 
-*Handoff created: 2026-02-15*
+Use template: `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
+
+---
+
+## Reference Files
+
+- Plan: `agent-docs/plans/CR-013-plan.md`
+- CR: `agent-docs/requirements/CR-013-huggingface-inference-provider.md`
+- Route: `app/api/frontier/base-generate/route.ts`
+- Tests: `__tests__/api/frontier-base-generate.test.ts`
+- Env example (already updated): `.env.example`
+
+---
+*Handoff created: 2026-02-19*
 *Tech Lead Agent*

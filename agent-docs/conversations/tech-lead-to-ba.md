@@ -1,127 +1,119 @@
-# Handoff: Tech Lead -> BA Agent
+# Handoff: Tech Lead → BA Agent
 
 ## Subject
-CR-012 - Transformers Stage Narrative Upgrade (Tiny -> Frontier -> Adaptation Bridge)
+`CR-013 — Hugging Face Inference API Provider Support`
 
 ## Status
 `verified`
 
+---
+
 ## Technical Summary
-- CR-012 implementation is complete and integrated across backend, frontend, and testing scopes.
-- Backend added a secure frontier failure-boundary route:
-  - `POST /api/frontier/base-generate` with validated prompt input, bounded timeout, live/fallback envelope, and no secret exposure (`app/api/frontier/base-generate/route.ts:277`).
-- Frontend restructured Stage 1 into the required narrative flow with deterministic contracts:
-  - `transformers-how`, `transformers-try`, `transformers-frontier`, `transformers-issues`, `transformers-next-stage`, `transformers-comparison` (`app/foundations/transformers/page.tsx:20`, `app/foundations/transformers/page.tsx:85`, `app/foundations/transformers/page.tsx:89`, `app/foundations/transformers/page.tsx:175`, `app/foundations/transformers/page.tsx:196`, `app/foundations/transformers/page.tsx:123`).
-- Frontier interaction UI was added with explicit live/fallback status and resilient output rendering:
-  - `frontier-form`, `frontier-input`, `frontier-submit`, `frontier-status`, `frontier-output` (`app/foundations/transformers/components/FrontierBaseChat.tsx:232`, `app/foundations/transformers/components/FrontierBaseChat.tsx:238`, `app/foundations/transformers/components/FrontierBaseChat.tsx:250`, `app/foundations/transformers/components/FrontierBaseChat.tsx:205`, `app/foundations/transformers/components/FrontierBaseChat.tsx:266`).
-- Existing continuity contracts were preserved:
-  - `transformers-continuity-links`, `transformers-link-home`, `transformers-link-adaptation` (`app/foundations/transformers/page.tsx:203`, `app/foundations/transformers/page.tsx:211`, `app/foundations/transformers/page.tsx:219`).
-- Tests were updated in the same CR for changed contracts:
-  - API: `__tests__/api/frontier-base-generate.test.ts`
-  - Component: `__tests__/components/FrontierBaseChat.test.tsx`
-  - E2E: `__tests__/e2e/transformer.spec.ts`
+
+CR-013 adds HF Inference API provider support to the existing `POST /api/frontier/base-generate` route via a new `FRONTIER_PROVIDER` env var. The implementation is a surgical extension to a single backend file; no UI changes, no new dependencies, no route or selector contract changes.
+
+**Changes delivered:**
+- `app/api/frontier/base-generate/route.ts` — added `FRONTIER_PROVIDER` config reading + validation, `buildProviderRequestBody()` helper (OpenAI vs HF formats), extended `extractProviderOutput()` to handle HF array-at-root `[{ generated_text }]`, added `frontier.provider` span attribute on all code paths
+- `__tests__/api/frontier-base-generate.test.ts` — 7 new HF-specific test cases; 3 existing tests unchanged; `FRONTIER_PROVIDER` cleanup added to `beforeEach`
+- `.env.example` — `FRONTIER_PROVIDER` entry with usage notes for both providers (Tech Lead direct edit)
+
+---
 
 ## Evidence of AC Fulfillment
-- [x] AC-1: Transformers page renders clear 5-part flow (`How`, `Try`, `Frontier`, `Issues`, `Next Stage`). — Evidence: `app/foundations/transformers/page.tsx:20`, `app/foundations/transformers/page.tsx:85`, `app/foundations/transformers/page.tsx:89`, `app/foundations/transformers/page.tsx:175`, `app/foundations/transformers/page.tsx:196`
-- [x] AC-2: `How` section states tiny-model purpose and includes working Colab link. — Evidence: `app/foundations/transformers/page.tsx:43`, `app/foundations/transformers/page.tsx:58`
-- [x] AC-3: Frontier interaction exists and is labeled as base-model without assistant fine-tuning. — Evidence: `app/foundations/transformers/components/FrontierBaseChat.tsx:81`, `app/foundations/transformers/components/FrontierBaseChat.tsx:131`, `app/foundations/transformers/components/FrontierBaseChat.tsx:260`
-- [x] AC-4: Missing-config/quota-unavailable path handled gracefully with explanatory fallback UI. — Evidence: `app/api/frontier/base-generate/route.ts:327`, `app/api/frontier/base-generate/route.ts:390`, `app/foundations/transformers/components/FrontierBaseChat.tsx:139`, `app/foundations/transformers/components/FrontierBaseChat.tsx:151`
-- [x] AC-5: Issues section includes at least 3 concrete base-model limitations. — Evidence: `app/foundations/transformers/page.tsx:184`, `app/foundations/transformers/page.tsx:188`, `app/foundations/transformers/page.tsx:191`
-- [x] AC-6: Next-stage bridge links unresolved issues to adaptation and links to `/models/adaptation`. — Evidence: `app/foundations/transformers/page.tsx:196`, `app/foundations/transformers/page.tsx:214`
-- [x] AC-7: Comparison artifact present on-page. — Evidence: `app/foundations/transformers/page.tsx:123`
-  - Deviation note: original wording targeted a same-prompt Tiny vs Frontier artifact; on 2026-02-15 this was user-directed to a generalized comparison template and matching E2E assertion removal (captured in testing report).
-- [x] AC-8: Quality checks and required testing sync complete. — Evidence: verification commands below + updated tests in `__tests__/api/frontier-base-generate.test.ts:58`, `__tests__/components/FrontierBaseChat.test.tsx:16`, `__tests__/e2e/transformer.spec.ts:4`
+
+- [x] HF Inference API format supported: `POST {FRONTIER_API_URL}` with `{ inputs: prompt, parameters: { max_new_tokens: 256, temperature: 0.4 } }` request and `[{ generated_text }]` response parsed. — Verified: `app/api/frontier/base-generate/route.ts:188-208` (`buildProviderRequestBody`, `extractProviderOutput`); test: `__tests__/api/frontier-base-generate.test.ts:130` ("should send HF request body format")
+
+- [x] Provider selection via configuration: `FRONTIER_PROVIDER=huggingface` enables HF path; absent or `=openai` preserves OpenAI path; unknown value triggers `invalid_config` fallback. — Verified: `app/api/frontier/base-generate/route.ts:102-116` (`loadFrontierConfig`); tests: `__tests__/api/frontier-base-generate.test.ts:111,223`
+
+- [x] Existing OpenAI-compatible flow unchanged: all 3 pre-existing tests pass without modification. — Verified: `pnpm test` → 111/111 passed; existing `'should return live envelope when upstream provider succeeds'` test at line 240 passes unchanged
+
+- [x] Fallback mechanism triggers appropriately for HF-specific errors (401, 429, 5xx, timeout): `mapProviderFailure()` is format-agnostic and handles HF HTTP status codes identically to OpenAI. — Verified: tests at `__tests__/api/frontier-base-generate.test.ts:153,169,185`
+
+- [x] Span attributes include provider type: `frontier.provider` set at `app/api/frontier/base-generate/route.ts:378`, before all branching paths (covers configured, unconfigured, and invalid-config paths). — Verified: `app/api/frontier/base-generate/route.ts:375-378`
+
+- [x] `pnpm lint` passes — Evidence below
+
+- [x] `pnpm build` passes — Evidence below
+
+- [x] Unit tests updated/added for HF response parsing: 7 new tests in `describe('HF Provider Path')`. — Verified: `__tests__/api/frontier-base-generate.test.ts:99-237`
+
+---
 
 ## Verification Commands
+
 - Command: `pnpm test`
-- Scope: `full suite`
-- Execution Mode: `sandboxed`
-- Result: `PASS` (16 suites, 104 tests)
+- Scope: full suite (16 suites)
+- Execution Mode: local-equivalent/unsandboxed (Node v18.19.0 via nvm; system Node v16 is below pnpm minimum)
+- Result: **PASS** — 111 tests, 16 suites, 0 failures
 
 - Command: `pnpm lint`
-- Scope: `full suite`
-- Execution Mode: `sandboxed`
-- Result: `PASS` (no ESLint errors)
+- Scope: full suite
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — `✔ No ESLint warnings or errors`
 
 - Command: `pnpm exec tsc --noEmit`
-- Scope: `full TypeScript check`
-- Execution Mode: `sandboxed`
-- Result: `PASS`
+- Scope: full TypeScript check
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — exit code 0, no output
 
 - Command: `pnpm build`
-- Scope: `production build`
-- Execution Mode: `sandboxed`
-- Result: `PASS`
+- Scope: production build
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — all 6 routes compiled; `ƒ /api/frontier/base-generate` present
 
-- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
-- Scope: `targeted transformer E2E`
-- Execution Mode: `sandboxed`
-- Browser Scope (if E2E): `N/A (startup failed before browser execution)`
-- Result: `FAIL` (`Process from config.webServer exited early`)
-
-- Command: `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts`
-- Scope: `targeted transformer E2E`
-- Execution Mode: `local-equivalent/unsandboxed`
-- Browser Scope (if E2E): `chromium/firefox/webkit`
-- Result: `PASS` (`9 passed`)
-
-- Command: `pnpm test:e2e`
-- Scope: `full E2E suite`
-- Execution Mode: `sandboxed`
-- Browser Scope (if E2E): `N/A (startup failed before browser execution)`
-- Result: `FAIL` (`Process from config.webServer exited early`)
-
-- Command: `pnpm test:e2e`
-- Scope: `full E2E suite`
-- Execution Mode: `local-equivalent/unsandboxed`
-- Browser Scope (if E2E): `chromium/firefox/webkit`
-- Result: `PASS` (`24 passed`)
+---
 
 ## Failure Classification Summary
-- CR-related:
-  - `none` (after user-directed scope adjustment on comparison assertion)
-- Pre-existing:
-  - `none observed`
-- Environmental:
-  - Sandboxed Playwright startup failure for both targeted and full E2E:
-    - `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` -> `Process from config.webServer exited early`
-    - `pnpm test:e2e` -> `Process from config.webServer exited early`
-- Non-blocking warning:
-  - `pnpm lint`: Next.js deprecation notice for `next lint`
-  - `pnpm build` / E2E webserver logs: OpenTelemetry bundling warnings (`require-in-the-middle` critical dependency)
-  - E2E runtime logs: OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) with no user-flow failure
+
+- **CR-related**: none
+- **Pre-existing**: none observed in this CR's scope
+- **Environmental**: System Node.js v16.20.1 is below the pnpm minimum (>=18.12) and the project minimum (>=20.x); verified using Node v18.19.0 via nvm. Not a CR regression — confirmed pre-existing from CR-012 Backend report.
+- **Non-blocking warning**:
+  - `pnpm lint`: `next lint` deprecation notice (pre-existing)
+  - `pnpm build`: OTel `require-in-the-middle` critical dependency warning (pre-existing)
+
+---
 
 ## Adversarial Diff Review
-- Verified backend security boundary:
-  - API key remains server-side only, request input is validated, and fallback responses are deterministic (`app/api/frontier/base-generate/route.ts:20`, `app/api/frontier/base-generate/route.ts:95`, `app/api/frontier/base-generate/route.ts:348`).
-- Verified frontend contract and continuity stability:
-  - route/href continuity preserved to `/models/adaptation` (`app/foundations/transformers/page.tsx:214`)
-  - required `data-testid` contracts added and exercised by tests (`__tests__/e2e/transformer.spec.ts:7`, `__tests__/components/FrontierBaseChat.test.tsx:19`)
-- Verified testing synchronization for changed contracts in same CR:
-  - API/component/E2E coverage added for new frontier behavior.
-- Residual risk:
-  - Comparison artifact semantics are now template-based rather than same-prompt live comparison due explicit user direction; BA should record this deviation formally in CR closure.
+
+- **Backward compatibility**: `FRONTIER_PROVIDER` absent → defaults to `'openai'` (line 116). No env change required for existing deployments. Verified by 3 pre-existing tests passing unchanged.
+- **Security boundary**: `FRONTIER_API_KEY` remains server-side only. No provider-format information leaked in the response envelope (same `LiveModeResponse | FallbackModeResponse` contract).
+- **HF parser placement**: `extractProviderOutput()` array check placed before OpenAI/Anthropic object checks — prevents false-positive matches on OpenAI/Anthropic shaped payloads. Correct.
+- **Unknown provider gate**: `loadFrontierConfig()` returns `configured: false, issueCode: 'invalid_config'` before URL validation or upstream call for any unrecognised `FRONTIER_PROVIDER` value. Correct.
+- **Span coverage**: `frontier.provider` set on line 378 before the `!frontierConfig.configured` branch — covers all code paths including invalid-config and missing-config early returns. Correct.
+
+---
 
 ## Technical Retrospective
-- The Stage 1 narrative now cleanly bridges tiny mechanics to frontier limits and adaptation continuity without introducing new infrastructure dependencies.
-- The frontier backend contract is provider-agnostic and resilient, enabling live-when-configured behavior with deterministic fallback.
-- User-directed scope change was applied late in testing: same-prompt comparison requirement was intentionally relaxed to a template artifact; this requires BA-level deviation acknowledgment for historical correctness.
+
+**One open product quality issue (not an AC blocker, recommend follow-up CR):**
+
+HF text-generation API defaults to `return_full_text: true`. This means `generated_text` in the API response includes the input prompt concatenated with the generated continuation. The current implementation does not include `return_full_text: false` in the HF request `parameters` — a decision deferred per the handoff protocol (Backend correctly flagged and did not implement without approval).
+
+Effect: Product End Users see the full prompt echoed back at the start of the output when using the HF provider.
+
+**Recommendation**: Open a follow-up CR to add `return_full_text: false` to `buildProviderRequestBody()` for the HF branch (single-line change, no new tests required — the existing HF tests mock the response). This should be done before the User does live testing with an HF token.
+
+The User's manual validation step (configure HF provider, send a prompt via Transformers page, observe response) will surface this behavior directly — flagging here to set expectations.
+
+---
 
 ## Deployment Notes
-- Added environment template keys for frontier integration:
-  - `FRONTIER_API_URL`, `FRONTIER_MODEL_ID`, `FRONTIER_API_KEY`, `FRONTIER_TIMEOUT_MS` (`.env.example:13`)
-- No package additions.
-- No middleware/CSP/security-boundary regressions detected.
 
-## Link to Updated Docs
-- `agent-docs/requirements/CR-012-transformers-tiny-to-frontier-bridge.md`
-- `agent-docs/plans/CR-012-plan.md`
+- New env var: `FRONTIER_PROVIDER='openai'` | `'huggingface'` — documented in `.env.example`
+- When switching to HF: set `FRONTIER_PROVIDER=huggingface`, `FRONTIER_API_URL=https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B`, `FRONTIER_API_KEY=<HF_TOKEN>`
+- No package additions. No middleware, CSP, or security-boundary changes.
+
+---
+
+## Link to Updated Artifacts
+
+- `agent-docs/requirements/CR-013-huggingface-inference-provider.md`
+- `agent-docs/plans/CR-013-plan.md`
 - `agent-docs/conversations/tech-lead-to-backend.md`
 - `agent-docs/conversations/backend-to-tech-lead.md`
-- `agent-docs/conversations/tech-lead-to-frontend.md`
-- `agent-docs/conversations/frontend-to-tech-lead.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/conversations/testing-to-tech-lead.md`
+- `.env.example`
 
-*Report created: 2026-02-15*
+---
+*Report created: 2026-02-19*
 *Tech Lead Agent*
