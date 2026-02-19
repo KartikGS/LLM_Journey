@@ -407,7 +407,6 @@ export async function POST(req: NextRequest) {
                         body: JSON.stringify(buildProviderRequestBody(frontierConfig.provider, prompt, frontierConfig.modelId)),
                         signal: controller.signal,
                     });
-                    console.log(upstreamResponse)
                 } catch (error) {
                     const isAbort = error instanceof Error && error.name === 'AbortError';
                     const reasonCode: FallbackReasonCode = isAbort ? 'timeout' : 'upstream_error';

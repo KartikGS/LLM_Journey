@@ -17,6 +17,7 @@ This document defines the mandatory tools and environment configurations for thi
 ### Runtime Preflight (Mandatory)
 - Run `node -v` once per execution session before verification commands.
 - If runtime is below the documented minimum, classify as an **environmental mismatch** in the role report instead of silently downgrading requirements.
+- **Recovery path**: Use `nvm use <documented-version>` (or equivalent version manager command) to activate the documented runtime version. Re-run the preflight check after switching. If the version manager is unavailable, report as a blocker via the feedback protocol — do not proceed with a mismatched runtime.
 
 ## Testing Stack
 - **Unit/Integration**: Jest + React Testing Library

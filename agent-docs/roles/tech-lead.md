@@ -65,7 +65,7 @@ The Tech Lead may **only** directly modify:
 |----------|-------|----------|
 | **Project Config** | Root config files | `tsconfig.json`, `next.config.js`, `jest.config.ts`, `tailwind.config.ts` |
 | **Dependency Governance** | Dependency manifest + lockfile | `package.json`, `pnpm-lock.yaml` (install/update operations only) |
-| **Environment** | Env templates | `.env.example`, `.env.local.example` |
+| **Environment** | Env templates | `.env.example`, `.env.local.example`. Note: Backend may also add new env vars to `.env.example` when directly introduced by their CR scope (no explicit delegation required; must be recorded in preflight note). |
 | **Documentation** | Agent docs, README | `README.md`, `agent-docs/*.md` |
 | **CI/CD** | Workflow files | `.github/workflows/*` |
 | **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*` (generic utilities only) |
@@ -208,9 +208,10 @@ Before any code is modified or any terminal command is run (except for discovery
 -  **Determine Delegation**: 
     - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/roles/sub-agents/`).
     - Define the order of execution.
-    - **MANDATORY**: Specify the Testing Sequence. 
+    - **MANDATORY**: Specify the Testing Sequence.
       - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
       - Deciding between Test-Driven Development (TDD) or Implementation-First is a Tech Lead technical decision.
+      - **Exception**: When tests are explicitly delegated to Backend (not Testing Agent) in the same handoff, TDD is structurally unavailable. Use Implementation-First and state this explicitly in the plan.
     - **Code Ownership**: 
       - **Tech Lead Agent**: Owns Project Configuration, Documentation, and Shared Infra only.
       - **Sub-Agents**: Own ALL Feature Code (`components/`, `app/`, `hooks/`, feature tests).
@@ -240,7 +241,7 @@ Present the **complete plan** to the USER, including:
 > If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Tech Lead Agent MUST halt, inform the BA, and potentially return to **Validate & Internalize Phase** (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
 
 
-**Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
+**Skip condition:** See `workflow.md` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here).
 
 ---
 
@@ -276,6 +277,8 @@ An ADR **must** be created when:
 - Adding cross-cutting concerns
 - Changing security or observability boundaries
 
+**Decision test**: Create an ADR when the change introduces a new top-level concept (provider type, auth mechanism, rendering boundary, observability contract). Do NOT create an ADR when the change extends an existing documented pattern (new value in an existing config enum, new route following an existing handler structure).
+
 ADRs live in:
 `agent-docs/decisions/`
 
@@ -286,21 +289,23 @@ ADRs live in:
 Before handing off to BA Agent, complete the **Verification Checklist**:
 
 #### Verification Checklist
+
+> **Verification scope**: Sub-agent verification is scoped to affected files (proves new work passes locally). Tech Lead verification runs the full suite (proves integration with the rest of the system is intact). Running both is intentional — they serve different purposes.
+
 - [ ] Read sub-agent report (`conversations/<role>-to-tech-lead.md`)
 - [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
     - **Rule**: Never trust the sub-agent's verification blindly.
     - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-- [ ] Run quality gates in sequence (per `testing-strategy.md`):
-  1. `pnpm test`
-  2. `pnpm lint`
-  3. `pnpm exec tsc --noEmit`
-  4. `pnpm build`
+    - **Check**: Look for debug artifacts (console.log, console.error, commented-out code blocks, TODO markers) in production code paths.
+    - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
+- [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there; not duplicated here.)
 - [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
 - [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.
 - [ ] For global/browser-sensitive changes that include E2E scope, ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
 - [ ] If UI was changed: verify Light/Dark mode rendering
 - [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
+- [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries whose root causes are resolved by this CR.
 - [ ] Verify documentation updates
 - [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
 

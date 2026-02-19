@@ -11,6 +11,7 @@
 - [Route/selector/semantic contract inventory when UI or route scope is involved]
 
 ## Configuration Specifications
+<!-- Purpose: Record TL decisions that sub-agents would otherwise have to guess — constant values, valid option sets, default behaviors for failure paths on type extensions, etc. -->
 - [MANDATORY for task involving config files]
 - [Define critical rules/schema here. Do not defer critical logic to sub-agent]
 - [e.g. "eslint rules: warn on console.log", "commitlint scopes: [api, ui] only"]
@@ -25,12 +26,14 @@
 - [Architectural impacts]
 
 ## Contract Delta Assessment (Mandatory)
+<!-- If backend-only scope (no route, data-testid, or accessibility contract changes), replace this section with: "No contract changes — backend-only scope." -->
 - Route contracts changed? [yes/no + details]
 - `data-testid` contracts changed? [yes/no + details]
 - Accessibility/semantic contracts changed? [yes/no + details]
 - Testing handoff required per workflow matrix? [yes/no + rationale]
 
 ## Architecture-Only Freeze Checklist (Conditional)
+<!-- Delete this section if this is not an Architecture-Only CR. -->
 If CR intent is architecture-only/refactor-only:
 - [ ] No visual redesign
 - [ ] No copy/content rewrite

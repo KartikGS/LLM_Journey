@@ -23,7 +23,7 @@
 ### Technical Planning & Delegation Phase (Tech Lead Agent)
 1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
 2. Tech Lead assesses technical complexity and identifies required sub-agents.
-3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued.
+3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
 4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `/agent-docs/plans/TEMPLATE.md`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
    - **Exception (narrow):** Skip explicit Go/No-Go only for strictly `[S][DOC]` work or pure discovery sessions with no execution/delegation handoff.
@@ -59,6 +59,7 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
 - Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
+- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's conversation content is captured in its plan, completion report, or CR artifact. Do not replace until this is verified.
 
 #### Delegation Mode Rules
 - **Parallel Mode**
@@ -109,7 +110,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
    - assumptions being made,
    - adjacent risks not covered by current scope,
    - open questions that could affect implementation validity.
-   If open questions are non-empty and materially affect validity/scope, pause and wait for Tech Lead clarification.
+   If open questions are non-empty and materially affect validity/scope, pause and wait for Tech Lead clarification. *(In synchronous sessions: flag the question in your preflight output and await a response in the same session turn before continuing implementation.)*
 4. **Pause vs Proceed Decision Rule (Mandatory)**:
    - **Proceed** when assumptions are testable locally and implementation does not change scope/contracts/ownership.
    - **Pause** when any open question can change route/API/test-id contracts, accessibility semantics, ownership boundaries, or expected behavior with two or more plausible implementations.
@@ -155,7 +156,8 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 3. Tech Lead ensures integration works
 4. **E2E Contract Closure Check (Conditional)**: For CRs touching routes/page structure/test IDs, Tech Lead verifies matching E2E assertion updates are present in the same CR (not deferred silently).
 5. Tech Lead updates architectural docs if needed
-6. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
+6. **Post-Verification Drift Check (Mandatory):** Before issuing the BA handoff, confirm that feature files verified in steps 1–5 have not been modified after verification was recorded — whether by an agent or by the Human User directly. If drift is detected, a re-verification pass is required. Note the drift in the BA handoff with the original and current file state.
+7. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.

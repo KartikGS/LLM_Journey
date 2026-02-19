@@ -136,7 +136,7 @@ Every BA task **must** produce:
    - **Strict Validation**: Do not accept "It's done". Check for:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?
-   - **AC Evidence Annotation**: When verifying each AC, mark it `[x]` in the CR document with a one-line evidence reference (e.g., `[x] Gradient glows — Verified: page.tsx L62-68`). This creates an audit trail of what was checked.
+   - **AC Evidence Annotation**: Per `workflow.md` Acceptance Phase step 2 (canonical source for format and evidence requirements).
    - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `agent-docs/workflow.md` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
    - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
    - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
@@ -168,11 +168,13 @@ Use measurable signals:
 ### BA Closure Checklist (Mandatory)
 Before declaring a CR closed, complete all items:
 - [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX-<slug>.md`
-- [ ] Every AC marked with `[x]` + one-line evidence reference
+- [ ] Every AC marked with `[x]` + one-line evidence reference (per `workflow.md` Acceptance Phase step 2)
 - [ ] Deviations reviewed and logged in "Deviations Accepted" (`Accepted` or `Escalated`)
 - [ ] Any pre-existing unrelated failures added to `project-log.md` as `Next Priorities`
 - [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
 - [ ] Human-facing closure note sent with outcome + residual risks (if any)
+- [ ] No debug artifacts spotted in verified production code paths. If found after TL verification: flag in CR Notes, notify user directly. Does not block closure.
+- [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 
 ---
 

@@ -3,6 +3,9 @@
 ## Subject
 `[CR-ID] - [Backend Report Title]`
 
+## [Status]
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
+
 ## [Preflight: Assumptions]
 - [Assumption 1]
 - [Assumption 2]
@@ -16,9 +19,6 @@
 
 ## [Preflight Status]
 - `clear-to-implement` | `blocked`
-
-## [Status]
-- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`

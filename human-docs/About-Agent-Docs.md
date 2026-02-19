@@ -1,6 +1,6 @@
 # Idea
 
-Agent docs aims to create documentation that agents can easily accessible to gather appropriate context depending on the task at hand. Attempt is to have a modularized representation of the project so that non overlaping responsibilities can be assigned to different agents.
+Agent docs aims to create documentation that agents can easily access to gather appropriate context depending on the task at hand. It attempts to have a modularized representation of the project so that non overlaping responsibilities can be assigned to different agents.
 
 # Refinement
 

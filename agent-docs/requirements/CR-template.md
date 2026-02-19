@@ -1,11 +1,12 @@
 # CR-XXX: [Title]
 
 ## Status
-[Draft | Clarified | In Progress | Done | Blocked]
+[Draft | Clarified | In Progress | Done | Done (user validation pending) | Blocked]
 
 ## Business Context
-**User Need:** 
+**User Need:**
 **Expected Value:**
+**Execution Mode:** [Standard | Fast | Heavy]
 
 ## Functional Requirements
 1. 
@@ -52,7 +53,7 @@
 ## Notes
 [BA Agent notes, user clarifications, etc.]
 
-## Technical Analysis (filled by Tech Lead)
+## Technical Analysis (filled by Tech Lead — required for M/L/H complexity; optional for [S])
 **Complexity:** [Low | Medium | High]
 **Estimated Effort:** [S | M | L]
 **Affected Systems:**

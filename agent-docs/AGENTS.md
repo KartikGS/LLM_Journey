@@ -83,21 +83,18 @@ If intent is unclear, stop and ask the user.
 ## After Reading - What Now?
 
 > [!CAUTION]
-> **Mandatory Reading Check**: Before you take your first action in this session, you MUST list the files you have read from the "Required Reading" section. If you proceed without naming these files, you are in violation of protocol.
+> **Mandatory Reading Check**: Your first output message in this session MUST attest that required context has been loaded. If you proceed without this output, you are in violation of protocol.
 
-
-- **Mandatory Output Check**: You MUST publish an explicit early-session message listing the files you have read.
-   - This requirement is tooling-agnostic. Use whatever communication primitive is available in your runtime.
-   - *Example*: "I have read `AGENTS.md`, `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `technical-context.md`, and `roles/ba.md`."
-   - **Failure to do this implies you have not loaded context.**
+- **Mandatory Output Check**: Publish an explicit early-session message confirming context is loaded.
+  - **Standard form** (all required readings loaded per your role file, no skips): _"Context loaded per `<role>.md` required readings. Conditional reads: [none | list]. No skips."_
+  - **Full listing form** (required if any file was intentionally skipped): List each file individually and include a one-line rationale for each skip.
+  - This requirement is tooling-agnostic. Use whatever communication primitive is available in your runtime.
+  - **Failure to do this implies you have not loaded context.**
 
 - **Verify your task is clear**
    - Do you understand the goal?
    - Do you know what success looks like?
    - Are constraints explicit?
-
-- **Execute**
-   - Follow [Workflow](/agent-docs/workflow.md)
 
 - **If stuck**
    - Don't guess

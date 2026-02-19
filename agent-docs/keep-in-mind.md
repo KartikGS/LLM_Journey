@@ -3,6 +3,7 @@
 > [!WARNING]
 > Entries here are temporary constraints or warnings derived from recent mistakes.
 > **Lifecycle**: Add here -> Fix root cause -> Move to permanent doc -> Delete from here.
+> **Promotion ownership**: Tech Lead promotes technical/security warnings (during Verification Phase). BA promotes content/product warnings (during Acceptance Phase). Both roles should review entries at each CR and retire any whose root causes are resolved.
 
 ## Follow the format given in the example below
 ### [Date Added: 2026-01-26] OTEL Proxy Token Validation

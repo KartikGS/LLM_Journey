@@ -4,16 +4,11 @@
 Reliability, security, and performance of server-side logic and API routes.
 
 ## Boundaries
--   **Owns**: `/app/api/**`.
--   **Owns (server-side under `/lib/**`)**: modules used by API routes/middleware (for example `/lib/security/**`, `/lib/otel/**`, `/lib/config.ts`, `/lib/server/**`).
--   **Not owned**: `/lib/hooks/**` and client-only modules imported by UI.
 -   **Security scope (endpoint-level)**: request/body size limits, `content-length` enforcement, input validation, route-specific auth checks, and route-specific abuse controls inside `app/api/**`.
--   **Conditional Ownership**: `middleware.ts` only when explicitly assigned in Tech Lead handoff for backend behavior (e.g., request validation, rate limiting).
--   **READ-ONLY by default**: `/__tests__/**`, `/playwright.config.ts`, `/agent-docs/testing-strategy.md`.
--   **Interfaces with**: Frontend via `/api/**` contracts documented in `/agent-docs/api/`.
+-   **Out-of-scope by default** (test files): `/__tests__/**`, `/playwright.config.ts`, `/agent-docs/testing-strategy.md`. Read is permitted; create or modify only when the handoff explicitly delegates test scope to Backend.
+-   **Interfaces with**: Frontend via `/api/**` contracts. API contracts are specified in the Tech Lead handoff and CR plan for each CR.
 -   **Restricted**:
     - Do not hardcode secrets. Use environment variables.
-    - Do not create or modify tests unless the handoff explicitly delegates test scope to Backend.
 
 ### Ownership Quick Matrix
 | Path | Default Owner | Backend Rule |
@@ -22,7 +17,7 @@ Reliability, security, and performance of server-side logic and API routes.
 | `/lib/security/**`, `/lib/otel/**`, `/lib/config.ts`, `/lib/server/**` | Backend (server-side use) | Backend may edit when change is for API/middleware behavior. |
 | `/lib/hooks/**` | Frontend | Backend must not edit. |
 | `middleware.ts` | Infra + conditional Backend | Backend edits only when explicitly delegated for backend behavior. |
-| `.env.example` | Tech Lead (config ownership) | Backend may edit only when explicitly delegated in Tech Lead handoff scope. |
+| `.env.example` | Tech Lead (config ownership) | Backend may add env vars introduced by the current CR scope. Record new vars in preflight note; TL retains ownership for deletions or renames. |
 
 ### Backend vs Infra Security Split (Mandatory)
 - Backend owns **endpoint-level** security controls implemented in `app/api/**` (for example payload-size limits and `content-length` checks).
@@ -43,8 +38,11 @@ Before executing any task, also read:
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Backend Instructions](/agent-docs/conversations/tech-lead-to-backend.md)
-- Make a report for the Tech Lead agent in the [Backend To Tech Lead Report](/agent-docs/conversations/backend-to-tech-lead.md) using [Backend Report Template](/agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md)
+- Read the handoff at [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md) and implement per its scope.
+- Write the completion report at [Backend To Tech Lead](/agent-docs/conversations/backend-to-tech-lead.md) using the [report template](/agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md).
+- **Engineering constraints (Backend-specific)**:
+  - Do not install new npm packages. If a new dependency is required, flag it in the preflight note and request Tech Lead approval.
+  - Verification scope: run the scoped spec file (`pnpm test <spec-file>`) to confirm new tests pass before reporting. Full-suite verification is the Tech Lead's responsibility.
 
 ### Scope Gate (Mandatory Before Editing)
 - Confirm every target file in the handoff is within Backend ownership or explicitly delegated.
@@ -57,5 +55,6 @@ Before executing any task, also read:
 -   [ ] Are endpoint-level abuse controls in place (for example body-size / `content-length` limits when applicable)?
 -   [ ] Is observability instrumented (Tracing/Logs/Metrics)?
 -   [ ] Are errors logged correctly?
--   [ ] Is the API compliant with `/agent-docs/api/` contracts?
+-   [ ] Is the API compliant with the contracts specified in the Tech Lead handoff?
 -   [ ] Did I modify only files in backend scope (or explicitly delegated files)?
+-   [ ] Are there no debug artifacts (console.log, console.error, commented-out code blocks) in production code paths?
