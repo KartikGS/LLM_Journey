@@ -207,6 +207,7 @@ Before marking work complete:
 
 ## Verification & Reporting Protocol
 
+- Run runtime preflight: `node -v`. If below Node ≥ 20.x (per `tooling-standard.md`), classify as `environmental` in the report before running any verification commands.
 - Run verification commands in this exact order:
   1. `pnpm lint`
   2. `pnpm exec tsc --noEmit`

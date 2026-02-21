@@ -42,15 +42,19 @@ Before executing any task, also read:
 - Write the completion report at [Backend To Tech Lead](/agent-docs/conversations/backend-to-tech-lead.md) using the [report template](/agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md).
 - **Engineering constraints (Backend-specific)**:
   - Do not install new npm packages. If a new dependency is required, flag it in the preflight note and request Tech Lead approval.
-  - Verification scope: run the scoped spec file (`pnpm test <spec-file>`) to confirm new tests pass before reporting. Full-suite verification is the Tech Lead's responsibility.
+  - Verification scope: run the scoped spec file (`pnpm test <spec-file>`) to confirm new tests pass before reporting. Full-suite verification is the Tech Lead's responsibility. **Exception**: when the active handoff's DoD explicitly requires full-suite verification from Backend, run full suite and report both scoped and full-suite results — the handoff DoD takes precedence over this default.
 
 ### Scope Gate (Mandatory Before Editing)
+
+**Handoff structure note**: The Tech Lead handoff may include an `## Out-of-Scope But Must Be Flagged (Mandatory)` section. Each item in that section is a pre-agreed stop-and-report condition — an adjacent risk or edge case that Tech Lead identified before delegation. Encountering any listed condition during implementation means **STOP** and report to Tech Lead before proceeding, not resolve unilaterally. Read this section before starting any implementation work.
+
 - Confirm every target file in the handoff is within Backend ownership or explicitly delegated.
 - If any required file is outside backend scope, **STOP** and report blocker via backend report instead of implementing cross-role work.
 - If target files include mixed-ownership shared modules under `lib/**`, **STOP** and request explicit Tech Lead ownership decision in the active handoff.
-- If verification appears to require new/updated tests, **STOP** and request Testing Agent delegation from Tech Lead.
+- If verification appears to require new/updated tests, **STOP** and request Testing Agent delegation from Tech Lead — unless the active handoff already explicitly delegates test scope to Backend, in which case proceed within that delegation.
 
 ## Checklist
+-   [ ] Did I run `node -v` before verification commands and confirm runtime is Node ≥ 20.x per `tooling-standard.md`? If not, classify as `environmental` before proceeding.
 -   [ ] Are input validations in place?
 -   [ ] Are endpoint-level abuse controls in place (for example body-size / `content-length` limits when applicable)?
 -   [ ] Is observability instrumented (Tracing/Logs/Metrics)?

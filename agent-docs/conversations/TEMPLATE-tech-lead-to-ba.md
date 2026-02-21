@@ -35,6 +35,10 @@ CR-XXX - [Short title]
 - [Trade-offs]
 - [Follow-up recommendations]
 
+## Tech Lead Recommendations (Conditional)
+<!-- Populate when adversarial review finds quality concerns not covered by any AC, or when adjacent UX/copy/naming observations fall outside current CR scope. For each: state the observation and recommend one of: create follow-up CR / defer to project-log Next Priority / resolve in keep-in-mind.md. BA reviews and decides at acceptance. Leave as `none` if no recommendations. -->
+- [Recommendation or `none`]
+
 ## Deployment Notes
 - [Dependencies/config/runtime impact]
 

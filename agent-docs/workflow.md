@@ -59,7 +59,7 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
 - Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
-- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's conversation content is captured in its plan, completion report, or CR artifact. Do not replace until this is verified.
+- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's conversation content is captured in its plan, completion report, or CR artifact. **Minimum evidence**: `plans/CR-XXX-plan.md` exists AND the outgoing conversation file or CR artifact shows `status: completed` (or equivalent closure signal) for the prior CR. Do not replace until this is verified.
 
 #### Delegation Mode Rules
 - **Parallel Mode**
@@ -75,8 +75,8 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
 - **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 - **The "Wait" State**:
-  - **Parallel Mode**: Once the full planned handoff batch is created, the Tech Lead Agent MUST stop and report back to the User.
-  - **Sequential Mode**: Once the current step handoff is created, the Tech Lead Agent MUST stop and report back to the User.
+  - **Parallel Mode**: Once all permitted direct changes (e.g., `.env.example`, config files) and the full planned handoff batch are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User. Permitted direct changes do not require a separate Wait State — they may be completed in the same turn as handoff issuance.
+  - **Sequential Mode**: Once permitted direct changes and the current step handoff are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User.
 - **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Tech Lead Agent. 
 - **The "Shift" Refusal**: If you feel the urge to "just do it" to be efficient, you are violating the Tech Lead role. Stop. Wait for the User to either:
   1. Approve the handoff for a sub-agent execution.
@@ -156,7 +156,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 3. Tech Lead ensures integration works
 4. **E2E Contract Closure Check (Conditional)**: For CRs touching routes/page structure/test IDs, Tech Lead verifies matching E2E assertion updates are present in the same CR (not deferred silently).
 5. Tech Lead updates architectural docs if needed
-6. **Post-Verification Drift Check (Mandatory):** Before issuing the BA handoff, confirm that feature files verified in steps 1–5 have not been modified after verification was recorded — whether by an agent or by the Human User directly. If drift is detected, a re-verification pass is required. Note the drift in the BA handoff with the original and current file state.
+6. **Post-Verification Drift Check (Mandatory):** Before issuing the BA handoff, confirm that feature files verified in steps 1–5 have not been modified after verification was recorded — whether by an agent or by the Human User directly. **Mechanism**: In synchronous single-session execution where verification and handoff issuance occur consecutively, this check is trivially satisfied — no drift is possible between sequential tool calls. In multi-session or async scenarios, re-read feature files or compare modification timestamps to confirm no intervening edits. If drift is detected, a re-verification pass is required. Note the drift in the BA handoff with the original and current file state.
 7. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
 
 ### Acceptance Phase (BA Agent)

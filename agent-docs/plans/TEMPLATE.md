@@ -16,6 +16,9 @@
 - [Define critical rules/schema here. Do not defer critical logic to sub-agent]
 - [e.g. "eslint rules: warn on console.log", "commitlint scopes: [api, ui] only"]
 
+## Implementation Decisions (Tech Lead Owned)
+<!-- Document technical choices explicitly deferred from BA handoff scope to Tech Lead authority. For each: state the decision question, options considered, chosen approach, and rationale. If the BA handoff contained no deferred decisions, write "none." -->
+- [Decision or `none`]
 
 ## Critical Assumptions
 - [List of things that MUST be true for this plan to work]

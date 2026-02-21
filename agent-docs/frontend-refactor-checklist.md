@@ -27,8 +27,9 @@ Use this checklist for rendering-boundary refactors, server/client extraction, a
   - no selector/semantic contract regressions.
 
 ## 5. Verification Commands (Mandatory Order)
-1. `pnpm exec tsc --noEmit`
-2. `pnpm lint`
+Run in the order specified in `frontend.md` Verification & Reporting Protocol (canonical source for frontend command sequence):
+1. `pnpm lint`
+2. `pnpm exec tsc --noEmit`
 
 ## 6. Report Evidence Format
 For each DoD/contract item, include:

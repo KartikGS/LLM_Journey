@@ -167,10 +167,10 @@ Before planning or executing ANY task, also read:
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
-Use the mandatory reading output protocol from `AGENTS.md`. For Tech Lead sessions, include at least:
-> "I have read:
-> - **Universal** (AGENTS.md): `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
-> - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
+Use the mandatory reading output protocol from `AGENTS.md` (canonical format). Standard form for Tech Lead sessions with no skips:
+> _"Context loaded per `tech-lead.md` required readings. Conditional reads: [none | list any conditional files loaded]. No skips."_
+>
+> Use full listing form only if any required file was intentionally skipped (list each file individually with one-line rationale per skip).
 
 ## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)
 
@@ -277,7 +277,7 @@ An ADR **must** be created when:
 - Adding cross-cutting concerns
 - Changing security or observability boundaries
 
-**Decision test**: Create an ADR when the change introduces a new top-level concept (provider type, auth mechanism, rendering boundary, observability contract). Do NOT create an ADR when the change extends an existing documented pattern (new value in an existing config enum, new route following an existing handler structure).
+**Decision test**: Create an ADR when the change introduces a new top-level concept (provider type, auth mechanism, rendering boundary, observability contract). Do NOT create an ADR when the change extends an existing documented pattern (new value in an existing config enum, new route following an existing handler structure, or a format migration within an existing provider type where the provider-type token itself is unchanged).
 
 ADRs live in:
 `agent-docs/decisions/`
@@ -297,6 +297,8 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
     - **Rule**: Never trust the sub-agent's verification blindly.
     - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
     - **Check**: Look for debug artifacts (console.log, console.error, commented-out code blocks, TODO markers) in production code paths.
+    - **Check**: Compare sub-agent's `[Changes Made]` and `[Deviations]` sections against actual file changes line-by-line. Any undisclosed change (present in files, absent in report) must be classified as an unreported deviation and handled per the Finding classification rule below.
+    - **Check**: For tests where assertions were updated due to a format or contract change, verify the test name still accurately describes the behavior being tested. A test name referencing the pre-migration format is a test-hygiene defect.
     - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
 - [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there; not duplicated here.)
 - [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
@@ -305,6 +307,7 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] If UI was changed: verify Light/Dark mode rendering
 - [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
+- [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision. Do not rely solely on the handoff file to persist this constraint.
 - [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries whose root causes are resolved by this CR.
 - [ ] Verify documentation updates
 - [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`

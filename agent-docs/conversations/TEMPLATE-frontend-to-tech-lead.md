@@ -60,6 +60,7 @@
 
 ## [Deviations]
 - `none` OR list deviations with rationale.
+- **Note**: CSS class changes that accompany text content updates (e.g., removing placeholder/muted styling when replacing TBD cells with real data) must be reported here even when the handoff specifies "text content only." Content semantic changes that necessitate style changes are in-scope deviations, not violations.
 
 ## [Ready for Next Agent]
 - `yes` | `no`

@@ -57,6 +57,7 @@ The BA agent **MAY**:
   - `scope changed`
   - `requires user decision`
 - Disagreement is expected when it improves requirement quality; unresolved scope/intent conflicts must be escalated to user.
+- If the User corrects the BA's root cause analysis or requirement framing: acknowledge the correction explicitly, document what changed and why the prior claim was incorrect, and continue with the corrected understanding. Do not treat user correction as requiring a formal scope-change designation — it is an analysis update, not a scope change.
 
 ### Product Content Ownership (Mandatory)
 - For LLM Journey pages, BA owns the **content intent** (target audience, learning objective, key message hierarchy).
@@ -97,11 +98,10 @@ When the task is incident/regression/testing related (failing test, lint, build,
 - **Runner Contract (E2E only):** `/playwright.config.ts`
 
 ### Reading Confirmation Template
-When reporting your readings, use this format:
-> "I have read:
-> - **Universal** (AGENTS.md): `general-principles.md`, `project-principles.md`, `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
-> - **Role-Specific** (BA): `project-vision.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`
-> - **Conditional (if applicable):** `testing-strategy.md`, `playwright.config.ts`"
+Use the mandatory reading output protocol from `AGENTS.md` (canonical format). Standard form for BA sessions with no skips:
+> _"Context loaded per `ba.md` required readings. Conditional reads: [none | list any conditional files loaded]. No skips."_
+>
+> Use full listing form only if any required file was intentionally skipped (list each file individually with one-line rationale per skip).
 
 ---
 
@@ -151,7 +151,7 @@ Use this matrix to decide the minimum BA action before drafting/finalizing a CR:
 | :--- | :--- |
 | User intent is explicit and procedural (`continue`, `close CR`, `status update`) | Proceed without additional clarifying questions |
 | User intent has scope, ownership, or success-criteria ambiguity | Ask at least one clarifying/challenging question before CR finalization |
-| Incident/regression (`test/lint/build/runtime mismatch`) | Load `testing-strategy.md` and collect at least one command baseline (`exact command + result`) |
+| Incident/regression (`test/lint/build/runtime mismatch`) | Load `testing-strategy.md` and collect at least one command baseline (`exact command + result`). **For external API failures** where no local command can reproduce the failure: collect code-reading evidence and qualify the root cause claim as "suspected cause — requires Tech Lead live API probe to confirm." Do not block CR finalization on an unverifiable external failure. |
 | Multiple plausible root causes or cross-cutting risk (security/telemetry/build pipeline) | Create investigation report before final CR handoff |
 | Request implies architectural/process policy change | Draft CR scope + escalate to Tech Lead for feasibility/verification before treating as policy |
 
@@ -161,7 +161,7 @@ Use measurable signals:
 
 | Mode | Suggested Criteria |
 | :--- | :--- |
-| Fast | Single user-visible objective; one primary artifact touched; no cross-role dependency; no incident triage required |
+| Fast | Single user-visible objective; one primary artifact touched (primary = most significant functional change; secondary documentation/config file touches do not change the mode classification); no cross-role dependency; no incident triage required |
 | Standard | 2-3 coordinated artifacts or roles; moderate ambiguity resolved by one clarification loop; limited regression/contract risk |
 | Heavy | Multi-phase effort; cross-cutting constraints (security/telemetry/architecture); incident/root-cause uncertainty; likely 2+ clarification loops |
 
@@ -174,6 +174,7 @@ Before declaring a CR closed, complete all items:
 - [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
 - [ ] Human-facing closure note sent with outcome + residual risks (if any)
 - [ ] No debug artifacts spotted in verified production code paths. If found after TL verification: flag in CR Notes, notify user directly. Does not block closure.
+- [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): for each, decide — create follow-up CR / add to project-log `Next Priority` / reject with rationale.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 
 ---
@@ -183,7 +184,7 @@ Before declaring a CR closed, complete all items:
 Before handing off to Tech Lead:
 - [ ] **Did I challenge the prompt?** (Did I ask "Why" or suggest a better way?)
 - [ ] **Is this Synthesis or just Migration?** (Did I interpret the intent or copy text?)
-- [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?)
+- [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?) For educational content CRs, translate this into at least one measurable AC (e.g., "table enables learner to compare X, Y, Z dimensions across models"). A checklist item with no measurable AC is an incomplete check.
 - [ ] **Are validation criteria Quantifiable?** (Replaced "fast" with "<200ms"?)
 - [ ] **Subjective AC Guard**: If the user selects "Subjective Approval" as an AC, did I define at least 2-3 *objective* companion criteria alongside it (e.g., "uses gradient effects", "has hover animations") to prevent scope ambiguity during acceptance?
 - [ ] **Is there a Rollback Plan?** (What if the hooks break?)
