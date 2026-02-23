@@ -369,7 +369,7 @@ export async function POST(req: NextRequest) {
 
                 const prompt = parsed.data.prompt;
                 const frontierConfig = loadFrontierConfig();
-                const configuredModelId = frontierConfig.modelId || 'unconfigured-frontier-base';
+                const configuredModelId = frontierConfig.modelId || 'model-not-configured';
 
                 span.setAttribute('frontier.configured', frontierConfig.configured);
                 span.setAttribute('frontier.timeout_ms', frontierConfig.timeoutMs);

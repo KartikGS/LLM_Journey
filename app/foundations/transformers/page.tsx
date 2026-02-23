@@ -87,7 +87,7 @@ export default function BaseLLMPage() {
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">What Happens When You Scale the Transformer Architecture?</h2>
           <div className="mt-3 space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
             <p>
-              When you scale the same architecture with more parameters, more training data, and more compute, the model can store much more general knowledge and produce richer answers. Now we are entering the Large Language Model (LLM) paradigm.
+              When you scale the same architecture with more parameters, more training data, and more compute, the model can store much more general knowledge and produce richer answers. This scaling trend defines the Large Language Model (LLM) paradigm.
             </p>
             <p>
               These large language models are usually trained on internet-scale text corpora. If you want general context, start with{' '}

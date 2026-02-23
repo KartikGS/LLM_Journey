@@ -34,7 +34,7 @@ export default function FrontierBaseChat() {
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<FrontierStatus>('idle');
   const [statusText, setStatusText] = useState(DEFAULT_STATUS);
-  const [modelId, setModelId] = useState('frontier-base-unknown');
+  const [modelId, setModelId] = useState('model-unknown');
   const [isLoading, setIsLoading] = useState(false);
   const [hasGeneratedText, setHasGeneratedText] = useState(false);
 
@@ -125,7 +125,7 @@ export default function FrontierBaseChat() {
       const responseModelId =
         typeof metadataRecord?.modelId === 'string' && metadataRecord.modelId.trim().length > 0
           ? metadataRecord.modelId
-          : 'frontier-base-unknown';
+          : 'model-unknown';
       setModelId(responseModelId);
 
       if (payloadRecord?.mode === 'live') {
@@ -257,7 +257,7 @@ export default function FrontierBaseChat() {
             </div>
           </div>
           <div className="flex justify-between items-center mt-1 px-1">
-            <span className="text-xs text-gray-400">Profile: frontier base model (no assistant tuning)</span>
+            <span className="text-xs text-gray-400">Base LLM (no instruction tuning)</span>
             <span className="text-xs text-gray-400 font-mono">{modelId}</span>
           </div>
         </form>

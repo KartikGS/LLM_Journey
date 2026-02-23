@@ -88,7 +88,7 @@ describe('Integration: Frontier Base Generate API', () => {
         expect(body.output.length).toBeGreaterThan(0);
         expect(body.metadata).toEqual({
             label: 'Frontier Base Model',
-            modelId: 'unconfigured-frontier-base',
+            modelId: 'model-not-configured',
             assistantTuned: false,
             adaptation: 'none',
             note: 'Pretrained on internet-scale text; not assistant fine-tuned.',
