@@ -30,7 +30,7 @@ For CR-triggered meta-analysis, the typical order is:
 
 This layered approach means upstream agents (Tech Lead, BA) do not need to re-discover what downstream agents already found — they evaluate and build on it.
 
-**BA entry-point check**: Before beginning BA findings, verify that Backend (or other downstream sub-agent) and Tech Lead findings files exist for this CR in `agent-docs/meta/`. If they do not exist, pause and request the missing agent meta sessions before proceeding. BA findings without carry-forward context are incomplete per this protocol.
+**BA entry-point check**: If prior findings files are already provided as session context, this check is satisfied and BA may proceed directly to findings production. Otherwise, before beginning BA findings, verify that Backend (or other downstream sub-agent) and Tech Lead findings files exist for this CR in `agent-docs/meta/`. If they do not exist, pause and request the missing agent meta sessions before proceeding. BA findings without carry-forward context are incomplete per this protocol.
 
 **Standard session prompt (use verbatim when starting each Phase 1 agent session):**
 

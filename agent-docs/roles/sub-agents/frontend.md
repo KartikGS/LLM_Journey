@@ -62,10 +62,10 @@ If preserving behavior requires changing any frozen area, mark `scope extension 
 
 ### Accessibility & Testability Contracts
 
-- **Single-select controls** (exactly one option active) MUST use radio semantics:
-  - container: `role="radiogroup"`
-  - options: `role="radio"` + `aria-checked`
-  - keyboard behavior: arrow-key navigation between options.
+- **Single-select controls** (exactly one option active) MUST use one of two ARIA patterns based on interaction type:
+  - **Option selection** (choosing between discrete values, for example size/color/strategy): radio semantics — container `role="radiogroup"`, options `role="radio"` + `aria-checked`, arrow-key navigation between options.
+  - **Panel navigation** (switching between panels of content, for example strategy tabs/view modes): tablist semantics — container `role="tablist"`, items `role="tab"` + `aria-selected`, associated panels `role="tabpanel"`. Arrow-key navigation within tablist; `Tab` moves focus to the active panel.
+  - When a handoff explicitly names a control a "tab" or "tab selector," apply tablist semantics. When terminology is neutral ("selector," "switcher," "picker"), apply radiogroup semantics unless the control navigates between panels of content.
 - Use toggle-button semantics (`aria-pressed`) only for true independent on/off controls.
 - Repeated interactive items (tabs/options/cards in mapped lists) MUST expose deterministic selectors derived from stable IDs.
   - Preferred pattern: `data-testid="<prefix>-${stableId}"`.
@@ -207,7 +207,9 @@ Before marking work complete:
 
 ## Verification & Reporting Protocol
 
-- Run runtime preflight: `node -v`. If below Node ≥ 20.x (per `tooling-standard.md`), classify as `environmental` in the report before running any verification commands.
+**Pre-Replacement Check (mandatory):** Before replacing `frontend-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+
+- Run runtime preflight per `tooling-standard.md` Runtime Preflight (canonical source). If below the minimum version, classify as `environmental` in the report before running any verification commands.
 - Run verification commands in this exact order:
   1. `pnpm lint`
   2. `pnpm exec tsc --noEmit`

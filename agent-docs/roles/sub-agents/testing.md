@@ -34,6 +34,8 @@ Before executing any task, also read:
 - Make a report for the Tech Lead agent in the [Testing To Tech Lead Handoff](/agent-docs/conversations/testing-to-tech-lead.md)
 
 ### Preflight Communication (Mandatory)
+**Pre-Replacement Check (mandatory):** Before replacing `testing-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+
 Before writing or modifying tests, publish a short **Preflight** note in `/agent-docs/conversations/testing-to-tech-lead.md` with:
 - **Assumptions I'm making**
 - **Risks not covered by current scope**
@@ -66,7 +68,7 @@ When reporting E2E failures in `/agent-docs/conversations/testing-to-tech-lead.m
 - result,
 - short classification note.
 
-Use `agent-docs/conversations/TEMPLATE-testing-to-tech-lead.md` as the canonical report structure.
+Read `agent-docs/conversations/TEMPLATE-testing-to-tech-lead.md` before writing your report.
 
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):
@@ -74,8 +76,7 @@ If tests fail due to the environment (e.g., Playwright version mismatch, CI vs l
 - Update `/agent-docs/testing-strategy.md` if the quirk represents a permanent system constraint.
 
 ### Runtime Preflight (Mandatory)
-- Run `node -v` once per execution session before verification commands.
-- Record the observed version in the testing report if it impacts classification.
+- Run runtime preflight per `tooling-standard.md` Runtime Preflight (canonical source). Record the observed version in your report if it affects classification.
 
 ## Checklist
 

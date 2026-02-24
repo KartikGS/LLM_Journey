@@ -247,8 +247,17 @@ Present the **complete plan** to the USER, including:
 
 ### Execution & Coordination
 Once approved:
+-  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
 -  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
    - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+   - Before replacing any existing handoff file, read it first, even if the prior content will be fully discarded. This is required by tooling (Write requires prior Read for existing files).
+   - **Known Environmental Caveats (required section in every sub-agent handoff):** Include environment constraints known at handoff time (Node version, nvm path, pnpm requirements, unavailable tooling). All sub-agents face the same environment; populate once and include in all handoffs.
+   - **Self-check before issuing**: If the handoff says "follow [pattern] exactly," verify no later spec item contradicts "exactly." Preferred framing: "Follow the structure and error-handling patterns of [pattern] — deviations are itemized below and take precedence."
+   - **Self-check**: If the handoff specifies multiple distinct error codes for one endpoint, explicitly define priority when multiple fields fail simultaneously (for example, if both `strategy` and `prompt` are invalid, return `invalid_strategy`). Do not leave this as an implementation judgment call.
+   - **Pattern fidelity handoffs**: When requiring pattern fidelity to a named component, include an explicit step: "Read `<ComponentPath>` before writing your implementation."
+   - **Self-check**: If the referenced pattern includes an output limit constant (for example `MAX_CHARS`), explicitly state whether the new route uses it, uses a different value, or intentionally omits it.
+   - **Self-check**: For per-variant user-visible labels (terminal labels, filenames, panel headings), specify the required label pattern explicitly; do not rely on agent inference.
+   - **Selector-contract phrasing**: Use "These N selectors are the required minimum. Do not add others without documenting them in the completion report." Avoid wording that can be misread as a prohibition or as optional scope.
 -  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
 -  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
@@ -299,6 +308,8 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
     - **Check**: Look for debug artifacts (console.log, console.error, commented-out code blocks, TODO markers) in production code paths.
     - **Check**: Compare sub-agent's `[Changes Made]` and `[Deviations]` sections against actual file changes line-by-line. Any undisclosed change (present in files, absent in report) must be classified as an unreported deviation and handled per the Finding classification rule below.
     - **Check**: For tests where assertions were updated due to a format or contract change, verify the test name still accurately describes the behavior being tested. A test name referencing the pre-migration format is a test-hygiene defect.
+    - **Check**: If the diff includes `data-testid` additions, removals, or renames, or route path changes, verify an instruction to update `testing-contract-registry.md` is included in the Testing or BA handoff before issuing the Wait State.
+    - **Check**: For each security constraint of the form "X must/must not appear in Y," verify the test table includes both the positive assertion (X appears in the allowed location) and the negative assertion (X does not appear in the disallowed location). A positive-only test does not satisfy a containment invariant.
     - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
 - [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there; not duplicated here.)
 - [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
@@ -311,6 +322,12 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries whose root causes are resolved by this CR.
 - [ ] Verify documentation updates
 - [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
+
+#### Quality Gate Fallback (Sub-Agent Environment Failure)
+If a sub-agent cannot run required verification commands because of environment constraints (for example, `pnpm` or browser runtime incompatibility), Tech Lead must run all quality gates before issuing the BA handoff. In `tech-lead-to-ba.md`, document:
+- the exact commands run by Tech Lead,
+- the runtime/environment used, and
+- whether the mismatch is pre-existing (tracked in `project-log.md`) or introduced by this CR.
 
 #### Pre-Existing Test Failures
 If tests fail for reasons **unrelated** to the current CR:

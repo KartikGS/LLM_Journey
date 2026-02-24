@@ -38,10 +38,10 @@ Validation rules:
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
--   **Recent Focus**: [M] **Adaptation Page Strategy-Linked Chat Interface**: `CR-015` - Replaced passive `AdaptationStrategySelector` with live `AdaptationChat` (3 tabs × real models via featherless-ai router); enriched comparison grid with bestFor/caution; new `/api/adaptation/generate` endpoint with per-strategy model routing and server-side system prompt for prompt-prefix; 133 tests passing; 12/12 E2E green - **Completed**.
+-   **Recent Focus**: [S][DOC] **Meta Improvement Phase 3 Documentation Hardening**: `CR-016` - Implemented approved Fix items from `META-20260224-CR-015-synthesis.md` across workflow/role docs (pre-replacement checks, contract-registry/security closure gates, runtime preflight canonicalization, handoff self-checks, accessibility semantics, BA acceptance clarifications) - **Completed**.
+-   **Previous**: [M] **Adaptation Page Strategy-Linked Chat Interface**: `CR-015` - Replaced passive `AdaptationStrategySelector` with live `AdaptationChat` (3 tabs × real models via featherless-ai router); enriched comparison grid with bestFor/caution; new `/api/adaptation/generate` endpoint with per-strategy model routing and server-side system prompt for prompt-prefix; 133 tests passing; 12/12 E2E green - **Completed**.
 -   **Previous**: [S] **HF Router Migration and Comparison Table Concretization**: `CR-014` - Migrated HF provider to featherless-ai router (OpenAI completions format); filled comparison table with Meta-Llama-3-8B concrete values; removed developer-facing subtitle; all quality gates passing (111 tests) - **Completed**.
 -   **Previous**: [S] **Hugging Face Inference API Provider Support**: `CR-013` - Extended frontier base-generate endpoint with dual-provider support (`FRONTIER_PROVIDER=huggingface|openai`); 7 new HF-specific unit tests; all quality gates passing - **Completed**.
--   **Previous**: [M][TEST] **Transformers Stage Narrative Upgrade (Tiny -> Frontier -> Adaptation Bridge)**: `CR-012` - Reframed Stage 1 with `How -> Try -> Frontier -> Issues -> Next Stage`, added secure live/fallback frontier base inference, and synchronized API/component/E2E contracts - **Completed**.
 
 
 ## Next Priorities
@@ -55,6 +55,7 @@ Validation rules:
 -   [ ] [L] Setup Evaluation & Observability framework.
 
 ## Archive
+-   [M][TEST] **Transformers Stage Narrative Upgrade (Tiny -> Frontier -> Adaptation Bridge)**: `CR-012` - Reframed Stage 1 with `How -> Try -> Frontier -> Issues -> Next Stage`, added secure live/fallback frontier base inference, and synchronized API/component/E2E contracts - **Completed**.
 -   [M] **Server-First Rendering Boundary for UI Pages**: `CR-011` - Refactored Home, Transformers, and Model Adaptation to server-first composition with targeted client islands for user input; preserved styling system and quality gates - **Completed**.
 -   [S][TEST] **E2E Baseline Stabilization**: `CR-010` - Resolved landing-page selector/route assertion drift and transformer transient-state fragility; restored green full-suite E2E in local-equivalent execution - **Completed**.
 -   [M][TEST] **Model Adaptation Page (Stage 2)**: `CR-009` - Implemented `/models/adaptation` with strategy comparison, lightweight interactive selector, continuity links, and passing quality gates - **Completed**.

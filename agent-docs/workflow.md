@@ -87,8 +87,9 @@ When entering the Wait State, the Tech Lead MUST inform the user:
 1. Execution mode selected (`Parallel` or `Sequential`)
 2. Which sub-agent role(s) need to execute next
 3. The handoff file location(s) (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
-4. Clear instruction: *"Start a new session and assign the [Role] to execute this handoff."*
-   - If the user explicitly overrides this and asks to continue in the same session, Tech Lead may proceed while still respecting role boundaries and delegation invariants.
+4. Clear instruction — role-dependent:
+   - **Sub-agent execution roles** (Backend, Frontend, Testing, Infra): *"Start a new session and assign the [Role] to execute this handoff."*
+   - **BA acceptance** (after issuing `tech-lead-to-ba.md`): *"Resume the existing BA session that produced `ba-to-tech-lead.md` and provide `tech-lead-to-ba.md` as input. Do not start a new session — the BA's accumulated CR context is required for accurate acceptance verification."*
 
 Do NOT simply say "I'm done" — the user needs actionable next steps.
 
@@ -161,15 +162,18 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
-2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (e.g., file + line number). Do not bulk-accept without individual verification.
+2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (file + line number). Apply graduated verification:
+   - **Security constraints** (data must/must not appear, auth invariants) and **deleted contracts** (removed testids, removed files, changed APIs): independently re-read the cited file/line to confirm.
+   - **Additive changes** (new components, copy changes, dark mode, UI layout): trust the Tech Lead's citation with a brief source audit note.
+   Do not bulk-accept all ACs with a single pass. Each AC must have a distinct evidence reference.
 3. **CR Immutability Rule (Historical Integrity):**
    - Once a CR is marked `Done`, treat it as a historical record.
    - Do **not** rewrite closed CRs to match newer templates or style conventions.
    - If gaps are discovered later, create a new artifact (follow-up CR or investigation report) that references the original CR.
 4. **Allowed Post-Closure Edits (closed CRs only):**
-   - Typo/formatting fixes, broken link fixes, or factual corrections.
-   - Any such update must be logged in an `Amendment Log` section with date + reason.
-   - Do **not** retroactively change acceptance intent or silently rewrite AC history.
+   - **AC evidence annotation** (`[ ]` -> `[x]` + one-line evidence reference) and CR status change to `Done` are required closure actions and do not constitute retroactive rewriting of intent. No Amendment Log entry is required for closure annotation.
+   - Typo/formatting fixes, broken link fixes, or factual corrections. Any such update must be logged in an `Amendment Log` section with date + reason.
+   - Do **not** retroactively change acceptance intent, expand or narrow AC scope, or silently rewrite AC history.
 5. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
    - Classify each deviation using the **Deviation Severity Rubric (Canonical)** below.
    - **Minor deviations**: Log acceptance in the CR's "Deviations Accepted" section.

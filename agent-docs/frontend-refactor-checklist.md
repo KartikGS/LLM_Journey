@@ -3,6 +3,7 @@
 Use this checklist for rendering-boundary refactors, server/client extraction, and shared UI component updates.
 
 ## 1. Intent Lock
+- [ ] If execution mode is already declared in the Tech Lead handoff, this step is satisfied. Confirm and proceed.
 - [ ] Confirm task mode: `architecture-only` or `feature-ui`.
 - [ ] If `architecture-only`, freeze visual behavior, copy, route structure, and information architecture.
 - [ ] Record allowed scope and explicit out-of-scope items from handoff.

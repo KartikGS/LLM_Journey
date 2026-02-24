@@ -42,18 +42,20 @@ Before executing any task, also read:
 - Write the completion report at [Backend To Tech Lead](/agent-docs/conversations/backend-to-tech-lead.md) using the [report template](/agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md).
 - **Engineering constraints (Backend-specific)**:
   - Do not install new npm packages. If a new dependency is required, flag it in the preflight note and request Tech Lead approval.
-  - Verification scope: run the scoped spec file (`pnpm test <spec-file>`) to confirm new tests pass before reporting. Full-suite verification is the Tech Lead's responsibility. **Exception**: when the active handoff's DoD explicitly requires full-suite verification from Backend, run full suite and report both scoped and full-suite results — the handoff DoD takes precedence over this default.
+  - Verification scope: **check the handoff DoD first.** If the DoD specifies `pnpm test` (full suite), run full suite — the DoD takes precedence over this default. Otherwise, run only the scoped spec file (`pnpm test <spec-file>`). Full-suite verification is the Tech Lead's responsibility unless the DoD explicitly delegates it to Backend.
 
 ### Scope Gate (Mandatory Before Editing)
 
 **Handoff structure note**: The Tech Lead handoff may include an `## Out-of-Scope But Must Be Flagged (Mandatory)` section. Each item in that section is a pre-agreed stop-and-report condition — an adjacent risk or edge case that Tech Lead identified before delegation. Encountering any listed condition during implementation means **STOP** and report to Tech Lead before proceeding, not resolve unilaterally. Read this section before starting any implementation work.
 
 - Confirm every target file in the handoff is within Backend ownership or explicitly delegated.
+- For new file creation, confirm the target directory is within Backend ownership per the Ownership Quick Matrix. The cross-role ownership check applies to modification of existing files only.
 - If any required file is outside backend scope, **STOP** and report blocker via backend report instead of implementing cross-role work.
 - If target files include mixed-ownership shared modules under `lib/**`, **STOP** and request explicit Tech Lead ownership decision in the active handoff.
 - If verification appears to require new/updated tests, **STOP** and request Testing Agent delegation from Tech Lead — unless the active handoff already explicitly delegates test scope to Backend, in which case proceed within that delegation.
 
 ## Checklist
+-   [ ] Before replacing `backend-to-tech-lead.md`: completed the Conversation File Freshness Pre-Replacement Check per `workflow.md` (prior CR plan exists + prior file shows `status: completed`)?
 -   [ ] Did I run `node -v` before verification commands and confirm runtime is Node ≥ 20.x per `tooling-standard.md`? If not, classify as `environmental` before proceeding.
 -   [ ] Are input validations in place?
 -   [ ] Are endpoint-level abuse controls in place (for example body-size / `content-length` limits when applicable)?

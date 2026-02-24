@@ -129,6 +129,7 @@ Every BA task **must** produce:
    - Create a new file in `/agent-docs/requirements/CR-XXX-<slug>.md` (example: `CR-012-agent-doc-clarity-improvements.md`).
    - Legacy CR filenames may not follow this pattern; do not rename historical files only for naming consistency.
    - Must include Business Value, Acceptance Criteria, and Constraints.
+- **Pre-Replacement Check (mandatory):** Before replacing `ba-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
 - **Tech Lead Prompt**
    - Put in `/agent-docs/conversations/ba-to-tech-lead.md`
 - **Acceptance Verification & Closure**
@@ -137,7 +138,9 @@ Every BA task **must** produce:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?
    - **AC Evidence Annotation**: Per `workflow.md` Acceptance Phase step 2 (canonical source for format and evidence requirements).
+   - During acceptance verification, annotate AC evidence references during each file read (combined pass). Separate verification and annotation passes are not required.
    - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `agent-docs/workflow.md` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
+   - **Recommendations that touch CR constraints**: If a `## Tech Lead Recommendations` item in `tech-lead-to-ba.md` touches a constraint explicitly stated in the CR (required pattern, constant, security invariant, or spec constraint), classify it as Minor or Major using the canonical deviation rubric. The "recommendation" label does not override a CR constraint.
    - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
    - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
    - Update `/agent-docs/project-log.md` with closure entry.
@@ -174,7 +177,10 @@ Before declaring a CR closed, complete all items:
 - [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
 - [ ] Human-facing closure note sent with outcome + residual risks (if any)
 - [ ] No debug artifacts spotted in verified production code paths. If found after TL verification: flag in CR Notes, notify user directly. Does not block closure.
-- [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): for each, decide — create follow-up CR / add to project-log `Next Priority` / reject with rationale.
+- [ ] If this CR changed any `data-testid` contracts or route contracts (additions, removals, renames): confirm `testing-contract-registry.md` is updated, or create a follow-up tracking item in project-log `Next Priorities` with the Testing Agent as responsible party.
+- [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant.
+- [ ] If `tech-lead-to-ba.md` reports that Tech Lead ran quality gates on behalf of a sub-agent (environment constraint), accept only when: mismatch is pre-existing in project-log, all required gates passed, and Tech Lead adversarial review confirms no runtime-specific gaps. Log this as an environmental note, not a CR deviation.
+- [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 
 ---
@@ -185,6 +191,7 @@ Before handing off to Tech Lead:
 - [ ] **Did I challenge the prompt?** (Did I ask "Why" or suggest a better way?)
 - [ ] **Is this Synthesis or just Migration?** (Did I interpret the intent or copy text?)
 - [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?) For educational content CRs, translate this into at least one measurable AC (e.g., "table enables learner to compare X, Y, Z dimensions across models"). A checklist item with no measurable AC is an incomplete check.
+- [ ] If the CR spec uses ARIA-semantic terminology (tab, radio, listbox, combobox, slider), does the term align with the intended accessibility pattern in `frontend.md` (`Accessibility & Testability Contracts`) before finalizing the spec?
 - [ ] **Are validation criteria Quantifiable?** (Replaced "fast" with "<200ms"?)
 - [ ] **Subjective AC Guard**: If the user selects "Subjective Approval" as an AC, did I define at least 2-3 *objective* companion criteria alongside it (e.g., "uses gradient effects", "has hover animations") to prevent scope ambiguity during acceptance?
 - [ ] **Is there a Rollback Plan?** (What if the hooks break?)
@@ -201,7 +208,7 @@ If any answer is "no" → continue clarification.
 
 ## BA Tenets
 1. **Clarification > Execution**: Never start a task with zero questions. A BA's value is inverse to their assumptions. You MUST ask at least one clarifying or challenging question before proceeding.
-   - **Exception**: You may skip this when user intent is explicit and procedural (e.g., "continue", "close CR-XXX", "update status only") and no ambiguity blocks execution.
+   - **Exception**: You may skip this when user intent is explicit and procedural (e.g., "continue", "close CR-XXX", "update status only"), or when the user provides `tech-lead-to-ba.md` and requests acceptance closure. In these cases, proceed if no ambiguity blocks execution.
 2. **Conversation > Compliance**: Disagreeing is a sign of high performance. "Yes Man" behavior is a failure of the BA role.
 3. **Direction > Description**: Tell us where we are going, not just what we are building.
 4. **Delegation Precision**: Never say "I will initate a task to install X". This causes Role Anxiety.
