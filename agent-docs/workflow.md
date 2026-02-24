@@ -184,6 +184,12 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 9. BA notifies the human of completion.
 10. **Output:** Closed CR, updated project log.
 
+### Post-CR Meta Improvement Cadence (Conditional)
+- Canonical procedure: `agent-docs/coordination/meta-improvement-protocol.md`.
+- Default after each completed CR: run Mode A lightweight meta pass.
+- Escalate to full Mode A three-phase chain only when trigger conditions in the meta protocol are met.
+- For structural doc evolution (portability split, collaboration throughput, doc maintainability), use Mode B alignment flow and implement in small `[S][DOC][ALIGN]` chunks.
+
 #### Deviation Severity Rubric (Canonical)
 Use this rubric during BA acceptance closure:
 
