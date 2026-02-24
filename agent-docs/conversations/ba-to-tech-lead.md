@@ -1,99 +1,153 @@
 # BA to Tech Lead Handoff
 
-## Subject: CR-014 — HF Router Migration and Comparison Table Concretization
+## Subject: CR-015 — Adaptation Page: Strategy-Linked Chat Interface
 
 ---
 
 ## What & Why
 
-**What:** Two connected fixes for the Transformers page frontier inference demo:
+**What:** Replace the `AdaptationStrategySelector` (passive radio buttons + detail card) on the Model Adaptation page with a live, strategy-linked chat interface. Three tabs — Full Fine-Tuning, LoRA/PEFT, Prompt/Prefix Tuning — each connect to a real model representing that adaptation strategy. The static comparison grid stays and is enriched with `bestFor` and `caution` content.
 
-1. **Migrate the HF provider** from the traditional HF Inference API (`api-inference.huggingface.co`) to the HF Router / Featherless AI (`router.huggingface.co/featherless-ai/v1/completions`), which uses OpenAI-compatible completions format.
-2. **Fill the comparison table** with concrete `meta-llama/Meta-Llama-3-8B` values and remove a developer-facing subtitle that should not be visible to learners.
-
-**Why this order matters:** Without the provider fix, the frontier chat demo always falls back to a deterministic sample. The learner never sees a real LLM response. That is the educational core of Stage 1 — the comparison is meaningless without it.
+**Why:** The current page teaches adaptation through description only. A learner reads about trade-offs but cannot experience the behavioral differences. With a live chat interface per strategy, a learner can type the same prompt into each and observe directly how a fully fine-tuned instruct model, a LoRA-adapted specialist, and a base model steered by a system prompt respond differently. This converts a description page into a behavioral demonstration — the core promise of the "Learn with Tiny, Build with Large" dual-engine philosophy, now applied to Stage 2.
 
 ---
 
-## Root Cause (confirmed)
+## Scope Summary
 
-The traditional HF Inference API does not serve `Meta-Llama-3-8B` on the free tier — gated models at this scale require a paid HF subscription. The upstream error is a **tier limitation**, not a request format bug. The HF Router (Featherless AI) exposes the same model via free $0.10 credits using a different endpoint and format.
+### Change 1: Enrich Comparison Grid (adaptation page)
 
----
+The `adaptation-strategy-comparison` section already renders `quality`, `cost`, `speed`. The `strategy-data.ts` already contains `bestFor` and `caution` fields that are currently only used by the selector.
 
-## Required Changes
+**Required:** Display `bestFor` and `caution` in each grid card inline. After this change, the grid is self-contained — the strategy selector's detail card becomes fully redundant.
 
-### Change 1: Provider request format (route.ts)
+`data-testid="adaptation-strategy-comparison"` must be preserved.
 
-The `huggingface` provider currently sends:
-```ts
-{ inputs: prompt, parameters: { max_new_tokens: 256, temperature: 0.4 } }
-```
+### Change 2: Remove `AdaptationStrategySelector`
 
-The HF Router requires OpenAI-compatible completions format:
-```ts
-{ model: modelId, prompt, max_tokens: 256, temperature: 0.4 }
-```
+Remove the component and its containing `<section data-testid="adaptation-interaction">` from the page entirely.
 
-The response format (`{ choices: [{ text }] }`) is already handled by `extractProviderOutput()` — no change needed there.
+**Removed data-testid contracts** (Testing handoff required — see below):
+- `adaptation-interaction`
+- `adaptation-strategy-selector`
+- `strategy-button-full-finetuning`
+- `strategy-button-lora-peft`
+- `strategy-button-prompt-prefix`
+- `adaptation-interaction-output`
 
-**Clean-up:** Remove `return_full_text` from any HF request path (dead code — it was missing `false`, and it's irrelevant in the router format).
+### Change 3: New `AdaptationChat` Component
 
-**Implementation decision (Tech Lead owns):** Whether to repurpose the existing `huggingface` provider type or introduce a new type (e.g., `huggingface-router`). Product requirement: `FRONTIER_PROVIDER=huggingface` + `FRONTIER_API_URL=https://router.huggingface.co/featherless-ai/v1/completions` must produce `mode: "live"` output, not fallback.
+New client component following the `FrontierBaseChat` visual and interaction pattern:
+- Tab/button selector for three strategies (embedded in the component, not page-level)
+- Left panel: model info card + clickable example prompts
+- Right panel: textarea input, send button, terminal-style output console
+- Status state machine: idle → loading → live / fallback / error
 
-**Risk to verify:** Confirm `meta-llama/Meta-Llama-3-8B` (base, not instruct) is available in the Featherless AI catalog before locking. If unavailable, escalate to BA before proceeding.
+**Per-strategy model targets:**
 
-### Change 2: `.env.example` update
-
-Update the `huggingface` provider comment and example URL to reflect the router endpoint:
-- New example URL: `https://router.huggingface.co/featherless-ai/v1/completions`
-- Note that this endpoint uses OpenAI-compatible completions format (not HF Inference API format).
-
-### Change 3: Comparison table content (page.tsx)
-
-File: `app/foundations/transformers/page.tsx`, section `data-testid="transformers-comparison"`.
-
-| Cell | Current | Required |
+| Strategy tab | Model ID | Notes |
 |---|---|---|
-| Column header (Scaled Base Model) | `Scaled Base Model` | `Meta-Llama-3-8B` |
-| Tokenization method (col 3) | `TBD (depends on selected model)` | `BPE (byte-pair encoding), 128K vocabulary` |
-| Context window (col 3) | `TBD` | `8,192 tokens` |
-| Model size (col 3) | `TBD` | `8B parameters` |
-| Card subtitle | `Use this template when you lock concrete model choices.` | *(remove entirely)* |
+| Full Fine-Tuning | `meta-llama/Meta-Llama-3-8B-Instruct` | English example prompts |
+| LoRA / PEFT | `swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA` | Italian example prompts mandatory; callout in info card: Italian-first specialist |
+| Prompt / Prefix Tuning | `meta-llama/Meta-Llama-3-8B` (base) | System prompt prepended server-side; info card explains the technique; no system prompt shown in UI |
 
-Do not change row labels, table structure, or `data-testid="transformers-comparison"`.
+**Per-strategy model info card content (BA-owned copy):**
 
-### Change 4: Unit tests
+*Full Fine-Tuning — Meta-Llama-3-8B-Instruct*
+- Origin: Meta AI — hundreds of engineers, multi-million GPU-hour training run
+- Adaptation: All 8 billion parameters retrained on instruction-following + RLHF data
+- Purpose: General-purpose assistant; the high-quality, high-cost benchmark of adaptation
 
-CR-013 added 7 HF-specific unit tests for `buildProviderRequestBody()` and `extractProviderOutput()`. These will need updating to assert the new completions format request body. This is expected scope for the implementing agent — no separate Testing handoff required (no route/testid/accessibility contract changes).
+*LoRA / PEFT — LLaMAntino-3-ANITA-8B-Inst-DPO-ITA*
+- Origin: University of Bari Aldo Moro (SWAP-Uniba research group) — small academic team
+- Adaptation: LoRA + DPO on top of Meta-Llama-3-8B-Instruct, targeting Italian language tasks
+- Purpose: Italian-language specialist — demonstrates how a small team can produce a domain expert at a fraction of the full fine-tune cost
+- Callout: "This model was fine-tuned primarily for Italian. Try asking in Italian for best results."
+
+*Prompt / Prefix Tuning — Meta-Llama-3-8B (base)*
+- Origin: Meta AI
+- Adaptation: Zero parameter changes. A system prompt is prepended to every query server-side.
+- Purpose: Shows what prompt steering can and cannot achieve on a non-instruct base model. Response reliability is lower — this is intentional and educational.
+
+### Change 4: New API Endpoint — Adaptation Generate
+
+A new API route to serve the `AdaptationChat` component. The Tech Lead owns path naming, env var naming, and implementation approach.
+
+**Product contract (BA-owned, not negotiable):**
+- Accepts `{ prompt: string, strategy: 'full-finetuning' | 'lora-peft' | 'prompt-prefix' }`
+- Routes each strategy to its configured model ID
+- For `prompt-prefix`: prepends a system prompt to the user input server-side before upstream call (prompt content open — see Risks below)
+- Returns the same `mode: 'live' | 'fallback'` response shape as `base-generate`
+- Fallback text must be strategy-specific (not generic). Suggested themes:
+  - Full fine-tune: context about what instruction tuning achieves and costs
+  - LoRA: context about specialist models and parameter efficiency
+  - Prompt-prefix: context about prompt steering limitations on base models
+- Same OTel tracing pattern as `base-generate`
+
+**New env vars required (naming: Tech Lead decides):**
+- Model ID env var per strategy (3 total)
+- API URL and API key can be shared with existing `FRONTIER_*` config — Tech Lead to confirm if same provider serves all three models
+- `.env.local` and `.env.example` must be updated
 
 ---
 
-## Acceptance Criteria (from CR-014)
+## Acceptance Criteria
 
-- [ ] AC-1: `FRONTIER_PROVIDER=huggingface` + router URL + valid HF token → `mode: "live"`, non-empty, non-echoing output.
-- [ ] AC-2: `buildProviderRequestBody()` for `huggingface` emits `{ model, prompt, max_tokens, temperature }`.
-- [ ] AC-3: `return_full_text` does not appear in any active HF request path.
-- [ ] AC-4: Comparison table shows `BPE (byte-pair encoding), 128K vocabulary` / `8,192 tokens` / `8B parameters`; column header reads `Meta-Llama-3-8B`.
-- [ ] AC-5: Subtitle `"Use this template when you lock concrete model choices."` is removed.
-- [ ] AC-6: `.env.example` HF comment and example URL reflect router endpoint.
-- [ ] AC-7: `pnpm lint`, `pnpm build`, `pnpm test` pass with no new failures.
+Canonical source: `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md`
+
+- AC-1: Comparison grid cards display `bestFor` and `caution`
+- AC-2: `AdaptationStrategySelector` and `adaptation-interaction` section removed from DOM
+- AC-3: New chat section renders with 3-tab strategy selector; tab switching changes content without page reload
+- AC-4: Each tab's model info card shows model ID, origin/team, adaptation method, purpose
+- AC-5: Full Fine-Tuning tab — calls adaptation API with `strategy: 'full-finetuning'`, English example prompts
+- AC-6: LoRA/PEFT tab — calls API with `strategy: 'lora-peft'`, Italian example prompts, Italian-first callout
+- AC-7: Prompt/Prefix tab — calls API with `strategy: 'prompt-prefix'`, system prompt applied server-side, not shown in UI; info card explains technique
+- AC-8: Strategy-specific fallback text for all three strategies when API unavailable
+- AC-9: API endpoint routes to correct model per strategy; system prompt prepended for `prompt-prefix`
+- AC-10: `pnpm lint`, `pnpm build`, `pnpm test` pass (≥111 unit tests)
+- AC-11: Light and dark themes correct for new component
+- AC-12: E2E tests updated for removed selectors and new `AdaptationChat` selectors (Testing handoff)
+
+---
+
+## Testing Handoff Requirement
+
+Per `workflow.md` Testing Handoff Trigger Matrix:
+
+- `data-testid` removals: 6 selectors removed (listed above in Change 2)
+- New `data-testid` contracts will be introduced by `AdaptationChat` (Frontend to document in its completion report)
+- **A Testing handoff is required in this CR.** Testing must update affected E2E specs after the Frontend completion report documents new selectors.
+
+Recommended execution order: **Parallel** for Frontend + Backend → **Sequential** for Testing (waits on Frontend's new data-testid documentation).
 
 ---
 
 ## Constraints
 
-- `data-testid="transformers-comparison"` must not change.
-- No new packages.
-- Do not remove either response extraction path in `extractProviderOutput()` unless confirmed unused.
-- No route renames; no accessibility contract changes → no E2E Testing handoff required.
+- `FrontierBaseChat` visual and interaction pattern must be followed for `AdaptationChat`
+- System prompt for `prompt-prefix` is server-side only — never in client payload or UI
+- Italian example prompts for LLaMAntino tab are mandatory
+- No new npm packages
+- Preserved contracts: `adaptation-page`, `adaptation-hero`, `adaptation-strategy-comparison`, `adaptation-continuity-links`
+
+---
+
+## Risks for Tech Lead to Resolve Before Delegation
+
+| Risk | Required Action |
+|---|---|
+| LLaMAntino model availability on featherless-ai router | Verify before delegation. If unavailable, escalate to BA — the LoRA model choice may need to change. |
+| All three models on same provider/router | Confirm whether shared `FRONTIER_API_URL` + `FRONTIER_API_KEY` works, or separate config needed |
+| System prompt content for `prompt-prefix` | Decide or propose to Human User. Suggestion: `"You are a helpful assistant. Answer the following question clearly and concisely.\n\n"` |
+| `extractProviderOutput()` dead code (`Array.isArray` HF path) | This was flagged as a `Next Priority` in CR-014. If the new adaptation endpoint shares this utility, decide whether to clean it up in-scope or keep as-is |
 
 ---
 
 ## Reference Files
 
-- API route: `app/api/frontier/base-generate/route.ts`
-- Transformers page: `app/foundations/transformers/page.tsx`
-- Unit tests: `__tests__/api/frontier-base-generate.test.ts`
+- CR: `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md`
+- Adaptation page: `app/models/adaptation/page.tsx`
+- Strategy data: `app/models/adaptation/components/strategy-data.ts`
+- Strategy selector (to be removed): `app/models/adaptation/components/AdaptationStrategySelector.tsx`
+- FrontierBaseChat (pattern reference): `app/foundations/transformers/components/FrontierBaseChat.tsx`
+- Existing frontier API route (pattern reference): `app/api/frontier/base-generate/route.ts`
 - Env example: `.env.example`
-- CR: `agent-docs/requirements/CR-014-hf-router-migration-and-comparison-table.md`

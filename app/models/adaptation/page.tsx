@@ -2,7 +2,7 @@ import { GlowBackground } from '@/app/ui/components/GlowBackground';
 import { GlassCard } from '@/app/ui/components/GlassCard';
 import { JourneyStageHeader } from '@/app/ui/components/JourneyStageHeader';
 import { JourneyContinuityLinks } from '@/app/ui/components/JourneyContinuityLinks';
-import { AdaptationStrategySelector } from './components/AdaptationStrategySelector';
+import { AdaptationChat } from './components/AdaptationChat';
 import { strategies } from './components/strategy-data';
 
 export default function ModelAdaptationPage() {
@@ -32,13 +32,15 @@ export default function ModelAdaptationPage() {
                 <li className="text-gray-700 dark:text-gray-300"><span className="font-semibold text-gray-900 dark:text-white">Quality:</span> {strategy.quality}</li>
                 <li className="text-gray-700 dark:text-gray-300"><span className="font-semibold text-gray-900 dark:text-white">Cost:</span> {strategy.cost}</li>
                 <li className="text-gray-700 dark:text-gray-300"><span className="font-semibold text-gray-900 dark:text-white">Speed:</span> {strategy.speed}</li>
+                <li className="text-gray-700 dark:text-gray-300"><span className="font-semibold text-gray-900 dark:text-white">Best for:</span> {strategy.bestFor}</li>
+                <li className="text-gray-700 dark:text-gray-300"><span className="font-semibold text-gray-900 dark:text-white">Caution:</span> {strategy.caution}</li>
               </ul>
             </div>
           </GlassCard>
         ))}
       </section>
 
-      <AdaptationStrategySelector />
+      <AdaptationChat />
 
       <JourneyContinuityLinks
         testId="adaptation-continuity-links"

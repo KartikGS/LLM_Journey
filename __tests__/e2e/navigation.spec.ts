@@ -21,22 +21,33 @@ test.describe('Navigation', () => {
         await expect(page.getByTestId('adaptation-page')).toBeVisible();
         await expect(page.getByTestId('adaptation-hero')).toBeVisible();
         await expect(page.getByTestId('adaptation-strategy-comparison')).toBeVisible();
-        await expect(page.getByTestId('adaptation-interaction')).toBeVisible();
-        await expect(page.getByTestId('adaptation-strategy-selector')).toBeVisible();
-        await expect(page.getByTestId('adaptation-interaction-output')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat-tab-full-finetuning')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat-tab-lora-peft')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat-tab-prompt-prefix')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat-input')).toBeVisible();
+        await expect(page.getByTestId('adaptation-chat-output')).toBeVisible();
         await expect(page.getByTestId('adaptation-continuity-links')).toBeVisible();
     });
 
-    test('should update adaptation output when strategy changes @critical', async ({ page }) => {
+    test('should update adaptation interface when strategy tab changes @critical', async ({ page }) => {
         await page.goto('/models/adaptation');
 
-        const output = page.getByTestId('adaptation-interaction-output');
-        await expect(output).toContainText('LoRA / PEFT');
-        await expect(output).toContainText('Strong quality/cost balance');
+        const loraPeftTab = page.getByTestId('adaptation-chat-tab-lora-peft');
+        const promptPrefixTab = page.getByTestId('adaptation-chat-tab-prompt-prefix');
+        const output = page.getByTestId('adaptation-chat-output');
 
-        await page.getByTestId('strategy-button-full-finetuning').click();
-        await expect(output).toContainText('Full Fine-Tuning');
-        await expect(output).toContainText('Highest ceiling on domain alignment');
+        await expect(loraPeftTab).toBeVisible();
+        await expect(promptPrefixTab).toBeVisible();
+
+        // Click LoRA / PEFT tab — terminal label must update to lora_peft_output.txt
+        await loraPeftTab.click();
+        await expect(output).toBeVisible();
+        await expect(output).toContainText('lora_peft_output.txt');
+
+        // Click Prompt / Prefix tab — terminal label must update to prompt_prefix_output.txt
+        await promptPrefixTab.click();
+        await expect(output).toContainText('prompt_prefix_output.txt');
     });
 
     test('should expose continuity links for previous and next stages @smoke', async ({ page }) => {

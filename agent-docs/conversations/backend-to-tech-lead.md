@@ -1,106 +1,123 @@
-# Backend → Tech Lead Report
+# Report: Backend → Tech Lead
 
 ## Subject
-`CR-014 - HF Router Migration: Update buildProviderRequestBody() and unit tests`
+`CR-015 - Adaptation Page: New /api/adaptation/generate Endpoint`
 
 ## Status
-`in_progress`
+`completed`
+
+---
+
+## [CR-014 Historical Note]
+Prior CR-014 backend-to-tech-lead content replaced per Conversation File Freshness Rule. CR-014 status was `completed`. Artifacts preserved in `agent-docs/requirements/CR-014-hf-router-migration.md` and `agent-docs/plans/CR-014-plan.md`.
 
 ---
 
 ## Preflight: Assumptions
 
-1. **`extractProviderOutput()` handles `{ choices: [{ text }] }`** — CONFIRMED.
-   - Lines 226–239 of `route.ts`: function checks `root.choices`, gets `choices[0]`, attempts `firstChoice.message.content` (chat format path), then falls through to `firstChoice.text` (lines 236–239). The HF Router format `{ choices: [{ text: "..." }] }` maps directly to the `firstChoice.text` path. ✅
-
-2. **`mapProviderFailure()` is format-agnostic** — CONFIRMED.
-   - Lines 281–310 of `route.ts`: branches only on HTTP status codes (`429`, `401/403`, `>=500`, else). Accepts a pre-extracted `providerMessage` string with no inspection of response body shape. Router error responses (non-OK HTTP codes) will be handled identically. ✅
-
-3. **`return_full_text` absent from `route.ts`** — CONFIRMED. Not present anywhere in the file. AC-3 satisfied by default. ✅
+1. `FRONTIER_API_KEY` env var name confirmed in `app/api/frontier/base-generate/route.ts` line 100 — correct, reused as-is.
+2. `parseTimeout()` pattern from `base-generate/route.ts` (lines 84–95) is clear; implemented locally as specified (no cross-file import).
+3. Featherless-ai router returns standard OpenAI chat completions format `{ choices: [{ message: { content: string } }] }` — confirmed by handoff spec.
+4. `.env.example` already updated by Tech Lead — not modified.
 
 ## Preflight: Adjacent Risks
 
-- The HF array path in `extractProviderOutput()` (`Array.isArray(payload)`) is now dead code for live traffic (router uses `choices[].text`, not array format) but kept intentionally per the handoff freeze on `extractProviderOutput()`. Not a risk.
-- Test 3's mock currently uses old HF array format `[{ generated_text }]`. After the code change, this path still resolves correctly via `extractProviderOutput()`'s array branch — test will still pass. I will update the mock to completions format for self-consistency (minor deviation — noted in Deviations section).
+1. **System prompt security**: `ADAPTATION_SYSTEM_PROMPT` must not appear in response payload, logger calls, or OTel span attributes. Audited all code paths — the constant is only used in `buildMessages()` to construct the outgoing provider request body, and is not referenced anywhere in response construction, logger calls, or span attribute assignments.
+2. **Node runtime**: `node -v` reports `v16.20.1` (below documented minimum of v20.x). nvm fallback to `v18.19.0` activated for this session — pnpm runs on v18.19.0. Classified as **environmental mismatch** (pre-existing from CR-014).
+3. **Outer catch fallback strategy**: The top-level `catch` fires only for truly unexpected post-parse errors where `strategy` is not in scope. Uses `'full-finetuning'` as sentinel strategy — same "safety net" pattern as `base-generate/route.ts`.
 
 ## Preflight: Open Questions
-none
+
+- none
 
 ## Preflight Status
 `clear-to-implement`
 
 ---
 
-## [CR-013 Historical Note]
-Prior CR-013 backend-to-tech-lead content replaced per Conversation File Freshness Rule. CR-013 status was `completed`. Artifacts preserved in `agent-docs/requirements/CR-013-huggingface-inference-provider.md` and `agent-docs/plans/CR-013-plan.md`.
-
----
-
-## Status
-`completed`
-
 ## Scope Check
+
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
-- Files modified:
-  - `app/api/frontier/base-generate/route.ts`
-  - `__tests__/api/frontier-base-generate.test.ts`
+- Files created:
+  - `app/api/adaptation/generate/route.ts`
+  - `__tests__/api/adaptation-generate.test.ts`
 - Scope compliance:
-  - [x] All modified files are in Backend ownership or explicitly delegated.
-  - [x] Test files modified under explicit Tech Lead delegation for this CR.
+  - [x] All created files are in Backend ownership or explicitly delegated.
+  - [x] Test file created under explicit Tech Lead delegation (handoff: "Test scope: delegated to Backend Agent for unit tests only").
+  - [x] `.env.example` NOT modified (already updated by Tech Lead as stated in handoff).
+  - [x] `app/api/frontier/base-generate/route.ts` NOT modified (frozen per handoff).
 
 ## Changes Made
 
-**`app/api/frontier/base-generate/route.ts`:**
-- Updated the `huggingface` branch of `buildProviderRequestBody()` from HF Inference API format to OpenAI-compatible text completions format:
-  - Removed: `{ inputs: prompt, parameters: { max_new_tokens: HF_MAX_NEW_TOKENS, temperature: 0.4 } }`
-  - Added: `{ model: modelId, prompt, max_tokens: HF_MAX_NEW_TOKENS, temperature: 0.4 }`
-- No other changes. `extractProviderOutput()`, `loadFrontierConfig()`, span attributes, and error handling are untouched.
+**`app/api/adaptation/generate/route.ts`** (new):
+- POST handler at `/api/adaptation/generate`.
+- Zod schema with `prompt` (string, 1–2000 chars) and `strategy` (enum: `full-finetuning | lora-peft | prompt-prefix`).
+- Validation: returns `invalid_strategy` (400) for bad strategy, `invalid_prompt` (400) for bad prompt — distinguished via `parsed.error.issues`.
+- Per-strategy config loading: reads `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, and strategy-specific model ID env var. Missing/invalid config → immediate fallback.
+- `buildMessages()`: returns `[system, user]` for `prompt-prefix`, `[user]` for other strategies.
+- Local `extractChatOutput()`: chat completions format only (`choices[0].message.content`).
+- Local `parseTimeout()`: same clamped parsing as `base-generate`.
+- Strategy-specific deterministic fallback text from `FALLBACK_TEXT` record (exact strings from handoff spec).
+- OTel span `adaptation.generate` with attributes: `adaptation.strategy`, `adaptation.configured`, `adaptation.model_id`, `adaptation.mode`, `adaptation.reason_code` (fallback paths), `adaptation.upstream_status` (non-OK HTTP).
+- Response shape matches `base-generate` contract exactly (`mode`, `output`, `reason`, `metadata`). `metadata` uses `AdaptationModelMetadata` type `{ strategy, modelId }`.
 
-**`__tests__/api/frontier-base-generate.test.ts`** — `HF Provider Path` describe block only:
-1. `HF_ENV.FRONTIER_API_URL` → `https://router.huggingface.co/featherless-ai/v1/completions`
-2. `'should return live envelope when HF upstream succeeds'` → mock updated to `{ choices: [{ text: 'HF output text' }] }`
-3. `'should send HF request body format (inputs + parameters)'` → mock updated to completions format; assertions updated to `{ model, prompt, max_tokens: 256, temperature: 0.4 }` with `not.toHaveProperty('inputs')` and `not.toHaveProperty('parameters')`
-4. `'should return empty_provider_output fallback when HF generated_text is empty'` → mock updated to `{ choices: [{ text: '' }] }`
-5. Error case tests (401, 429, 503) and unknown-provider test — unchanged except URL update via `HF_ENV`.
+**`__tests__/api/adaptation-generate.test.ts`** (new):
+- 22 unit tests covering all 18 rows from the handoff test table (some rows produce multiple tests for per-strategy coverage).
 
 ## Verification Results
 
-**Environmental note:** System Node.js v16.20.1 — below documented minimum (>=20.x). Classified as **environmental mismatch**. Verification ran using Node.js v18.19.0 via `~/.nvm/versions/node/v18.19.0`.
+**Environmental note:** System Node.js v16.20.1 — below documented minimum (>=20.x). Classified as **environmental mismatch** (pre-existing). Verification ran under Node.js v18.19.0 via `~/.nvm/versions/node/v18.19.0`.
 
 **1. `pnpm test`** — PASS
 
 ```
-PASS __tests__/api/frontier-base-generate.test.ts
-  Integration: Frontier Base Generate API
-    ✓ should return 400 with controlled error payload for invalid prompt (9 ms)
-    ✓ should return fallback envelope when provider config is missing (2 ms)
-    ✓ should return live envelope when upstream provider succeeds (2 ms)
-    HF Provider Path
-      ✓ should return live envelope when HF upstream succeeds (3 ms)
-      ✓ should send HF request body format (inputs + parameters) (2 ms)
-      ✓ should return upstream_auth fallback when HF returns 401 (2 ms)
-      ✓ should return quota_limited fallback when HF returns 429 (2 ms)
-      ✓ should return upstream_error fallback when HF returns 503 (5 ms)
-      ✓ should return empty_provider_output fallback when HF generated_text is empty (2 ms)
-      ✓ should return invalid_config fallback and not call fetch for unknown FRONTIER_PROVIDER (2 ms)
+PASS __tests__/api/adaptation-generate.test.ts
+  Integration: Adaptation Generate API
+    ✓ should return 400 invalid_prompt for empty prompt (9 ms)
+    ✓ should return 400 invalid_prompt for prompt exceeding 2000 chars (2 ms)
+    ✓ should return 400 invalid_strategy for unknown strategy (2 ms)
+    ✓ should return fallback with missing_config for full-finetuning when env vars absent (2 ms)
+    ✓ should return fallback with missing_config for lora-peft when env vars absent (1 ms)
+    ✓ should return fallback with missing_config for prompt-prefix when env vars absent (5 ms)
+    ✓ should return live mode response for full-finetuning when configured (2 ms)
+    ✓ should return live mode response for lora-peft when configured (2 ms)
+    ✓ should return live mode response for prompt-prefix when configured (2 ms)
+    ✓ should include system message as first message for prompt-prefix strategy (2 ms)
+    ✓ should NOT include system message for full-finetuning strategy (1 ms)
+    ✓ should route to full-finetuning model ID (1 ms)
+    ✓ should route to lora-peft model ID (1 ms)
+    ✓ should route to prompt-prefix model ID (1 ms)
+    ✓ should return fallback with quota_limited when upstream returns 429 (1 ms)
+    ✓ should return fallback with upstream_auth when upstream returns 401 (1 ms)
+    ✓ should return fallback with upstream_error when upstream returns 503 (1 ms)
+    ✓ should return fallback with timeout when fetch is aborted (2 ms)
+    ✓ should return fallback with empty_provider_output when provider returns empty content (1 ms)
+    ✓ should return exact fallback text for full-finetuning strategy (1 ms)
+    ✓ should return exact fallback text for lora-peft strategy (1 ms)
+    ✓ should return exact fallback text for prompt-prefix strategy
 
-Test Suites: 16 passed, 16 total
-Tests:       111 passed, 111 total
+Test Suites: 17 passed, 17 total
+Tests:       133 passed, 133 total
+Snapshots:   0 total
+Time:        2.702 s
 ```
 
+New tests: 22 (≥18 required). Total: 133 (was 111 baseline; 133 ≥ 111 ✓).
+
 **2. `pnpm lint`** — PASS
-`✔ No ESLint warnings or errors` (pre-existing `next lint` deprecation notice — unrelated to CR)
+`✔ No ESLint warnings or errors` (pre-existing `next lint` deprecation notice — unrelated to CR).
 
 **3. `pnpm exec tsc --noEmit`** — PASS
 Exit code 0, no output.
 
 **DoD checklist:**
-- [x] `buildProviderRequestBody()` for `huggingface` emits `{ model, prompt, max_tokens, temperature }` — verified by "HF request body format" test
-- [x] `buildProviderRequestBody()` for `openai` is unchanged — "live envelope when upstream provider succeeds" passes unchanged
-- [x] `return_full_text` does not appear anywhere in `route.ts` — confirmed absent; AC-3 satisfied by default
-- [x] `extractProviderOutput()` is unchanged — not touched
-- [x] All 7 HF tests pass with updated mocks; all 3 non-HF tests pass unchanged — 10/10 target spec, 111/111 full suite
-- [x] `pnpm test` passes — 111 tests, 16 suites, all green
+- [x] POST `/api/adaptation/generate` routes to correct model per strategy (AC-9) — verified by "correct model routing" tests for all 3 strategies
+- [x] `prompt-prefix` strategy prepends system prompt server-side; system prompt NOT in response payload (AC-7, AC-9) — verified by system prompt injection test; response payloads checked in all live tests
+- [x] All 3 strategies return strategy-specific deterministic fallback text when unconfigured (AC-8) — verified by missing_config and fallback text tests
+- [x] Request validation rejects: invalid strategy (400 `invalid_strategy`), empty prompt (400 `invalid_prompt`), prompt >2000 chars (400 `invalid_prompt`)
+- [x] OTel span `adaptation.generate` emitted with `adaptation.strategy` attribute — instrumented in POST handler
+- [x] Unit tests: 22 new tests covering all rows in handoff test table (≥18 ✓)
+- [x] `pnpm test` passes — 133 total tests, no regressions
 - [x] `pnpm lint` passes — ✔ No ESLint warnings or errors
 - [x] `pnpm exec tsc --noEmit` passes — exit code 0
 
@@ -113,18 +130,18 @@ none
 ## Failure Classification
 - `CR-related`: none
 - `pre-existing`: none
-- `environmental`: System Node.js v16.20.1 below documented minimum (>=20.x); verified via Node v18.19.0 (nvm). Not a CR regression.
+- `environmental`: System Node.js v16.20.1 below documented minimum (>=20.x); verified under Node v18.19.0 (nvm). Not a CR regression.
 - `non-blocking warning`: `next lint` deprecation notice — pre-existing, unrelated to this CR.
 
 ## Deviations
-- **Minor**: Updated test 3's mock response from `[{ generated_text: 'HF output text' }]` to `{ choices: [{ text: 'HF output text' }] }` for suite self-consistency. The handoff only specified assertion changes for test 3; the mock update was not required (old format still resolves via `extractProviderOutput()`'s array branch) but makes the test correctly represent the router format. No behavioral or contract impact.
+none
 
 ## Ready for Next Agent
 yes
 
 ## Follow-up Recommendations
-none
+- The `toRecord()` utility is locally duplicated in `route.ts` and `base-generate/route.ts`. If a third route needs it, consider extracting to `lib/server/`. Out of scope for this CR.
 
 ---
-*Report created: 2026-02-20*
+*Report created: 2026-02-23*
 *Backend Agent*

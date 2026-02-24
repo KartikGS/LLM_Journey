@@ -15,3 +15,7 @@ Stack specific agents
 Using gRPC for servers telemetry
 
 Common chat interface
+
+Add streaming
+
+Add warnings, chat limiting.

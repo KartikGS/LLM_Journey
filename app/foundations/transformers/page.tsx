@@ -92,7 +92,7 @@ export default function BaseLLMPage() {
             <p>
               These large language models are usually trained on internet-scale text corpora. If you want general context, start with{' '}
               <a
-                href="https://www.youtube.com/watch?v=kCc8FmEb1nY"
+                href="https://youtu.be/7xTGNNLPyMI?si=G_wqTEIO7NlwSriC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-blue-600 hover:underline dark:text-blue-400"
