@@ -295,6 +295,11 @@ ADRs live in:
 
 ### Verification & BA Handoff
 
+> **Context boundary for `[M]`/`[L]` CRs:** Each Wait State is a natural reset point. When re-entering after a sub-agent completes, start a new session loading only the plan + the sub-agent's report + the files they modified. Do not reload Layer 1/2 project standards — the plan already captures all decisions, and re-reading standards adds context cost without adding verification value.
+> - **Parallel mode**: one reset point — start fresh here for the full verification pass.
+> - **Sequential mode**: reset at every Wait State cycle — each re-entry is a new session loading only the plan + latest report.
+> If context saturation is experienced at any cycle, record it in the Workflow Health Signal section of the lightweight meta pass.
+
 Before handing off to BA Agent, complete the **Verification Checklist**:
 
 #### Verification Checklist

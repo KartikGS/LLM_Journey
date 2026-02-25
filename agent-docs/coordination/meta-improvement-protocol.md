@@ -25,7 +25,8 @@ Cadence:
   - blocking contradiction or authority-boundary ambiguity was observed,
   - security/contract drift risk is identified,
   - 3+ distinct findings are captured in the lightweight pass,
-  - periodic checkpoint reached (recommended: every 3 completed CRs).
+  - periodic checkpoint reached (recommended: every 3 completed CRs),
+  - a role health threshold is crossed (see Role Health Indicators below).
 
 This prevents the full meta chain from serializing every CR while preserving deep analysis when needed.
 
@@ -129,6 +130,11 @@ For each non-trivial finding, add lens tags:
 
 Ground every finding in a specific moment from your CR execution (file read, decision made,
 judgment call required). Avoid generic observations.
+
+Finally, produce a `## Top 5 Findings (Ranked)` section at the bottom of your file.
+List your 5 highest-impact findings, one line each:
+`[ID] | [one-line summary] | [affected doc / section] | [lens tags]`
+Phase 2 synthesis reads this section only — not the full file.
 ```
 
 **Output per agent:**
@@ -179,6 +185,15 @@ judgment call required). Avoid generic observations.
 ## Prior Findings: Assessment
 (Only present if prior findings files were provided)
 - [Prior finding ID or summary] → Validated / Refuted / Extended — [one-line rationale]
+
+## Top 5 Findings (Ranked)
+1. [ID] | [one-line summary] | [affected doc / section] | [lens tags]
+2. [ID] | [one-line summary] | [affected doc / section] | [lens tags]
+3. [ID] | [one-line summary] | [affected doc / section] | [lens tags]
+4. [ID] | [one-line summary] | [affected doc / section] | [lens tags]
+5. [ID] | [one-line summary] | [affected doc / section] | [lens tags]
+
+(Max 5. Rank by impact. Phase 2 synthesis reads this section only — not the full file.)
 ```
 
 ---
@@ -200,18 +215,18 @@ Attached are per-agent findings files from a <CR-ID> meta-analysis:
 - [list findings files with paths]
 
 Your task:
-1. De-duplicate overlapping findings across agents.
-2. Prioritize each finding: High (blocks agent effectiveness) / Medium (causes friction or confusion) / Low (polish).
-3. For each finding, decide: Fix | Defer | Reject — with a one-line rationale.
-4. For Fix items: propose specific, minimal before/after wording for the affected doc and section.
-5. Add lens impact for each Fix item: portability boundary, collaboration throughput, evolvability.
-6. Group Fix items into small implementation chunks (recommended 1-3 files per chunk) that can be executed independently.
+1. Read ONLY the `## Top 5 Findings (Ranked)` section from each findings file — not the full files.
+2. De-duplicate overlapping findings across agents.
+3. Assign consolidated priority: High (blocks agent effectiveness) / Medium (friction or confusion) / Low (polish).
+4. For each finding, decide: Fix | Defer | Reject — with a one-line rationale.
+5. Group Fix items into implementation chunks (1-3 files per chunk) that can execute independently.
+
+Do NOT propose before/after wording. That is written by the implementing agent during Phase 3.
 
 Output: agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md
 
 This is NOT a CR execution session. Do not write plans, handoffs, or code.
 Do not treat prior implementation decisions as correct by default — evaluate each finding on its merits.
-Do not fix items by duplicating policy text across files; resolve by updating one source-of-truth location and cross-referencing.
 ```
 
 **Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md`
@@ -230,40 +245,29 @@ Do not fix items by duplicating policy text across files; resolve by updating on
 ## Summary
 (1–3 sentences on the overall doc health signal from this CR's meta-analysis)
 
-## Lens Summary (Mandatory)
-- Portability Boundary: [what should move to reusable policy vs remain project-specific]
-- Collaboration Throughput: [which rules currently serialize work and why]
-- Evolvability: [which changes reduce future maintenance cost]
-
 ---
 
-## High Priority
-| # | Finding Summary | Source Role(s) | Affected Doc + Section | Decision | Proposed Change |
+## Fix Items
+| # | Finding Summary | Source Role(s) | Affected Doc + Section | Priority | Rationale |
 |---|---|---|---|---|---|
-| H1 | ... | Backend | `backend.md` / Boundaries | Fix | Before: ... / After: ... |
-
-## Medium Priority
-| # | Finding Summary | Source Role(s) | Affected Doc + Section | Decision | Proposed Change |
-|---|---|---|---|---|---|
-
-## Low Priority
-| # | Finding Summary | Source Role(s) | Decision | Rationale |
-|---|---|---|---|---|
+| F1 | ... | Backend | `backend.md` / Boundaries | High | ... |
 
 ## Deferred / Rejected
 | # | Finding Summary | Decision | Rationale |
 |---|---|---|---|
 
-## Implementation Chunking Plan (Mandatory for Fix items)
-| Chunk | Included Findings | Files (1-3 recommended) | Why Independent | Notes |
-|---|---|---|---|---|
+## Implementation Chunks (for Phase 3)
+| Chunk | Fix Items | Target Files (1-3) | Notes |
+|---|---|---|---|
 
 ---
 
 ## Decision Needed
-Items requiring Human User input before doc changes can proceed.
+Items requiring Human User input before proceeding.
 - [Item or "none"]
 ```
+
+> **Note:** No before/after wording in the synthesis. The implementing agent reads the target doc and writes the wording change during Phase 3 execution.
 
 ---
 
@@ -274,6 +278,7 @@ Items requiring Human User input before doc changes can proceed.
    - Default: doc-only CR per chunk (`CR-XXX-<slug>.md`, recommended tags `[S][DOC][ALIGN]`).
    - Inline edits by Tech Lead only for small, isolated wording fixes in one localized section.
    - Do not batch unrelated fixes into one large doc sweep if they can ship independently.
+   - **Wording is written here, not in Phase 2**: The implementing agent reads the target doc section and proposes before/after wording at the time of implementation. The synthesis doc identifies *what* to fix and *where*; the implementing CR defines *how*.
 3. BA validates closure if changes touch requirement templates, workflow phase definitions, or role authority boundaries.
 4. Implemented changes are logged in `agent-docs/project-log.md`.
 5. If approved items exceed one chunk, schedule the remaining approved chunks in `project-log.md` `Next Priorities` so evolution continues without blocking feature CR throughput.
@@ -325,6 +330,36 @@ This mode is intended to run in parallel with feature CRs without forcing a full
 | Portable vs project-specific instruction boundary changes | Tech Lead + BA jointly | User |
 | Collaboration throughput/cadence changes to meta procedure | Tech Lead proposes, BA ratifies | User |
 | Cross-cutting policy (affects multiple roles) | Tech Lead + BA jointly | User |
+
+---
+
+## Role Health Indicators
+
+Workflows accumulate responsibilities over time. Use these signals to detect when a role or workflow phase has grown beyond what a single session can hold effectively. The Tech Lead filling in the Workflow Health Signal section of the lightweight meta pass is the primary data source.
+
+### Threshold Definitions
+
+| Signal | Threshold | Automatic Action |
+|---|---|---|
+| Role doc line count | > 350 lines | Flag in next lightweight pass; schedule a Mode B scope review if confirmed in 2 consecutive CRs |
+| Context saturation (same phase) | Reported in 2+ consecutive lightweight passes for the same role phase | Escalate to `role-scope-review` in Mode A; schedule as Mode B item |
+| Unfixed carry-forward finding | Same finding class appears across 3+ consecutive meta analyses | Force-promote to High in the next synthesis regardless of re-assessed priority |
+| Responsibility accumulation | A role doc section count exceeds 10 distinct H2 sections | Review whether sections belong to the same role or should split into a sub-session or new role |
+
+### Response Levels
+
+- **Flag** — record in the lightweight pass Workflow Health Signal. No immediate action required.
+- **Mode B item** — schedule a `[S][DOC][ALIGN]` chunk to redistribute, clarify, or split the affected role responsibility.
+- **Role scope review** — a dedicated analysis session (not tied to a specific CR) to decide: redistribute responsibilities within the role, formalize a two-session execution model, or introduce a new role. Output is a proposal for user approval before any role authority changes are made.
+
+### Role Scope Review: guiding questions
+
+When a role scope review is triggered, answer these before proposing changes:
+1. Which phase of the role's execution is hitting context pressure — planning, execution, or verification?
+2. Is the pressure from accumulated responsibilities (role doc growth) or from data volume (reading many files per CR)?
+3. Can the responsibility be moved to an adjacent phase (e.g., sub-agent does more self-verification) without creating a new handoff ceremony?
+4. Would a defined two-session model (Phase A / Phase B) within the same role reduce pressure without requiring a new role doc?
+5. If a new role is warranted: does it have a distinct authority boundary, a distinct execution context, and a non-overlapping file ownership zone?
 
 ---
 

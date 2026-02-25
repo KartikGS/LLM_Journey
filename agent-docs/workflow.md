@@ -33,7 +33,12 @@
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
-8. **Architecture-Only Mode (Conditional):** If a CR is intended as rendering-boundary/architecture-only (no product behavior redesign), Tech Lead MUST state this explicitly in plan + handoff and include:
+8. **Session Scope Management (for `[M]`/`[L]` CRs):** Each Wait State is a natural context reset point. The strategy differs by delegation mode:
+   - **Parallel mode**: Two sessions. Session 1 — full context load → plan → direct changes → all handoffs → Wait State. Session 2 — load only sub-agent reports + modified files → adversarial review → quality gates → BA handoff.
+   - **Sequential mode**: Fresh session at each Wait State cycle. Each re-entry loads only the plan + the latest sub-agent report — not the full Layer 1/2 context. The plan already captures all decisions; re-reading standards docs adds context cost without adding value at review time.
+   - **`[S]` CRs**: single session is acceptable unless context pressure was observed in a prior lightweight meta pass for this role.
+   - **Record in lightweight pass**: if context saturation was experienced at any cycle, record it in the Workflow Health Signal section.
+9. **Architecture-Only Mode (Conditional):** If a CR is intended as rendering-boundary/architecture-only (no product behavior redesign), Tech Lead MUST state this explicitly in plan + handoff and include:
    - UI/copy/IA freeze statement (`no visual redesign, no content rewrite, no route rename`),
    - contract preservation list (`routes`, `data-testid`, accessibility semantics),
    - required regression checks (desktop/mobile + light/dark + critical interactive surfaces).
