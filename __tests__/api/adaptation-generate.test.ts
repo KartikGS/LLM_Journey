@@ -19,6 +19,14 @@ jest.mock('@/lib/otel/tracing', () => ({
     getTracer: jest.fn(() => mockTracer),
 }));
 
+// --- Metrics mock ---
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    getAdaptationGenerateRequestsCounter: () => ({ add: mockAdd }),
+    getAdaptationGenerateFallbacksCounter: () => ({ add: mockAdd }),
+}));
+
 jest.mock('@/lib/otel/logger', () => ({
     __esModule: true,
     default: {
@@ -83,6 +91,7 @@ describe('Integration: Adaptation Generate API', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockAdd.mockClear();
         process.env = { ...originalEnv };
         delete process.env.ADAPTATION_API_URL;
         delete process.env.FRONTIER_API_KEY;
@@ -417,5 +426,98 @@ describe('Integration: Adaptation Generate API', () => {
         const body = await res.json();
 
         expect(body.output).toBe(FALLBACK_TEXT['prompt-prefix']);
+    });
+
+    describe('Metrics and Security', () => {
+        const VALID_ENV = {
+            ADAPTATION_API_URL: 'https://router.huggingface.co/v1/chat/completions',
+            FRONTIER_API_KEY: 'sk-secret-key',
+            ADAPTATION_FULL_FINETUNE_MODEL_ID: 'model-ff',
+            ADAPTATION_LORA_MODEL_ID: 'model-lora',
+            ADAPTATION_PROMPT_PREFIX_MODEL_ID: 'model-pp',
+        };
+
+        it('increments adaptation_generate.requests counter on every POST', async () => {
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            await POST(req);
+            expect(mockAdd).toHaveBeenCalledWith(1);
+        });
+
+        it('increments adaptation_generate.fallbacks with reason_code missing_config when not configured', async () => {
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            await POST(req);
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'missing_config' });
+        });
+
+        it('increments adaptation_generate.fallbacks with reason_code timeout on AbortError', async () => {
+            Object.assign(process.env, VALID_ENV);
+            (global.fetch as jest.Mock).mockRejectedValueOnce(
+                Object.assign(new Error('aborted'), { name: 'AbortError' })
+            );
+
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            await POST(req);
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'timeout' });
+        });
+
+        it('increments adaptation_generate.fallbacks with reason_code upstream_auth on upstream 401', async () => {
+            Object.assign(process.env, VALID_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(JSON.stringify({ error: 'Auth failed' }), { status: 401 })
+            );
+
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            await POST(req);
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'upstream_auth' });
+        });
+
+        it('does not call fallbacks counter on a successful live response', async () => {
+            Object.assign(process.env, VALID_ENV);
+            mockLiveResponse('Success');
+
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            await POST(req);
+
+            const fallbackCalls = mockAdd.mock.calls.filter(call => call[1] && call[1].reason_code);
+            expect(fallbackCalls.length).toBe(0);
+        });
+
+        it('does not expose FRONTIER_API_KEY in the response body on any fallback path', async () => {
+            Object.assign(process.env, VALID_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(JSON.stringify({ error: 'Error' }), { status: 500 })
+            );
+
+            const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
+            const res = await POST(req);
+            const body = await res.json();
+            expect(JSON.stringify(body)).not.toContain('sk-secret-key');
+        });
+
+        it('does not expose ADAPTATION_SYSTEM_PROMPT content in the response body', async () => {
+            Object.assign(process.env, VALID_ENV);
+            mockLiveResponse('Success');
+
+            const req = createRequest({ prompt: 'test', strategy: 'prompt-prefix' });
+            const res = await POST(req);
+            const body = await res.json();
+            // ADAPTATION_SYSTEM_PROMPT content: 'You are a helpful assistant'
+            expect(JSON.stringify(body)).not.toContain('You are a helpful assistant');
+        });
+
+        it('does not set ADAPTATION_SYSTEM_PROMPT content as a span attribute', async () => {
+            Object.assign(process.env, VALID_ENV);
+            mockLiveResponse('Success');
+
+            const req = createRequest({ prompt: 'test', strategy: 'prompt-prefix' });
+            await POST(req);
+
+            mockSpan.setAttribute.mock.calls.forEach(call => {
+                const value = call[1];
+                if (typeof value === 'string') {
+                    expect(value).not.toContain('You are a helpful assistant');
+                }
+            });
+        });
     });
 });

@@ -1,202 +1,527 @@
 # Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-017 — Small Backlog Fixes: Route Cleanup (Output Cap + toRecord + Dead Code)`
+`CR-018 — Generation API Hardening Parity: Backend Implementation`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior content: `CR-015` (`Adaptation Page: New /api/adaptation/generate Endpoint`)
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md` ✓
-- Evidence 2 (prior CR closed): `CR-015` status `Done` per `agent-docs/project-log.md` ✓
+- Prior content: `CR-017`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md` ✓
+- Evidence 2 (prior CR closed): CR-017 status `Done` per `agent-docs/project-log.md` ✓
 - Result: replacement allowed.
 
 ---
 
 ## Objective
 
-Three focused backend changes:
-1. Add a configurable output-length cap to `/api/adaptation/generate` live responses (AC-1/AC-2).
-2. Migrate both API routes to import `toRecord()` from the new shared utility `lib/utils/record.ts`, removing the two inline local definitions (AC-3).
-3. Remove the unreachable `Array.isArray(payload)` branch from `extractProviderOutput()` in `base-generate/route.ts` (AC-5).
+Implement hardening parity between the generation API routes and the existing OTEL proxy boundary. Concretely:
+
+1. Extract four duplicated generation-route utilities into a shared server module.
+2. Add middleware abuse-control entries for both generation routes (rate limit + body size).
+3. Add route-level metrics (request + fallback counters) for both generation routes.
+4. Create the missing API contract doc for the adaptation route.
 
 ---
 
 ## Rationale (Why)
 
-- **Output cap (AC-1)**: The adaptation route has no output length ceiling. The frontier route already caps at 4000 chars via `FRONTIER_OUTPUT_MAX_CHARS`. Without a matching cap, an upstream model could return very long responses and degrade learner UX. Consistency with the existing safety pattern is the goal.
-- **toRecord extraction (AC-3)**: The same 3-line utility is defined locally in two server-side routes. Extracting to `lib/utils/record.ts` (already created by Tech Lead) removes duplication without changing any behavior. If a third route needs it, the shared utility is already in place.
-- **Dead code removal (AC-5)**: The `Array.isArray(payload)` branch in `extractProviderOutput()` handled a legacy HF inference API format (`[{ generated_text: "" }]`). After the CR-014 featherless-ai migration, the HF provider now uses OpenAI-compatible completions format (`choices[].text`). The array branch is unreachable by any supported provider path and no existing test exercises it. Removing it reduces confusion for future maintainers.
+The OTEL proxy has explicit middleware enforcement (rate limit + body-size), route-level metrics, and a contract doc. The two generation routes were introduced incrementally and never received equivalent treatment. This creates:
+- **Governance drift**: identical logic duplicated in two files with no single source of truth.
+- **Security exposure**: no middleware-layer body-size enforcement on interactive generation endpoints.
+- **Observability gap**: no metrics signal for generation request volume or fallback rates.
+- **Traceability gap**: no contract artifact for `/api/adaptation/generate`.
+
+This CR closes all four gaps while preserving both public route contracts exactly.
 
 ---
 
-## Known Environmental Caveats
+## Known Environmental Caveats (Mandatory)
 
-- **Node.js runtime**: System runtime may be below `>=20.x` (documented minimum). Run `node -v` first. If below 20.x, activate via `nvm use 20`. If nvm is unavailable, classify as `environmental` in your report — do not skip verification.
+- **Node.js runtime**: System may be below `>=20.x` documented minimum. Run `node -v` first. If below v20, activate via `nvm use 20`. If nvm is unavailable, classify as `environmental` and document — do not skip verification.
 - **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
-- **Port**: Dev server is on `3001` if needed. Not required for unit test verification.
+- **Port**: Dev server runs on port `3001`. Not required for unit/lint/type verification.
+- **E2E**: Not in scope for this handoff. Testing Agent handles full quality gates in Step 2.
+
+---
+
+## Constraints
+
+### Technical Constraints
+- No new package dependencies — all implementation uses existing OTel, Zod, Next.js, and TypeScript.
+- All metric calls MUST be wrapped in `safeMetric(() => ...)`. Metric failures must never crash a route.
+- Do NOT introduce high-cardinality metric dimensions (no prompt text, no model ID, no user identifier as labels).
+- Middleware thresholds are hardcoded constants — do NOT make them env-configurable in this CR.
+- Preserve all existing route response envelopes exactly. No route-path, `data-testid`, or accessibility contract changes (AC-9).
+
+### Ownership Constraints
+- Files in scope: `lib/server/generation/shared.ts` (new), `app/api/frontier/base-generate/route.ts`, `app/api/adaptation/generate/route.ts`, `middleware.ts`, `lib/otel/metrics.ts`, `agent-docs/api/adaptation-generate.md` (new).
+- Do NOT modify `__tests__/` files — the Testing Agent handles all test work in Step 2.
+- Do NOT modify `agent-docs/api/frontier-base-generate.md` unless a frontier route contract detail actually changes (none expected).
 
 ---
 
 ## Assumptions To Validate (Mandatory)
 
-1. `lib/utils/record.ts` exists and exports `toRecord` — **already created by Tech Lead**. Verify the file is present before modifying routes.
-2. The `Array.isArray(payload)` branch in `extractProviderOutput()` is not exercised by any test in `__tests__/api/frontier-base-generate.test.ts`. Confirm by inspecting the test file — no mock should return an array payload.
-3. `process.env.ADAPTATION_OUTPUT_MAX_CHARS` is not yet read anywhere in `adaptation/generate/route.ts`. Confirm before adding.
+1. `lib/server/generation/shared.ts` does NOT yet exist — you create it. Verify with a file check before creating.
+2. `parseTimeout`, `extractProviderErrorMessage`, and `mapProviderFailure` are byte-for-byte identical in both routes. Confirm by re-reading both files before extracting. If any divergence is found, **stop and flag** — do not silently reconcile.
+3. `ADAPTATION_SYSTEM_PROMPT` (defined in `adaptation/generate/route.ts`) must never appear in any response payload, log field, or span attribute. Confirm this is already the case before making changes.
+4. `FRONTIER_API_KEY` must never appear in any response payload, log field, or span attribute. Confirm the existing spans/logs are already clean.
+5. `safeMetric` is exported from `@/lib/otel/metrics` (it is — confirmed by Tech Lead read).
+6. `validateContentLength` is already imported in `middleware.ts` from `@/lib/security/contentLength` (it is — confirmed). No new imports needed for middleware body-size enforcement.
 
 ---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
 
-- Do NOT modify client-side components (`FrontierBaseChat.tsx`, `AdaptationChat.tsx`) — they also have local `toRecord()` definitions but are out of scope for this CR.
-- Do NOT modify `__tests__/api/frontier-base-generate.test.ts` for any purpose other than confirming tests still pass after dead code removal.
-- Do NOT modify `.env.example` — already updated by Tech Lead.
-- If you discover the `Array.isArray` branch IS exercised by any existing test, **stop and flag it** before removing. Do not delete tested code without Tech Lead approval.
+- If you find that any existing route test references the local `parseTimeout`, `extractProviderErrorMessage`, or `mapProviderFailure` by import — **stop and flag**. Do not delete from routes until confirmed safe.
+- If you discover that any span attribute or logger call currently includes `FRONTIER_API_KEY` or `ADAPTATION_SYSTEM_PROMPT` text — **stop and flag before completing** (AC-5 blocker).
+- Do NOT add streaming support, response envelope changes, or new HTTP status codes beyond what is spec'd here.
+- Client-side `toRecord()` helpers in `FrontierBaseChat.tsx` and `AdaptationChat.tsx` are out of scope (tracked as a Next Priority in project-log.md).
 
 ---
 
 ## Scope
 
+### Files to Create
+- `lib/server/generation/shared.ts`: new shared generation utility module (spec below)
+- `agent-docs/api/adaptation-generate.md`: adaptation route contract doc (spec below)
+
 ### Files to Modify
-- `app/api/adaptation/generate/route.ts`:
-  - Remove local `toRecord()` definition (line 185-187)
-  - Add import: `import { toRecord } from '@/lib/utils/record';` at top with other imports
-  - Add `ADAPTATION_OUTPUT_MAX_CHARS` env read (see spec below)
-  - Apply output cap to live response (see spec below)
-
-- `app/api/frontier/base-generate/route.ts`:
-  - Remove local `toRecord()` definition (line 163-165)
-  - Add import: `import { toRecord } from '@/lib/utils/record';` at top with other imports
-  - Remove `Array.isArray(payload)` branch from `extractProviderOutput()` (lines 211-218)
-
-- `__tests__/api/adaptation-generate.test.ts`:
-  - Add one new test: verify live output is capped when provider returns content longer than `ADAPTATION_OUTPUT_MAX_CHARS`
+- `app/api/frontier/base-generate/route.ts`: import from shared module; add metric calls
+- `app/api/adaptation/generate/route.ts`: import from shared module; add metric calls
+- `middleware.ts`: add generation route entries to `API_CONFIG`
+- `lib/otel/metrics.ts`: add 4 new metric getter functions
 
 ---
 
-## Implementation Specification (Tech Lead Owned — Use Exactly)
+## Implementation Specification (Tech Lead Owned — Follow Exactly)
 
-### 1. ADAPTATION_OUTPUT_MAX_CHARS — module-level constant
+### 1. Create `lib/server/generation/shared.ts`
 
-Add near the top of `adaptation/generate/route.ts`, after the existing constants (`PROMPT_MAX_CHARS`, `DEFAULT_TIMEOUT_MS`, etc.):
+Create this file with exactly this content:
 
-```ts
-const ADAPTATION_OUTPUT_MAX_CHARS =
-    Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
-```
+```typescript
+/**
+ * Shared utilities for server-side generation API routes.
+ * Extracted from /api/frontier/base-generate and /api/adaptation/generate.
+ */
 
-This is parsed once at module load. The `|| 4000` fallback handles `NaN` from a non-numeric env value. `Math.max(1, ...)` prevents a zero or negative cap.
+const DEFAULT_TIMEOUT_MS = 8000;
+const MIN_TIMEOUT_MS = 1000;
+const MAX_TIMEOUT_MS = 20000;
 
-### 2. Apply cap to live output
+export type FallbackReasonCode =
+    | 'missing_config'
+    | 'invalid_config'
+    | 'quota_limited'
+    | 'timeout'
+    | 'upstream_auth'
+    | 'upstream_error'
+    | 'invalid_provider_response'
+    | 'empty_provider_output';
 
-In `adaptation/generate/route.ts`, locate the `LiveModeResponse` return (currently around line 459):
-
-```ts
-// CURRENT — no cap:
-return NextResponse.json<LiveModeResponse>(
-    {
-        mode: 'live',
-        output: extractedOutput,
-        metadata: { strategy, modelId: config.modelId },
-    },
-    { status: 200 }
-);
-
-// CHANGE TO:
-return NextResponse.json<LiveModeResponse>(
-    {
-        mode: 'live',
-        output: extractedOutput.slice(0, ADAPTATION_OUTPUT_MAX_CHARS),
-        metadata: { strategy, modelId: config.modelId },
-    },
-    { status: 200 }
-);
-```
-
-### 3. Remove dead code from extractProviderOutput()
-
-In `base-generate/route.ts`, remove the `Array.isArray` block (currently lines 211-218):
-
-```ts
-// DELETE THIS ENTIRE BLOCK:
-// HF: [{ generated_text: "..." }]
-if (Array.isArray(payload) && payload.length > 0) {
-    const first = toRecord(payload[0]);
-    const text = first?.generated_text;
-    if (typeof text === 'string' && text.trim().length > 0) {
-        return text.trim();
+export function parseTimeout(rawTimeout: string | undefined): number {
+    if (!rawTimeout) {
+        return DEFAULT_TIMEOUT_MS;
     }
-    return null; // HF array found but no usable text → empty_provider_output fallback
+
+    const parsed = Number.parseInt(rawTimeout, 10);
+    if (!Number.isFinite(parsed)) {
+        return DEFAULT_TIMEOUT_MS;
+    }
+
+    return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, parsed));
+}
+
+export function extractProviderErrorMessage(payload: unknown): string | null {
+    if (typeof payload !== 'object' || payload === null) {
+        return null;
+    }
+
+    const root = payload as Record<string, unknown>;
+
+    const directMessage = root.message;
+    if (typeof directMessage === 'string' && directMessage.trim().length > 0) {
+        return directMessage.trim();
+    }
+
+    const errorObj = root.error;
+    if (typeof errorObj === 'object' && errorObj !== null) {
+        const errorRecord = errorObj as Record<string, unknown>;
+        const nestedMessage = errorRecord.message;
+        if (typeof nestedMessage === 'string' && nestedMessage.trim().length > 0) {
+            return nestedMessage.trim();
+        }
+    }
+
+    return null;
+}
+
+export function mapProviderFailure(
+    status: number,
+    providerMessage: string | null
+): { code: FallbackReasonCode; message: string } {
+    if (status === 429) {
+        return {
+            code: 'quota_limited',
+            message: 'Live provider quota is currently unavailable. Showing deterministic fallback output.',
+        };
+    }
+
+    if (status === 401 || status === 403) {
+        return {
+            code: 'upstream_auth',
+            message: 'Live provider rejected authentication. Showing deterministic fallback output.',
+        };
+    }
+
+    if (status >= 500) {
+        return {
+            code: 'upstream_error',
+            message: 'Live provider is temporarily unavailable. Showing deterministic fallback output.',
+        };
+    }
+
+    return {
+        code: 'upstream_error',
+        message: providerMessage ?? 'Live provider request failed. Showing deterministic fallback output.',
+    };
 }
 ```
 
-After removal, `extractProviderOutput()` body should start directly with `const root = toRecord(payload);`.
+**Important**: The `extractProviderErrorMessage` implementation above uses inline object narrowing rather than `toRecord()` to avoid a dependency on `lib/utils/record`. This is intentional — the shared utility must not depend on other domain-specific utilities that may evolve independently.
 
-### 4. New test for output cap
+---
 
-Add to `__tests__/api/adaptation-generate.test.ts`, in the Live Response section:
+### 2. Update `app/api/frontier/base-generate/route.ts`
 
-```ts
-it('should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters', async () => {
-    process.env.ADAPTATION_OUTPUT_MAX_CHARS = '10';
-    setConfigEnv('full-finetuning');
-    mockLiveResponse('This response is longer than ten characters');
+**Step A — Replace local definitions with imports.**
 
-    const req = createRequest({ prompt: 'Test cap.', strategy: 'full-finetuning' });
-    const res = await POST(req);
-    const body = await res.json();
+Remove the following local definitions (they are fully replaced by the shared module):
+- The `FallbackReasonCode` type (lines 26–34)
+- The `parseTimeout` function
+- The `extractProviderErrorMessage` function
+- The `mapProviderFailure` function
 
-    expect(res.status).toBe(200);
-    expect(body.mode).toBe('live');
-    expect(body.output).toBe('This respo');
-    expect(body.output.length).toBe(10);
-});
+Add this import at the top of the file alongside existing imports:
+
+```typescript
+import {
+    type FallbackReasonCode,
+    parseTimeout,
+    extractProviderErrorMessage,
+    mapProviderFailure,
+} from '@/lib/server/generation/shared';
 ```
 
-**Important**: Add `delete process.env.ADAPTATION_OUTPUT_MAX_CHARS;` to the `beforeEach` cleanup block alongside the other `delete process.env.*` lines.
+**Step B — Add metric imports.**
+
+Add to the existing metrics/otel imports section:
+
+```typescript
+import {
+    safeMetric,
+    getFrontierGenerateRequestsCounter,
+    getFrontierGenerateFallbacksCounter,
+} from '@/lib/otel/metrics';
+```
+
+**Step C — Add metric call sites in the POST handler.**
+
+Read the full `POST` function before making these changes.
+
+Place a **request counter call** immediately after the two `span.setAttribute` calls at the top of the span callback (before the outer `try` block):
+
+```typescript
+span.setAttribute('http.method', 'POST');
+span.setAttribute('http.route', ROUTE_PATH);
+safeMetric(() => getFrontierGenerateRequestsCounter().add(1)); // ← ADD HERE
+```
+
+Place a **fallback counter call** immediately before each `return NextResponse.json<FallbackModeResponse>(...)` inside the POST handler. There are exactly six fallback return sites:
+
+1. **Missing/invalid config fallback** (inside `if (!frontierConfig.configured)`):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: issueCode }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+2. **Fetch network/abort error fallback** (inside the `catch (error)` for the `await fetch(...)` call):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: reasonCode }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+3. **Upstream non-OK status fallback** (inside `if (!upstreamResponse.ok)`):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: mappedFailure.code }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+4. **Unreadable response payload fallback** (inside the `catch` for `await upstreamResponse.json()`):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'invalid_provider_response' }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+5. **Empty provider output fallback** (inside `if (!extractedOutput)`):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+6. **Outer catch-all fallback** (inside the outermost `catch (error)` block):
+   ```typescript
+   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'upstream_error' }));
+   return NextResponse.json<FallbackModeResponse>(...);
+   ```
+
+The **live success path** (when `extractedOutput` is non-empty and response is `mode: 'live'`) receives NO fallback counter — only the request counter.
+
+---
+
+### 3. Update `app/api/adaptation/generate/route.ts`
+
+**Step A — Replace local definitions with imports.**
+
+Remove the following local definitions:
+- The `FallbackReasonCode` type
+- The `parseTimeout` function
+- The `extractProviderErrorMessage` function
+- The `mapProviderFailure` function
+
+Add this import:
+
+```typescript
+import {
+    type FallbackReasonCode,
+    parseTimeout,
+    extractProviderErrorMessage,
+    mapProviderFailure,
+} from '@/lib/server/generation/shared';
+```
+
+**Step B — Add metric imports.**
+
+```typescript
+import {
+    safeMetric,
+    getAdaptationGenerateRequestsCounter,
+    getAdaptationGenerateFallbacksCounter,
+} from '@/lib/otel/metrics';
+```
+
+**Step C — Add metric call sites in the POST handler.**
+
+Place the **request counter call** immediately after the two `span.setAttribute` calls at the top of the span callback:
+
+```typescript
+span.setAttribute('http.method', 'POST');
+span.setAttribute('http.route', ROUTE_PATH);
+safeMetric(() => getAdaptationGenerateRequestsCounter().add(1)); // ← ADD HERE
+```
+
+Place **fallback counter calls** immediately before each `return NextResponse.json<FallbackModeResponse>(...)`. There are exactly six fallback return sites (same pattern as frontier):
+
+1. **Missing/invalid config fallback** (inside `if (!config.configured)`):
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: issueCode }));
+   ```
+
+2. **Fetch network/abort error fallback**:
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: reasonCode }));
+   ```
+
+3. **Upstream non-OK status fallback**:
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: mappedFailure.code }));
+   ```
+
+4. **Unreadable response payload fallback**:
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'invalid_provider_response' }));
+   ```
+
+5. **Empty provider output fallback**:
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
+   ```
+
+6. **Outer catch-all fallback**:
+   ```typescript
+   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'upstream_error' }));
+   ```
+
+---
+
+### 4. Update `middleware.ts`
+
+Add two new entries to the `API_CONFIG` object. Place them after the existing `/api/otel/trace` entry:
+
+```typescript
+'/api/frontier/base-generate': {
+    rateLimit_windowMs: ONE_MINUTE,
+    rateLimit_max: 20,
+    contentLengthRequired: false,
+    maxBodySize: 8_192,
+},
+'/api/adaptation/generate': {
+    rateLimit_windowMs: ONE_MINUTE,
+    rateLimit_max: 20,
+    contentLengthRequired: false,
+    maxBodySize: 8_192,
+},
+```
+
+**Threshold rationale (do not deviate without flagging):**
+- `rateLimit_max: 20` — interactive learner endpoint; 20/min is 4–6× a typical session peak; blocks automation.
+- `maxBodySize: 8_192` — 4× the theoretical maximum for a 2000-char prompt JSON body; not brittle.
+- `contentLengthRequired: false` — Browser `fetch()` JSON POST does not guarantee a `Content-Length` header. Enforcement applies when the header is present; absence is not rejected.
+
+No other middleware logic changes.
+
+---
+
+### 5. Update `lib/otel/metrics.ts`
+
+Add four new module-level variables (after the existing OTEL proxy variable declarations):
+
+```typescript
+// Pre-defined metrics for frontier generation
+let frontierGenerateRequests: Counter | null = null;
+let frontierGenerateFallbacks: Counter | null = null;
+
+// Pre-defined metrics for adaptation generation
+let adaptationGenerateRequests: Counter | null = null;
+let adaptationGenerateFallbacks: Counter | null = null;
+```
+
+Add four new getter functions (after the existing `getOtelProxyErrorsCounter` function):
+
+```typescript
+/**
+ * Counter for total frontier base-generate requests
+ */
+export function getFrontierGenerateRequestsCounter(): Counter {
+    if (!frontierGenerateRequests) {
+        frontierGenerateRequests = getMeter().createCounter('frontier_generate.requests', {
+            description: 'Total number of frontier base-generate requests',
+            unit: '1',
+        });
+    }
+    return frontierGenerateRequests;
+}
+
+/**
+ * Counter for frontier base-generate fallback outcomes by reason code
+ */
+export function getFrontierGenerateFallbacksCounter(): Counter {
+    if (!frontierGenerateFallbacks) {
+        frontierGenerateFallbacks = getMeter().createCounter('frontier_generate.fallbacks', {
+            description: 'Total number of frontier base-generate fallback outcomes',
+            unit: '1',
+        });
+    }
+    return frontierGenerateFallbacks;
+}
+
+/**
+ * Counter for total adaptation generate requests
+ */
+export function getAdaptationGenerateRequestsCounter(): Counter {
+    if (!adaptationGenerateRequests) {
+        adaptationGenerateRequests = getMeter().createCounter('adaptation_generate.requests', {
+            description: 'Total number of adaptation generate requests',
+            unit: '1',
+        });
+    }
+    return adaptationGenerateRequests;
+}
+
+/**
+ * Counter for adaptation generate fallback outcomes by reason code
+ */
+export function getAdaptationGenerateFallbacksCounter(): Counter {
+    if (!adaptationGenerateFallbacks) {
+        adaptationGenerateFallbacks = getMeter().createCounter('adaptation_generate.fallbacks', {
+            description: 'Total number of adaptation generate fallback outcomes',
+            unit: '1',
+        });
+    }
+    return adaptationGenerateFallbacks;
+}
+```
+
+No existing functions are changed. The `Counter` and `Histogram` types are already imported at the top of the file.
+
+---
+
+### 6. Create `agent-docs/api/adaptation-generate.md`
+
+Create this contract document. Read `agent-docs/api/route-contract-template.md` and `agent-docs/api/frontier-base-generate.md` first for structural reference.
+
+The adaptation route contract must cover:
+- **Route**: `POST /api/adaptation/generate`
+- **Purpose**: Stage 2 adaptation interaction — live model output per strategy when configured; deterministic strategy-specific fallback when not configured.
+- **Ownership**: Backend implements, Frontend + Testing consume.
+- **Request contract**: `{ "prompt": string (1–2000 chars), "strategy": "full-finetuning" | "lora-peft" | "prompt-prefix" }`
+- **Response contracts** (live mode, fallback mode, and validation error — see route code for exact shapes).
+- **Fallback reason codes**: same 8-value enum as frontier.
+- **Status code matrix**: `200` for live and fallback; `400` for invalid JSON, invalid prompt, invalid strategy.
+- **Environment contract**: `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, `ADAPTATION_FULL_FINETUNE_MODEL_ID`, `ADAPTATION_LORA_MODEL_ID`, `ADAPTATION_PROMPT_PREFIX_MODEL_ID`, `FRONTIER_TIMEOUT_MS` (optional), `ADAPTATION_OUTPUT_MAX_CHARS` (optional).
+- **Observability contract**: Span name `adaptation.generate`; span attributes include `adaptation.strategy`, `adaptation.configured`, `adaptation.model_id`, `adaptation.mode`, `adaptation.reason_code`; logs must not include `FRONTIER_API_KEY` or `ADAPTATION_SYSTEM_PROMPT` content.
+- **Security notes**: `FRONTIER_API_KEY` is server-only; `ADAPTATION_SYSTEM_PROMPT` is server-only; neither appears in responses, logs, or span attributes.
+- **Consumer notes**: Frontend branches on `mode` (`live` vs `fallback`); validation errors are explicit `400` with `error.code`.
+- **Change log**: `2026-02-25`: Initial contract added for CR-018.
 
 ---
 
 ## Definition of Done
 
-- [ ] `adaptation/generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
-- [ ] `base-generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
-- [ ] `Array.isArray(payload)` branch removed from `extractProviderOutput()` in `base-generate/route.ts` (AC-5)
-- [ ] `ADAPTATION_OUTPUT_MAX_CHARS` constant parsed from env in `adaptation/generate/route.ts`; applied via `.slice(0, ADAPTATION_OUTPUT_MAX_CHARS)` to live output (AC-1)
-- [ ] New cap test added and passing; `ADAPTATION_OUTPUT_MAX_CHARS` cleared in `beforeEach` (AC-1 test coverage)
-- [ ] `pnpm test` passes — no regression vs. 133 baseline (AC-8); report total test count
-- [ ] `pnpm lint` passes (AC-8)
-- [ ] `pnpm exec tsc --noEmit` passes (AC-8)
-- [ ] No route/testid/accessibility contract changes (AC-7)
+- [ ] `lib/server/generation/shared.ts` created; exports `FallbackReasonCode`, `parseTimeout`, `extractProviderErrorMessage`, `mapProviderFailure` (AC-2).
+- [ ] `app/api/frontier/base-generate/route.ts` imports all four items from `@/lib/server/generation/shared`; no local definitions of those four items remain (AC-2).
+- [ ] `app/api/adaptation/generate/route.ts` imports all four items from `@/lib/server/generation/shared`; no local definitions of those four items remain (AC-2).
+- [ ] `middleware.ts` has entries for both `/api/frontier/base-generate` and `/api/adaptation/generate` with rate limit 20/min, body size 8192, contentLengthRequired false (AC-3).
+- [ ] `lib/otel/metrics.ts` exports 4 new getter functions: `getFrontierGenerateRequestsCounter`, `getFrontierGenerateFallbacksCounter`, `getAdaptationGenerateRequestsCounter`, `getAdaptationGenerateFallbacksCounter` (AC-4).
+- [ ] Both generation routes call request counter once per request entry and fallback counter at each of the 6 fallback return sites, all wrapped in `safeMetric()` (AC-4).
+- [ ] `FRONTIER_API_KEY` is confirmed absent from all response payloads, log fields, and span attributes. `ADAPTATION_SYSTEM_PROMPT` is confirmed absent from all response payloads, log fields, and span attributes (AC-5).
+- [ ] `agent-docs/api/adaptation-generate.md` created following contract template (AC-6).
+- [ ] No route-path, `data-testid`, or accessibility-semantic contract changes made (AC-9).
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
+- [ ] `pnpm test` passes — report total test count and confirm no regression vs 134 baseline (AC-8, scoped verification before Testing Agent runs full gates).
 
 ---
 
 ## Clarification Loop (Mandatory)
 
-- Post preflight concerns/questions to `agent-docs/conversations/backend-to-tech-lead.md`.
+- Before implementation, Backend posts preflight concerns/questions in `agent-docs/conversations/backend-to-tech-lead.md`.
 - Tech Lead responds in the same file.
-- If any open question reveals the dead code is not actually dead, or changes the API contract: **pause and wait** for Tech Lead response before implementing.
+- If any assumption is invalidated (e.g., a divergence found in the supposedly identical functions, an existing span attribute leaking a secret) — **stop and flag before proceeding**.
 
 ---
 
 ## Verification
 
-Run in sequence (not parallel):
+Run in sequence. Report using the Command Evidence Standard format.
+
 ```
 node -v
-pnpm test
 pnpm lint
 pnpm exec tsc --noEmit
+pnpm test
 ```
 
-Report using canonical Command Evidence Standard format:
-- Command: `[exact command]`
-- Scope: `[full suite | impacted files]`
-- Execution Mode: `[sandboxed | local-equivalent/unsandboxed]`
-- Result: `[PASS/FAIL + key counts]`
+For each command:
+- **Command**: `[exact command]`
+- **Scope**: `[full suite | targeted files]`
+- **Execution Mode**: `[sandboxed | local-equivalent/unsandboxed]`
+- **Result**: `[PASS/FAIL + key counts or error summary]`
 
-Include total test count from `pnpm test` output.
+Include total test count from `pnpm test` output. Confirm no regression vs 134 baseline.
 
 ---
 
@@ -205,3 +530,9 @@ Include total test count from `pnpm test` output.
 Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`.
 
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
+
+Include in report:
+- Summary of each file changed (what was added/removed/modified)
+- AC-5 security confirmation (exact span attributes and log fields verified clean)
+- Deviations from this spec (if any), classified per the Deviation Protocol
+- Verification evidence in Command Evidence Standard format

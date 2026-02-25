@@ -1,218 +1,296 @@
-# Handoff: Tech Lead → Testing Agent
+# Tech Lead → Testing Agent Handoff
 
-## Subject
-`CR-015 - Adaptation Page: Update E2E Tests for AdaptationChat Selector Contracts`
-
-## Status
-`issued`
-
-## Dependency Note
-This handoff is issued after the Frontend Agent has completed and reported back. The confirmed `data-testid` contracts from the Frontend completion report are encoded in this handoff. Do NOT modify them.
+**CR:** CR-018 — Generation API Hardening Parity
+**Date:** 2026-02-25
+**Status:** Ready for Testing Agent execution
 
 ---
 
-## Objective
+## Context
 
-Update `__tests__/e2e/navigation.spec.ts` to reflect the removal of 6 old `AdaptationStrategySelector` data-testids and the introduction of 9 new `AdaptationChat` data-testids. Two tests require changes; one test must be rewritten.
+CR-018 closed a governance drift gap between the generation API routes and the OTEL boundary.
+Backend Agent has completed implementation. Tech Lead adversarial diff review passed all ACs.
+This handoff covers the test coverage required to satisfy AC-7.
 
----
-
-## Rationale (Why)
-
-CR-015 replaced `AdaptationStrategySelector` with `AdaptationChat`. Six data-testids that existing E2E tests assert are now absent from the DOM. The two affected tests will fail if run against the updated app. The Testing Handoff Trigger Matrix requires a Testing handoff when data-testids are removed and new selectors are introduced. E2E contract closure is mandatory before this CR can be closed.
-
----
-
-## Constraints
-
-### Testing Boundaries
-- Allowed files: `__tests__/e2e/navigation.spec.ts` only.
-- Do NOT modify any app source files (`app/`, `components/`, `lib/`).
-- Do NOT modify any other test files.
-- Do NOT add new test files (unless required for a `.debug.spec.ts` — must be deleted before reporting complete).
-
-### Verification Boundaries
-- E2E required: **YES** — data-testid contract changes trigger mandatory E2E per workflow matrix.
-- Run quality gates in sequence: `pnpm test:e2e`, then classify results.
-- Tech Lead has already verified `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` — all pass. You do not need to re-run these unless you introduce TypeScript/lint changes.
-- Failure classification required: classify each E2E result as `CR-related`, `pre-existing`, or `environmental`.
+**No E2E handoff is required** — AC-9 is confirmed clean (no route paths, `data-testid`s, or
+accessibility semantics changed by Backend).
 
 ---
 
-## Stable Signals to Assert (Mandatory)
+## What Backend Delivered (Verified)
 
-Use the E2E Selector Reliability Ladder. Prefer `data-testid` (level 1) for structural assertions, `getByRole` (level 2) for interactive controls.
+Six files were created or modified:
 
-### Preserved contracts (must remain asserted)
-| `data-testid` | Assertion type |
+| File | Change |
 |---|---|
-| `adaptation-page` | `toBeVisible()` |
-| `adaptation-hero` | `toBeVisible()` |
-| `adaptation-strategy-comparison` | `toBeVisible()` |
-| `adaptation-continuity-links` | `toBeVisible()` |
-| `adaptation-link-transformers` | `toBeVisible()` + `toHaveAttribute('href', '/foundations/transformers')` |
-| `adaptation-link-context` | `toBeVisible()` + `toHaveAttribute('href', '/context/engineering')` |
+| `lib/server/generation/shared.ts` | NEW — shared utility module |
+| `app/api/frontier/base-generate/route.ts` | Imports shared module + metrics; removes local duplicates |
+| `app/api/adaptation/generate/route.ts` | Imports shared module + metrics; removes local duplicates |
+| `middleware.ts` | Adds `API_CONFIG` entries for both generation routes |
+| `lib/otel/metrics.ts` | Adds 4 new counter getters |
+| `agent-docs/api/adaptation-generate.md` | NEW — API contract doc (no tests required) |
 
-### New contracts to assert (from Frontend completion report — confirmed)
-| `data-testid` | Element |
-|---|---|
-| `adaptation-chat` | Outermost section container |
-| `adaptation-chat-tab-full-finetuning` | Full Fine-Tuning tab button |
-| `adaptation-chat-tab-lora-peft` | LoRA / PEFT tab button |
-| `adaptation-chat-tab-prompt-prefix` | Prompt / Prefix Tuning tab button |
-| `adaptation-chat-form` | `<form>` element |
-| `adaptation-chat-input` | `<textarea>` |
-| `adaptation-chat-submit` | Submit button |
-| `adaptation-chat-output` | Terminal output `<div>` |
-| `adaptation-chat-status` | Status/mode indicator |
-
-### Removed contracts (must NOT be asserted after this CR)
-| `data-testid` | Reason |
-|---|---|
-| `adaptation-interaction` | Component deleted |
-| `adaptation-strategy-selector` | Component deleted |
-| `strategy-button-full-finetuning` | Component deleted |
-| `strategy-button-lora-peft` | Component deleted |
-| `strategy-button-prompt-prefix` | Component deleted |
-| `adaptation-interaction-output` | Component deleted |
+All 134 pre-existing tests pass at Backend handoff. Your job is to **add** new tests only.
+Do not modify or delete any existing test.
 
 ---
 
-## Prohibited Brittle Assertions (Mandatory)
+## Required Test Files
 
-- **No assertions on transient loading copy** (e.g., "Querying adaptation endpoint...") — timing-dependent.
-- **No assertions on terminal output text content from the API** — live API responses are non-deterministic and fallback text is only shown when unconfigured.
-- **No layout-coupled CSS selectors** — only `data-testid`, `getByRole`, `href`, and stable `aria-*` attributes.
-- **No timeout-only waits** — use `toBeVisible()` or state-based assertions with Playwright's built-in retrying.
+### 1. `__tests__/middleware.test.ts`
+
+**Read the file first** to understand the existing pattern:
+- Tests use `jest.resetModules()` + dynamic `require()` to reset in-memory rate limit state between tests
+- Existing coverage: `/api/telemetry-token` (threshold 10), `/api/otel/trace` (threshold 30)
+- `validateContentLength` is mocked at `@/lib/security/contentLength`
+
+Add a **new `describe` block** at the bottom of the file for generation route middleware controls.
+Cover both `/api/frontier/base-generate` and `/api/adaptation/generate` (they share identical config,
+so parameterise or duplicate as fits the existing file style).
+
+#### Required tests (8 minimum):
+
+**Rate limit — threshold edge (per route):**
+```
+it('allows request N=20 and blocks request N+1=21 for /api/frontier/base-generate')
+it('allows request N=20 and blocks request N+1=21 for /api/adaptation/generate')
+```
+- Make 20 requests from the same non-localhost IP → all should pass (not 429)
+- Make a 21st request → must return 429
+
+**Rate limit — window reset:**
+```
+it('resets rate limit after window expires for generation routes')
+```
+- Send 20 requests, advance fake time by >60 000 ms (jest fake timers / Date.now mock),
+  send one more → must pass (not 429)
+
+**Localhost bypass:**
+```
+it('does not rate-limit localhost IPs on generation routes')
+```
+- Use IP `127.0.0.1` or `::1`; send 25+ requests → none should be 429
+
+**E2E bypass:**
+```
+it('does not rate-limit when E2E=true on generation routes')
+```
+- Set `process.env.E2E = 'true'`; send 25+ requests from a non-localhost IP → none should be 429
+- Restore env after test
+
+**Body size — pass at limit:**
+```
+it('passes a body of exactly 8192 bytes for /api/adaptation/generate')
+```
+- `content-length: 8192` → must not return 413
+
+**Body size — reject over limit:**
+```
+it('rejects a body of 8193 bytes for /api/adaptation/generate')
+```
+- `content-length: 8193` → must return 413
+
+**Body size — absent header passes (contentLengthRequired: false):**
+```
+it('passes when content-length header is absent for /api/frontier/base-generate')
+```
+- No `content-length` header → must not return 413
 
 ---
 
-## Known Environmental Caveats (Mandatory)
+### 2. `__tests__/api/frontier-base-generate.test.ts`
 
-- System Node.js is v16.20.1 (below ≥20.x minimum). Use `nvm use 18` before running `pnpm test:e2e`.
-- E2E requires the local dev server on port `3001`. The `pnpm test:e2e` script sets `E2E=true` and manages the server — use this script, not raw `playwright test`.
-- If the dev server fails to bind (sandbox constraint), classify as **environmental** — not a product regression. Attempt local-equivalent execution per `agent-docs/testing-strategy.md`.
-- Playwright expects the adaptation page at `/models/adaptation`. This route is unchanged.
+**Read the file first** to understand how it mocks `@opentelemetry/api`, Zod, and fetch.
 
----
+Add the following **at the top of the mocks section** (before or after the OTel mock, following
+the existing ordering convention):
 
-## Assumptions To Validate (Mandatory)
-
-1. The terminal filename label inside `adaptation-chat-output` is a stable client-side assertion (driven by `TAB_CONFIGS[strategy].terminalLabel` — not an API response). Values: `full_finetuning_output.txt`, `lora_peft_output.txt`, `prompt_prefix_output.txt`. Confirmed from `AdaptationChat.tsx`.
-2. Tab switching in `AdaptationChat` is synchronous client-side state — no network request required to see the UI update.
-3. The `adaptation-chat-status` element uses `role="status"` and `aria-live="polite"` — accessible and Playwright-queryable.
-
----
-
-## Out-of-Scope But Must Be Flagged (Mandatory)
-
-- If you find any other E2E spec file referencing removed adaptation testids, flag it in your report — do not fix silently.
-- The `@critical` tag on the rewritten test must be preserved. If you believe the new test cannot be marked `@critical`, flag it in the report.
-- Do NOT add E2E assertions that depend on live API responses from `/api/adaptation/generate` — the endpoint may be unconfigured in E2E environments.
-
----
-
-## Scope
-
-### Files to Modify
-- `__tests__/e2e/navigation.spec.ts`: Update 2 tests as specified below. Leave Test 3 untouched.
-
----
-
-## Test-by-Test Instructions
-
-### Test 1: "should navigate to Models/Adaptation" (`@smoke`)
-
-**Remove these three assertions** (currently lines 24–26):
-```ts
-await expect(page.getByTestId('adaptation-interaction')).toBeVisible();
-await expect(page.getByTestId('adaptation-strategy-selector')).toBeVisible();
-await expect(page.getByTestId('adaptation-interaction-output')).toBeVisible();
+```typescript
+// --- Metrics mock ---
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    getFrontierGenerateRequestsCounter: () => ({ add: mockAdd }),
+    getFrontierGenerateFallbacksCounter: () => ({ add: mockAdd }),
+}));
 ```
 
-**Replace with** (new `AdaptationChat` structural assertions):
-```ts
-await expect(page.getByTestId('adaptation-chat')).toBeVisible();
-await expect(page.getByTestId('adaptation-chat-tab-full-finetuning')).toBeVisible();
-await expect(page.getByTestId('adaptation-chat-tab-lora-peft')).toBeVisible();
-await expect(page.getByTestId('adaptation-chat-tab-prompt-prefix')).toBeVisible();
-await expect(page.getByTestId('adaptation-chat-input')).toBeVisible();
-await expect(page.getByTestId('adaptation-chat-output')).toBeVisible();
+Add `beforeEach(() => mockAdd.mockClear())` inside the existing `beforeEach` or as a sibling.
+
+#### Required tests (7 minimum):
+
+**Metrics emission — request counter:**
 ```
-
-### Test 2: "should update adaptation output when strategy changes" (`@critical`)
-
-This test is fully obsolete — it asserts `adaptation-interaction-output` and `strategy-button-full-finetuning`, both deleted. **Rewrite it entirely.**
-
-**New test name**: `'should update adaptation interface when strategy tab changes @critical'`
-
-**New test intent**: Verify tab switching updates visible client-side content (terminal label), without requiring a live API call.
-
-**Implementation**:
-```ts
-test('should update adaptation interface when strategy tab changes @critical', async ({ page }) => {
-  await page.goto('/models/adaptation');
-
-  const loraPeftTab = page.getByTestId('adaptation-chat-tab-lora-peft');
-  const promptPrefixTab = page.getByTestId('adaptation-chat-tab-prompt-prefix');
-  const output = page.getByTestId('adaptation-chat-output');
-
-  await expect(loraPeftTab).toBeVisible();
-  await expect(promptPrefixTab).toBeVisible();
-
-  // Click LoRA / PEFT tab — terminal label must update to lora_peft_output.txt
-  await loraPeftTab.click();
-  await expect(output).toBeVisible();
-  await expect(output).toContainText('lora_peft_output.txt');
-
-  // Click Prompt / Prefix tab — terminal label must update to prompt_prefix_output.txt
-  await promptPrefixTab.click();
-  await expect(output).toContainText('prompt_prefix_output.txt');
-});
+it('increments frontier_generate.requests counter on every POST')
 ```
+- Any valid request (configured or unconfigured) → `mockAdd` called with `(1)` and no label
+  argument on at least one call (the request counter call)
 
-The terminal label (`lora_peft_output.txt`, `prompt_prefix_output.txt`) is rendered from `activeConfig.terminalLabel` — a client-side constant, not an API response. It is visible in the `adaptation-chat-output` div header bar immediately on tab switch.
+**Metrics emission — fallback on missing config:**
+```
+it('increments frontier_generate.fallbacks with reason_code missing_config when not configured')
+```
+- Ensure `FRONTIER_API_URL` / `FRONTIER_MODEL_ID` / `FRONTIER_API_KEY` are unset
+- `mockAdd` must be called with `(1, { reason_code: 'missing_config' })`
 
-### Test 3: "should expose continuity links for previous and next stages" (`@smoke`)
-**No changes.** Leave untouched.
+**Metrics emission — fallback on timeout:**
+```
+it('increments frontier_generate.fallbacks with reason_code timeout on AbortError')
+```
+- Configured route; `fetch` throws `Object.assign(new Error('aborted'), { name: 'AbortError' })`
+- `mockAdd` called with `(1, { reason_code: 'timeout' })`
+
+**Metrics emission — fallback on upstream 429:**
+```
+it('increments frontier_generate.fallbacks with reason_code quota_limited on upstream 429')
+```
+- `fetch` resolves with `ok: false, status: 429`
+- `mockAdd` called with `(1, { reason_code: 'quota_limited' })`
+
+**Metrics emission — NO fallback counter on live success:**
+```
+it('does not call fallbacks counter on a successful live response')
+```
+- `fetch` resolves with valid OpenAI-shaped JSON payload
+- `mockAdd` must NOT be called with any `{ reason_code: ... }` argument
+
+**Security containment — API key not in response:**
+```
+it('does not expose FRONTIER_API_KEY in the response body on any fallback path')
+```
+- Set `process.env.FRONTIER_API_KEY = 'sk-secret-frontier-key'`
+- Trigger a fallback (e.g. upstream error)
+- Stringify the JSON response body and assert it does NOT contain `'sk-secret-frontier-key'`
+
+**Security containment — API key not in span attributes:**
+```
+it('does not set FRONTIER_API_KEY as a span attribute')
+```
+- Capture all `span.setAttribute` calls via mock/spy
+- Assert none of the values passed to `setAttribute` contain the API key string
 
 ---
 
-## Verification Depth
-`baseline` — structural presence and client-side tab-switch behavior. No boundary-focused API coverage needed.
+### 3. `__tests__/api/adaptation-generate.test.ts`
+
+**Read the file first** — same approach as frontier test.
+
+Add metrics mock (same pattern, different getter names):
+
+```typescript
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    getAdaptationGenerateRequestsCounter: () => ({ add: mockAdd }),
+    getAdaptationGenerateFallbacksCounter: () => ({ add: mockAdd }),
+}));
+```
+
+Add `beforeEach(() => mockAdd.mockClear())` inside the existing `beforeEach` or as a sibling.
+
+#### Required tests (8 minimum):
+
+**Metrics emission — request counter:**
+```
+it('increments adaptation_generate.requests counter on every POST')
+```
+
+**Metrics emission — fallback on missing config:**
+```
+it('increments adaptation_generate.fallbacks with reason_code missing_config when not configured')
+```
+- One or more of `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, plus the strategy-specific model ID
+  (`ADAPTATION_FULL_FINETUNE_MODEL_ID`, `ADAPTATION_LORA_MODEL_ID`, or
+  `ADAPTATION_PROMPT_PREFIX_MODEL_ID`) unset
+
+**Metrics emission — fallback on timeout:**
+```
+it('increments adaptation_generate.fallbacks with reason_code timeout on AbortError')
+```
+
+**Metrics emission — fallback on upstream 401:**
+```
+it('increments adaptation_generate.fallbacks with reason_code upstream_auth on upstream 401')
+```
+- `fetch` resolves with `ok: false, status: 401`
+- `mockAdd` called with `(1, { reason_code: 'upstream_auth' })`
+
+**Metrics emission — NO fallback counter on live success:**
+```
+it('does not call fallbacks counter on a successful live response')
+```
+
+**Security containment — API key not in response:**
+```
+it('does not expose FRONTIER_API_KEY in the response body on any fallback path')
+```
+- Same pattern as frontier: set env var to a known string, trigger fallback, check JSON body
+
+**Security containment — system prompt not in response:**
+```
+it('does not expose ADAPTATION_SYSTEM_PROMPT content in the response body')
+```
+- `ADAPTATION_SYSTEM_PROMPT` is defined server-side only.
+  Its value is `'You are a helpful assistant. Answer the following question clearly and concisely.\n\n'`
+- Trigger any fallback or success path for strategy `prompt-prefix`
+- Stringify the full JSON response body and assert it does NOT contain
+  `'You are a helpful assistant'`
+
+**Security containment — system prompt not in span attributes:**
+```
+it('does not set ADAPTATION_SYSTEM_PROMPT content as a span attribute')
+```
+- Capture all `span.setAttribute` calls via mock/spy
+- Assert none of the values contain the system prompt string
+
+---
+
+## Quality Gates (Run in Order)
+
+```bash
+pnpm test
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+```
+
+All must exit 0. If any gate fails, fix before reporting back. Do not report partial success.
 
 ---
 
 ## Definition of Done
 
-- [ ] Test 1 updated: old 3 assertions removed; 6 new `AdaptationChat` assertions present.
-- [ ] Test 2 rewritten: asserts tab switch via terminal label; `@critical` tag preserved.
-- [ ] Test 3 unchanged.
-- [ ] No other E2E spec files modified (or flagged if discovered).
-- [ ] `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` passes under local-equivalent execution.
-- [ ] All failures classified as `CR-related`, `pre-existing`, or `environmental`.
+- [ ] All pre-existing 134 tests still pass
+- [ ] 8 middleware tests added and passing
+- [ ] 7 frontier metrics/security tests added and passing
+- [ ] 8 adaptation metrics/security tests added and passing
+- [ ] `pnpm lint` clean
+- [ ] `pnpm exec tsc --noEmit` clean
+- [ ] `pnpm build` clean
 
 ---
 
-## Clarification Loop (Mandatory)
+## Reporting Back
 
-- Post preflight concerns/questions to `agent-docs/conversations/testing-to-tech-lead.md`.
-- Tech Lead responds in the same file.
-- If you cannot confirm the terminal label assertion at runtime, flag it as `needs_environment_verification` and provide the reproduction command.
+When done, update `agent-docs/conversations/testing-to-tech-lead.md` with:
 
----
+```
+CR: CR-018
+Status: completed | blocked
 
-## Verification
+Tests added:
+  middleware.test.ts: <N> new tests
+  frontier-base-generate.test.ts: <N> new tests
+  adaptation-generate.test.ts: <N> new tests
 
-Use the command evidence standard in your report:
-- Command: `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`
-- Scope: navigation spec (adaptation tests specifically)
-- Execution Mode: local-equivalent/unsandboxed
-- Browser Scope: chromium minimum; report any firefox/webkit divergence
-- Result: PASS/FAIL + test count
+Total test count: <N> (was 134)
 
----
+Quality gates:
+  pnpm test: pass | fail
+  pnpm lint: pass | fail
+  pnpm exec tsc --noEmit: pass | fail
+  pnpm build: pass | fail
 
-## Report Back
-
-Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.
+Deviations from spec: none | <describe>
+Blockers: none | <describe>
+```

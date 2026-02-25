@@ -245,12 +245,24 @@ Present the **complete plan** to the USER, including:
 
 ---
 
+### Two-Session Execution Model
+
+**Trigger:** Apply this model for any CR with both Backend AND Testing sub-agents. Single-sub-agent CRs may fit in one session.
+
+**Session A:** context load → discovery → planning → Backend handoff (delegate). Before closing Session A, write a handover artifact at `agent-docs/coordination/TL-session-state.md` recording: (1) the CR ID, (2) the Backend delegation outcome summary, (3) pending verification tasks for Session B.
+
+**Session B (new session):** Load `agent-docs/coordination/TL-session-state.md` as primary context — do NOT rely on session compressor summaries for verification decisions. Then: Backend adversarial review → Testing handoff (delegate) → Testing adversarial review → BA handoff.
+
+> **Note:** The Role Scope Review trigger (per `meta-improvement-protocol.md`) was exercised for this model in CR-018. The two-session split is the outcome: structural context saturation is expected for any Backend+Testing CR and should be planned for, not treated as incidental.
+
+---
+
 ### Execution & Coordination
 Once approved:
 -  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
 -  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
    - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
-   - Before replacing any existing handoff file, read it first, even if the prior content will be fully discarded. This is required by tooling (Write requires prior Read for existing files).
+   - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.
    - **Known Environmental Caveats (required section in every sub-agent handoff):** Include environment constraints known at handoff time (Node version, nvm path, pnpm requirements, unavailable tooling). All sub-agents face the same environment; populate once and include in all handoffs.
    - **Self-check before issuing**: If the handoff says "follow [pattern] exactly," verify no later spec item contradicts "exactly." Preferred framing: "Follow the structure and error-handling patterns of [pattern] — deviations are itemized below and take precedence."
    - **Self-check**: If the handoff specifies multiple distinct error codes for one endpoint, explicitly define priority when multiple fields fail simultaneously (for example, if both `strategy` and `prompt` are invalid, return `invalid_strategy`). Do not leave this as an implementation judgment call.
@@ -258,6 +270,7 @@ Once approved:
    - **Self-check**: If the referenced pattern includes an output limit constant (for example `MAX_CHARS`), explicitly state whether the new route uses it, uses a different value, or intentionally omits it.
    - **Self-check**: For per-variant user-visible labels (terminal labels, filenames, panel headings), specify the required label pattern explicitly; do not rely on agent inference.
    - **Selector-contract phrasing**: Use "These N selectors are the required minimum. Do not add others without documenting them in the completion report." Avoid wording that can be misread as a prohibition or as optional scope.
+   - **Inline snippet size constraint:** Snippets up to ~30 lines (e.g., a single mock pattern, a single stub) may be inlined in the handoff file. Larger specs (e.g., 10+ test case bodies) must be placed in a separate spec file at `agent-docs/specs/CR-XXX-test-spec.md`; the handoff file links to it. This preserves snippet-first clarity while avoiding handoff files that exhaust context on their own.
 -  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
 -  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
@@ -316,6 +329,10 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
     - **Check**: If the diff includes `data-testid` additions, removals, or renames, or route path changes, verify an instruction to update `testing-contract-registry.md` is included in the Testing or BA handoff before issuing the Wait State.
     - **Check**: For each security constraint of the form "X must/must not appear in Y," verify the test table includes both the positive assertion (X appears in the allowed location) and the negative assertion (X does not appear in the disallowed location). A positive-only test does not satisfy a containment invariant.
     - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
+    - **Risk-differentiated review scope** (exception to the default full-read rule):
+      - **Source file changes:** Full re-read required. Review question: did any existing behavior change?
+      - **Test-only additions** (new `describe`/`it` blocks added, zero modifications to existing test content): Targeted review of the new blocks only is sufficient. Review question: are the new tests present, correctly structured, and non-regressive? Re-reading unchanged existing test content is not required.
+      - Default rule remains full re-read for all other cases. This is an explicit exception for additive-only test changes, not a general relaxation.
 - [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there; not duplicated here.)
 - [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
 - [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.

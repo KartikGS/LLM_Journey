@@ -77,7 +77,7 @@ Configuration lives in:
 Note: `agent-docs/tooling-standard.md` includes a quick command canon, but this file is canonical for E2E triage/classification policy.
 
 ### Runtime Preflight
-Before verification commands, run `node -v` once per session and classify any version mismatch against `/agent-docs/tooling-standard.md` as `environmental`.
+> **Canonical source:** `agent-docs/tooling-standard.md` — Runtime Preflight (Mandatory). Run preflight per that section before verification commands. If the runtime is below the documented minimum, classify as `environmental` in the role report — do not duplicate the protocol text here.
 
 ### E2E Reproducibility Rule
 When reporting E2E outcomes for handoff evidence, always include:
@@ -127,7 +127,7 @@ If level 4 is used, report why levels 1-3 were unavailable in the testing handof
 - Timing-only waits without behavior/state confirmation.
 
 ### Command Sequencing Rule (Pipeline Verification)
-For final CR verification evidence, run quality gates in sequence, not in parallel:
+For final CR verification evidence, run verification gates in sequence, not in parallel:
 1. `pnpm test`
 2. `pnpm lint`
 3. `pnpm exec tsc --noEmit`
@@ -135,7 +135,7 @@ For final CR verification evidence, run quality gates in sequence, not in parall
 
 Reason: some projects include generated `.next/types` entries in `tsconfig` and concurrent `tsc` + `build` execution can produce false negatives from transient type-generation state.
 
-### Tech Lead Verification Matrix (Canonical)
+### Tech Lead Verification Gates (Canonical)
 - `Always required`:
   - `pnpm test`
   - `pnpm lint`
@@ -175,7 +175,7 @@ If any checklist item is out of scope, report it as an explicit risk in `testing
 Use this order when a CR objective is to restore a broken pipeline:
 1. Fix test-path/module-resolution regressions first (fast signal restoration).
 2. Fix feature/type regressions next (strict compile/build blockers).
-3. Run full quality gates once at the end for closure evidence.
+3. Run full verification gates once at the end for closure evidence.
 
 ### Ownership Guidance
 - Testing Agent: test-path fixes and full gate execution/reporting.
@@ -263,6 +263,28 @@ Helpers such as `safeMetric` are mocked to preserve **semantic behavior**:
 - The wrapped function executes
 - Errors are swallowed
 - Tests validate system resilience, not helper internals
+
+#### OTel Metrics Mocking Pattern (Mandatory for API Route Tests)
+
+Any API route test that exercises counter increments must mock `@/lib/otel/metrics` using the following pattern. Do not re-invent this block in individual test files — copy it verbatim and adjust the getter names for the route under test.
+
+```ts
+// --- Metrics mock ---
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    get<RoutePrefix>RequestsCounter: () => ({ add: mockAdd }),
+    get<RoutePrefix>FallbacksCounter: () => ({ add: mockAdd }),
+}));
+```
+
+**Pattern notes:**
+
+- `mockAdd` is a single shared spy used for all counters. This is intentional: tests that need to distinguish counter calls use `mockAdd.mock.calls` filtering (for example, `calls.filter(call => call[1]?.reason_code)` isolates fallback counter calls from request counter calls).
+- `safeMetric` is replaced with a pass-through `(fn) => fn()` so that the wrapped counter call executes synchronously in tests. This validates that the route correctly invokes the counter, while avoiding the error-swallowing behavior that would silently hide a misconfigured getter.
+- Replace `<RoutePrefix>` with the actual getter prefix for the route under test. Examples: `getAdaptationGenerateRequestsCounter` (adaptation route), `getFrontierGenerateRequestsCounter` (frontier base-generate route).
+- Clear `mockAdd` in `beforeEach` alongside `jest.clearAllMocks()`: `mockAdd.mockClear()`.
+- Reference implementations: `__tests__/api/adaptation-generate.test.ts`, `__tests__/api/frontier-base-generate.test.ts`.
 
 ---
 

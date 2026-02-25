@@ -30,11 +30,12 @@
 6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
    - **Template Rule**: Use role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
+   - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
 8. **Session Scope Management (for `[M]`/`[L]` CRs):** Each Wait State is a natural context reset point. The strategy differs by delegation mode:
-   - **Parallel mode**: Two sessions. Session 1 — full context load → plan → direct changes → all handoffs → Wait State. Session 2 — load only sub-agent reports + modified files → adversarial review → quality gates → BA handoff.
+   - **Parallel mode**: Two sessions. Session 1 — full context load → plan → direct changes → all handoffs → Wait State. Session 2 — load only sub-agent reports + modified files → adversarial review → verification gates → BA handoff.
    - **Sequential mode**: Fresh session at each Wait State cycle. Each re-entry loads only the plan + the latest sub-agent report — not the full Layer 1/2 context. The plan already captures all decisions; re-reading standards docs adds context cost without adding value at review time.
    - **`[S]` CRs**: single session is acceptable unless context pressure was observed in a prior lightweight meta pass for this role.
    - **Record in lightweight pass**: if context saturation was experienced at any cycle, record it in the Workflow Health Signal section.
@@ -53,7 +54,7 @@ Use this matrix to decide whether a Testing handoff is required in the same CR:
 | `data-testid` add/remove/rename | Yes | Update selector-based tests + run impacted specs |
 | Accessibility contract change (`role`, `aria-*`, keyboard behavior) | Yes | Update semantic assertions + run impacted specs |
 | UI structure/class refactor with unchanged route/selector/semantics | Conditional | If no contract change, Tech Lead may close without Testing handoff after documenting contract stability evidence |
-| Copy-only change with stable selectors/contracts | No (default) | Existing quality gates only, unless CR explicitly requests copy assertions |
+| Copy-only change with stable selectors/contracts | No (default) | Existing verification gates only, unless CR explicitly requests copy assertions |
 | Shared component changes under `app/ui/**` | Conditional | Require route impact list + sanity checks; Testing handoff only if contracts/behavior changed |
 
 Canonical rule: this matrix is the source of truth for Testing handoff decisions. If any other section conflicts, follow this matrix.
@@ -171,23 +172,25 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
    - **Security constraints** (data must/must not appear, auth invariants) and **deleted contracts** (removed testids, removed files, changed APIs): independently re-read the cited file/line to confirm.
    - **Additive changes** (new components, copy changes, dark mode, UI layout): trust the Tech Lead's citation with a brief source audit note.
    Do not bulk-accept all ACs with a single pass. Each AC must have a distinct evidence reference.
-3. **CR Immutability Rule (Historical Integrity):**
+3. **Assumed Gate Fallback (Mandatory)**: If `tech-lead-to-ba.md` marks any verification gate result as "assumed" (rather than confirmed with a specific command output), those "assumed" citations are not sufficient for BA acceptance. The BA must rerun the specific assumed gates directly and include the result in the AC evidence annotation. An "assumed" gate citation from the Tech Lead handoff does not satisfy AC evidence for the corresponding acceptance criterion.
+   - **Runtime mismatch clarification**: If an AC requires verification gates to pass "under compliant runtime" and the BA is running on a non-compliant runtime, this does not automatically constitute AC failure. If the runtime mismatch is pre-existing and already tracked in `project-log.md`, the BA may proceed using the proceed-and-classify exception per `tooling-standard.md` (Runtime Preflight section). The BA must document the exception in the AC evidence annotation (e.g., "runtime mismatch pre-existing per project-log; proceed-and-classify exception applied per `tooling-standard.md`"). A new, untracked runtime mismatch is not covered by this exception.
+4. **CR Immutability Rule (Historical Integrity):**
    - Once a CR is marked `Done`, treat it as a historical record.
    - Do **not** rewrite closed CRs to match newer templates or style conventions.
    - If gaps are discovered later, create a new artifact (follow-up CR or investigation report) that references the original CR.
-4. **Allowed Post-Closure Edits (closed CRs only):**
+5. **Allowed Post-Closure Edits (closed CRs only):**
    - **AC evidence annotation** (`[ ]` -> `[x]` + one-line evidence reference) and CR status change to `Done` are required closure actions and do not constitute retroactive rewriting of intent. No Amendment Log entry is required for closure annotation.
    - Typo/formatting fixes, broken link fixes, or factual corrections. Any such update must be logged in an `Amendment Log` section with date + reason.
    - Do **not** retroactively change acceptance intent, expand or narrow AC scope, or silently rewrite AC history.
-5. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
+6. **Deviation Handling**: BA must explicitly acknowledge deviations reported in the Tech Lead's handoff:
    - Classify each deviation using the **Deviation Severity Rubric (Canonical)** below.
    - **Minor deviations**: Log acceptance in the CR's "Deviations Accepted" section.
    - **Major deviations**: Escalate to Human User before closing the CR.
-6. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
-7. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
-8. BA updates `agent-docs/project-log.md` with the final entry.
-9. BA notifies the human of completion.
-10. **Output:** Closed CR, updated project log.
+7. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
+8. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
+9. BA updates `agent-docs/project-log.md` with the final entry.
+10. BA notifies the human of completion.
+11. **Output:** Closed CR, updated project log.
 
 ### Post-CR Meta Improvement Cadence (Conditional)
 - Canonical procedure: `agent-docs/coordination/meta-improvement-protocol.md`.

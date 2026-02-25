@@ -29,6 +29,12 @@ Avoid tightly coupling:
 - UI components with API logic
 - Business logic with framework-specific APIs
 
+### Leaf Utility Isolation
+
+Utilities in leaf-level server lib directories (e.g., `lib/server/`) must be dependency-free: they must not import from domain-specific helpers such as `lib/utils`. Use standard TypeScript narrowing instead. This maximizes portability and prevents circular dependency creep.
+
+The principle is intentional: a utility that avoids domain imports can be moved, tested, or vendored without dragging in unrelated dependencies. Resist the reflex to reach for a convenience helper from elsewhere in `lib/` — if standard TypeScript narrowing covers the case, use it.
+
 ---
 
 ## API Route Development

@@ -219,7 +219,9 @@ Your task:
 2. De-duplicate overlapping findings across agents.
 3. Assign consolidated priority: High (blocks agent effectiveness) / Medium (friction or confusion) / Low (polish).
 4. For each finding, decide: Fix | Defer | Reject — with a one-line rationale.
-5. Group Fix items into implementation chunks (1-3 files per chunk) that can execute independently.
+5. Before finalizing, cross-reference the most recent prior synthesis Fix table (`agent-docs/meta/META-*-synthesis.md`) for overlapping items. Flag any finding that may already have been addressed as a regression risk (⚠️) — the implementing agent will confirm current file state.
+6. For any Fix items that span multiple chunks and require consistent vocabulary (e.g., a renamed term used in two files), pre-decide the exact term in the synthesis document. Do not leave cross-chunk vocabulary to be resolved independently by implementing agents.
+7. Group Fix items into implementation chunks (1-3 files per chunk) that can execute independently. Include a "Cross-chunk coordination notes" section for items spanning multiple chunks.
 
 Do NOT propose before/after wording. That is written by the implementing agent during Phase 3.
 

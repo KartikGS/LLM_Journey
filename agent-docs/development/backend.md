@@ -13,3 +13,11 @@
 -   If a security change is global/platform-wide (middleware/header/runtime policy), coordinate via Infra ownership and explicit Tech Lead delegation.
 -   Document new or changed route contracts in `/agent-docs/api/`.
 -   Follow the [Development Standards](./development-standards.md).
+-   When creating or modifying utilities in `lib/server/`, apply the Leaf Utility Isolation principle documented in Development Standards — keep them dependency-free.
+-   After any function extraction task, audit the source file for newly unused imports and constants and remove them before running lint.
+
+## Verification Scope
+
+Check the handoff DoD before applying any default here. If the DoD specifies a verification scope (e.g., full-suite `pnpm test`), that takes precedence. The role-doc default applies only when the DoD is silent on verification scope.
+
+Default when the DoD is silent: run the scoped spec for the changed module only.

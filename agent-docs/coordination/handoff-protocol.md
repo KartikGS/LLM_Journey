@@ -55,6 +55,7 @@ Protocol requirements:
     - [Reference Files]
 - **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.
   - **Template**: Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+  - **Inline snippet size:** Snippets ≤ ~30 lines (e.g., a single mock pattern or stub) may be inlined in the handoff file. Larger specs must be placed in a separate file at `agent-docs/specs/CR-XXX-test-spec.md`; the handoff links to it. See `tech-lead.md` (Execution & Coordination → Formalize Handoffs) for the canonical size guidance.
 
 ## Sub-Agent → Tech Lead (Execution Report)
 - **File**: `agent-docs/conversations/<role>-to-tech-lead.md`
@@ -85,6 +86,7 @@ Protocol requirements:
 
     - [Deployment Notes]
     - [Link to Updated Docs]
+- **AC-ID alignment requirement (Mandatory)**: AC identifiers and text in `tech-lead-to-ba.md` must match the corresponding AC IDs and text in the CR document exactly. If the Tech Lead references a subset of ACs, they must be quoted verbatim from the CR — paraphrasing or renumbering is not permitted. Mismatched numbering forces the BA to manually crosswalk evidence by meaning and creates acceptance verification risk.
 - **Protocol**: Tech Lead MUST NOT update `project-log.md`. This is reserved for the BA Agent in Acceptance Phase.
 
 ## Failure Classification Rules (MANDATORY)

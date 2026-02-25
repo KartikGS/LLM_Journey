@@ -19,6 +19,14 @@ jest.mock('@/lib/otel/tracing', () => ({
     getTracer: jest.fn(() => mockTracer),
 }));
 
+// --- Metrics mock ---
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    getFrontierGenerateRequestsCounter: () => ({ add: mockAdd }),
+    getFrontierGenerateFallbacksCounter: () => ({ add: mockAdd }),
+}));
+
 jest.mock('@/lib/otel/logger', () => ({
     __esModule: true,
     default: {
@@ -42,6 +50,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockAdd.mockClear();
         process.env = { ...originalEnv };
         delete process.env.FRONTIER_API_URL;
         delete process.env.FRONTIER_MODEL_ID;
@@ -291,5 +300,105 @@ describe('Integration: Frontier Base Generate API', () => {
                 }),
             })
         );
+    });
+
+    describe('Metrics and Security', () => {
+        const HF_ENV = {
+            FRONTIER_API_URL: 'https://router.huggingface.co/featherless-ai/v1/completions',
+            FRONTIER_MODEL_ID: 'meta-llama/Meta-Llama-3-8B',
+            FRONTIER_API_KEY: 'sk-secret-frontier-key',
+            FRONTIER_PROVIDER: 'huggingface',
+        };
+
+        it('increments frontier_generate.requests counter on every POST', async () => {
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            // Should be called at least once for requests counter
+            expect(mockAdd).toHaveBeenCalledWith(1);
+        });
+
+        it('increments frontier_generate.fallbacks with reason_code missing_config when not configured', async () => {
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'missing_config' });
+        });
+
+        it('increments frontier_generate.fallbacks with reason_code timeout on AbortError', async () => {
+            Object.assign(process.env, HF_ENV);
+            (global.fetch as jest.Mock).mockRejectedValueOnce(
+                Object.assign(new Error('aborted'), { name: 'AbortError' })
+            );
+
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'timeout' });
+        });
+
+        it('increments frontier_generate.fallbacks with reason_code quota_limited on upstream 429', async () => {
+            Object.assign(process.env, HF_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(JSON.stringify({ error: 'Rate limited' }), { status: 429 })
+            );
+
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'quota_limited' });
+        });
+
+        it('does not call fallbacks counter on a successful live response', async () => {
+            Object.assign(process.env, HF_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({ choices: [{ text: 'success' }] }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                )
+            );
+
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            // mockAdd should be called for requests counter (1), but not for fallbacks
+            // Check that no call has a reason_code
+            const fallbackCalls = mockAdd.mock.calls.filter(call => call[1] && call[1].reason_code);
+            expect(fallbackCalls.length).toBe(0);
+        });
+
+        it('does not expose FRONTIER_API_KEY in the response body on any fallback path', async () => {
+            Object.assign(process.env, HF_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(JSON.stringify({ error: 'Upstream Error' }), { status: 500 })
+            );
+
+            const req = createRequest({ prompt: 'test prompt' });
+            const res = await POST(req);
+            const body = await res.json();
+            const bodyString = JSON.stringify(body);
+
+            expect(bodyString).not.toContain('sk-secret-frontier-key');
+        });
+
+        it('does not set FRONTIER_API_KEY as a span attribute', async () => {
+            Object.assign(process.env, HF_ENV);
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({ choices: [{ text: 'success' }] }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                )
+            );
+
+            const req = createRequest({ prompt: 'test prompt' });
+            await POST(req);
+
+            mockSpan.setAttribute.mock.calls.forEach(call => {
+                const value = call[1];
+                if (typeof value === 'string') {
+                    expect(value).not.toContain('sk-secret-frontier-key');
+                }
+            });
+        });
     });
 });

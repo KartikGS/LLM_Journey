@@ -2,14 +2,21 @@ import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import logger from '@/lib/otel/logger';
+import {
+    safeMetric,
+    getAdaptationGenerateRequestsCounter,
+    getAdaptationGenerateFallbacksCounter,
+} from '@/lib/otel/metrics';
 import { getTracer } from '@/lib/otel/tracing';
-import { toRecord } from '@/lib/utils/record';
+import {
+    type FallbackReasonCode,
+    parseTimeout,
+    extractProviderErrorMessage,
+    mapProviderFailure,
+} from '@/lib/server/generation/shared';
 
 const ROUTE_PATH = '/api/adaptation/generate';
 const PROMPT_MAX_CHARS = 2000;
-const DEFAULT_TIMEOUT_MS = 8000;
-const MIN_TIMEOUT_MS = 1000;
-const MAX_TIMEOUT_MS = 20000;
 
 const ADAPTATION_OUTPUT_MAX_CHARS =
     Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
@@ -41,15 +48,7 @@ const requestSchema = z.object({
     strategy: z.enum(STRATEGY_VALUES),
 });
 
-type FallbackReasonCode =
-    | 'missing_config'
-    | 'invalid_config'
-    | 'quota_limited'
-    | 'timeout'
-    | 'upstream_auth'
-    | 'upstream_error'
-    | 'invalid_provider_response'
-    | 'empty_provider_output';
+
 
 type AdaptationModelMetadata = {
     strategy: StrategyId;
@@ -88,18 +87,7 @@ type AdaptationConfig = {
     issueCode?: 'missing_config' | 'invalid_config';
 };
 
-function parseTimeout(rawTimeout: string | undefined): number {
-    if (!rawTimeout) {
-        return DEFAULT_TIMEOUT_MS;
-    }
 
-    const parsed = Number.parseInt(rawTimeout, 10);
-    if (!Number.isFinite(parsed)) {
-        return DEFAULT_TIMEOUT_MS;
-    }
-
-    return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, parsed));
-}
 
 function loadAdaptationConfig(strategy: StrategyId): AdaptationConfig {
     const apiUrl = process.env.ADAPTATION_API_URL?.trim() ?? '';
@@ -186,56 +174,9 @@ function extractChatOutput(payload: unknown): string | null {
     return trimmed.length > 0 ? trimmed : null;
 }
 
-function extractProviderErrorMessage(payload: unknown): string | null {
-    const root = toRecord(payload);
-    if (!root) {
-        return null;
-    }
 
-    const directMessage = root.message;
-    if (typeof directMessage === 'string' && directMessage.trim().length > 0) {
-        return directMessage.trim();
-    }
 
-    const errorObj = toRecord(root.error);
-    const nestedMessage = errorObj?.message;
-    if (typeof nestedMessage === 'string' && nestedMessage.trim().length > 0) {
-        return nestedMessage.trim();
-    }
 
-    return null;
-}
-
-function mapProviderFailure(
-    status: number,
-    providerMessage: string | null
-): { code: FallbackReasonCode; message: string } {
-    if (status === 429) {
-        return {
-            code: 'quota_limited',
-            message: 'Live provider quota is currently unavailable. Showing deterministic fallback output.',
-        };
-    }
-
-    if (status === 401 || status === 403) {
-        return {
-            code: 'upstream_auth',
-            message: 'Live provider rejected authentication. Showing deterministic fallback output.',
-        };
-    }
-
-    if (status >= 500) {
-        return {
-            code: 'upstream_error',
-            message: 'Live provider is temporarily unavailable. Showing deterministic fallback output.',
-        };
-    }
-
-    return {
-        code: 'upstream_error',
-        message: providerMessage ?? 'Live provider request failed. Showing deterministic fallback output.',
-    };
-}
 
 function createFallbackResponse(
     strategy: StrategyId,
@@ -266,6 +207,7 @@ export async function POST(req: NextRequest) {
         async (span) => {
             span.setAttribute('http.method', 'POST');
             span.setAttribute('http.route', ROUTE_PATH);
+            safeMetric(() => getAdaptationGenerateRequestsCounter().add(1));
 
             try {
                 let rawBody: unknown;
@@ -323,6 +265,7 @@ export async function POST(req: NextRequest) {
                     span.setAttribute('adaptation.reason_code', issueCode);
                     span.setStatus({ code: SpanStatusCode.OK, message: issueMessage });
 
+                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: issueCode }));
                     return NextResponse.json<FallbackModeResponse>(
                         createFallbackResponse(strategy, issueCode, issueMessage, configuredModelId),
                         { status: 200 }
@@ -370,6 +313,7 @@ export async function POST(req: NextRequest) {
                     span.setAttribute('adaptation.reason_code', reasonCode);
                     span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
 
+                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: reasonCode }));
                     return NextResponse.json<FallbackModeResponse>(
                         createFallbackResponse(strategy, reasonCode, reasonMessage, config.modelId),
                         { status: 200 }
@@ -402,6 +346,7 @@ export async function POST(req: NextRequest) {
                     span.setAttribute('adaptation.upstream_status', upstreamResponse.status);
                     span.setStatus({ code: SpanStatusCode.OK, message: mappedFailure.message });
 
+                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: mappedFailure.code }));
                     return NextResponse.json<FallbackModeResponse>(
                         createFallbackResponse(
                             strategy,
@@ -423,6 +368,7 @@ export async function POST(req: NextRequest) {
                     span.setAttribute('adaptation.reason_code', 'invalid_provider_response');
                     span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
 
+                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'invalid_provider_response' }));
                     return NextResponse.json<FallbackModeResponse>(
                         createFallbackResponse(
                             strategy,
@@ -442,6 +388,7 @@ export async function POST(req: NextRequest) {
                     span.setAttribute('adaptation.reason_code', 'empty_provider_output');
                     span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
 
+                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
                     return NextResponse.json<FallbackModeResponse>(
                         createFallbackResponse(
                             strategy,
@@ -479,6 +426,7 @@ export async function POST(req: NextRequest) {
                     'Unhandled adaptation route error'
                 );
 
+                safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'upstream_error' }));
                 return NextResponse.json<FallbackModeResponse>(
                     createFallbackResponse(
                         'full-finetuning',

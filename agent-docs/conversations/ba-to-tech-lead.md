@@ -1,72 +1,75 @@
 # BA to Tech Lead Handoff
 
 ## Subject
-`CR-017 — Small Backlog Fixes and Runtime Alignment`
+`CR-018 — Generation API Hardening Parity`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing BA handoff context: `CR-015`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md`
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md` status is `Done`
+- Prior outgoing BA handoff context: `CR-017`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md`
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-017-small-backlog-fixes-and-runtime-alignment.md` status is `Done`
 - Result: replacement allowed for new CR context.
 
 ## Objective
-Complete the five small `Next Priorities` items from `project-log.md:48-52` in one controlled pass, with no contract regressions.
+Close hardening/governance drift between generation APIs and the OTEL boundary while preserving existing learner-facing route contracts.
 
-## Linked CR
-- `agent-docs/requirements/CR-017-small-backlog-fixes-and-runtime-alignment.md`
+## Linked Artifacts
+- CR: `agent-docs/requirements/CR-018-generation-api-hardening-parity.md`
+- Investigation: `agent-docs/reports/INVESTIGATION-CR-018-route-hardening-parity.md`
 
 ## Audience & Outcome Check
-- Human User intent: execute the five queued small tasks now.
-- Product End User audience: LLM Journey learners on Stage 1/2 pages.
-- Expected outcome: clearer learner copy, safer adaptation output behavior, reduced cleanup debt, and explicit Node runtime contract.
+- Human User intent: validate and execute hardening parity for new generation routes versus OTEL baseline.
+- Product End User audience: Stage 1 and Stage 2 learners using frontier/adaptation interactive flows.
+- Expected outcome: reliable and secure generation interactions with stronger route-level controls and clearer operational diagnostics, without UX/contract regression.
 
 ## Clarified Requirement Summary
-- Add adaptation output-length cap contract (`ADAPTATION_OUTPUT_MAX_CHARS`) and enforce it on live output.
-- Reduce duplicated server-side `toRecord()` helpers between adaptation and frontier API routes.
-- Rename Transformers comparison heading from developer-facing to learner-facing language.
-- Remove unreachable HF-array branch from `extractProviderOutput()` once dependency check confirms no valid path needs it.
-- Align repository runtime contract to Node `>=20.x` with explicit activation guidance.
+- Keep `/api/frontier/base-generate` and `/api/adaptation/generate` as separate external contracts.
+- Reduce duplicated server-side logic across generation routes where behavior is equivalent.
+- Add abuse-protection parity for generation routes (rate/body constraints) using explicit policy.
+- Add route-level non-blocking metrics parity for generation routes in addition to current tracing/logging.
+- Ensure contract-documentation parity in `agent-docs/api/` for touched routes.
+- Add tests for new controls and negative-path containment checks.
 
 ## Acceptance Criteria Mapping
-- [ ] AC-1: `/api/adaptation/generate` live output is capped by configurable maximum length.
-- [ ] AC-2: Output-cap environment contract is explicit and documented in `.env.example`.
-- [ ] AC-3: Server-side `toRecord()` duplication is reduced via shared utility with no API behavior regression.
-- [ ] AC-4: Transformers heading text no longer shows `Model Comparison Template`; learner-facing text is used.
-- [ ] AC-5: Unreachable `Array.isArray(payload)` branch in `extractProviderOutput()` is removed after validation.
-- [ ] AC-6: Node runtime contract is machine-readable as `>=20.x`, with explicit developer activation path.
-- [ ] AC-7: No route, `data-testid`, or accessibility semantic contracts change.
-- [ ] AC-8: `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` pass under compliant runtime.
+- [ ] AC-1: Separate public route contracts preserved (frontier/adaptation).
+- [ ] AC-2: Duplicated generation-route server logic reduced via shared internal module/utility.
+- [ ] AC-3: Explicit abuse controls (rate + body-size) applied to generation routes with controlled responses.
+- [ ] AC-4: Route-level metrics added for generation request/failure/fallback outcomes, non-blocking by design.
+- [ ] AC-5: No secret/system-prompt leakage in responses/logs/span attributes.
+- [ ] AC-6: API contract docs updated for all touched routes (minimum adaptation route doc added).
+- [ ] AC-7: Tests added/updated to verify new controls and observability safety behavior.
+- [ ] AC-8: `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` pass.
+- [ ] AC-9: No route-path, `data-testid`, or accessibility-semantic contract changes.
 
 ## Verification Mapping
-- Backend code + tests for AC-1/2/3/5.
-- Frontend file-level copy proof for AC-4.
-- Runtime artifact + command proof (`node -v`) for AC-6.
-- Explicit contract stability statement in completion report for AC-7.
-- Full quality-gate command evidence (sequence required) for AC-8.
+- Route behavior + regression proof: focused API tests for frontier/adaptation routes.
+- Abuse-control proof: middleware/API tests with threshold-edge and reset-window checks.
+- Observability proof: metrics emission assertions plus non-blocking telemetry-failure test(s).
+- Security containment proof: explicit negative assertions/audit for prohibited data leakage.
+- Full quality gates in canonical sequence for closure evidence.
 
 ## Constraints
-- Preserve response schemas for `/api/adaptation/generate` and `/api/frontier/base-generate`.
-- No visual redesign beyond heading copy.
-- No dependency installation or package churn.
-- Preserve observability failure-boundary behavior.
-- If any route/test-id/accessibility contract changes become necessary, pause and trigger Testing handoff per workflow matrix.
+- Preserve current route paths and response envelopes for frontier/adaptation consumers.
+- Preserve ADR-0001 telemetry-failure boundary behavior.
+- Avoid high-cardinality metrics dimensions and avoid logging sensitive payload fields.
+- No package installation unless scope extension is explicitly approved.
+- If route/selector/accessibility contracts must change, pause and request scope-extension decision.
 
 ## Open Decisions
-- `none` (scope is explicit).
+- `none` at BA stage.
 
 ## Risk Analysis
-- Runtime alignment may still require local environment action even after repo contract updates.
-- Dead-code cleanup must be validated against supported provider payload contracts before deletion.
-- Utility extraction should remain narrow (avoid broad refactor spillover).
+- Too-strict abuse thresholds may degrade legitimate interactions.
+- Shared internal refactor can accidentally widen change scope.
+- Metrics additions can become noisy if dimensions are not tightly bounded.
 
 ## Rationale (Why)
-These five items are low-risk but high-signal maintenance tasks that improve learner-facing clarity, consistency with existing API safety patterns, and engineering hygiene before larger roadmap items.
+This CR addresses your three questions directly: keep product-intent route separation, but remove maintainability drift by aligning generation-route hardening, testing, and observability posture with the established OTEL boundary standards.
 
 ## Evidence Expectations for Tech Lead Handoff
-- Command evidence in canonical sequence with exact commands and pass/fail summaries.
-- File-level evidence for each AC with precise paths/lines.
-- Runtime mismatch classification note if host runtime remains below policy even after repo updates.
-- Explicit note that route/selector/semantic contracts remained stable.
+- One-line evidence per AC (file/line and command outputs).
+- Explicit contract-stability declaration (routes, selectors, semantics).
+- Clear classification of any environmental limitations vs CR-related defects.
+- Updated API contract doc references for every touched endpoint contract.
