@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import logger from '@/lib/otel/logger';
 import { getTracer } from '@/lib/otel/tracing';
+import { toRecord } from '@/lib/utils/record';
 
 const ROUTE_PATH = '/api/frontier/base-generate';
 const PROMPT_MAX_CHARS = 2000;
@@ -160,10 +161,6 @@ function selectFallbackSample(prompt: string): string {
     return FALLBACK_SAMPLES[hash % FALLBACK_SAMPLES.length];
 }
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
-}
-
 function extractContentText(content: unknown): string | null {
     if (typeof content === 'string') {
         const trimmed = content.trim();
@@ -207,16 +204,6 @@ function buildProviderRequestBody(
 }
 
 function extractProviderOutput(payload: unknown): string | null {
-    // HF: [{ generated_text: "..." }]
-    if (Array.isArray(payload) && payload.length > 0) {
-        const first = toRecord(payload[0]);
-        const text = first?.generated_text;
-        if (typeof text === 'string' && text.trim().length > 0) {
-            return text.trim();
-        }
-        return null; // HF array found but no usable text → empty_provider_output fallback
-    }
-
     const root = toRecord(payload);
     if (!root) {
         return null;

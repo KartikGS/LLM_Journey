@@ -38,23 +38,21 @@ Validation rules:
 
 ## Current State
 -   **Status**: Vision & Roadmap Finalized.
--   **Recent Focus**: [S][DOC] **Meta Improvement Phase 3 Documentation Hardening**: `CR-016` - Implemented approved Fix items from `META-20260224-CR-015-synthesis.md` across workflow/role docs (pre-replacement checks, contract-registry/security closure gates, runtime preflight canonicalization, handoff self-checks, accessibility semantics, BA acceptance clarifications) - **Completed**.
+-   **Recent Focus**: [M] **Small Backlog Fixes and Runtime Alignment**: `CR-017` - Added adaptation output cap (`ADAPTATION_OUTPUT_MAX_CHARS`), extracted shared server-side `toRecord()` utility, renamed learner-facing transformers comparison heading, removed unreachable frontier provider-array branch, and formalized Node runtime contract (`engines >=20.x` + `.nvmrc`); quality gates passing (134 tests) - **Completed**.
+-   **Previous**: [S][DOC] **Meta Improvement Phase 3 Documentation Hardening**: `CR-016` - Implemented approved Fix items from `META-20260224-CR-015-synthesis.md` across workflow/role docs (pre-replacement checks, contract-registry/security closure gates, runtime preflight canonicalization, handoff self-checks, accessibility semantics, BA acceptance clarifications) - **Completed**.
 -   **Previous**: [M] **Adaptation Page Strategy-Linked Chat Interface**: `CR-015` - Replaced passive `AdaptationStrategySelector` with live `AdaptationChat` (3 tabs × real models via featherless-ai router); enriched comparison grid with bestFor/caution; new `/api/adaptation/generate` endpoint with per-strategy model routing and server-side system prompt for prompt-prefix; 133 tests passing; 12/12 E2E green - **Completed**.
 -   **Previous**: [S] **HF Router Migration and Comparison Table Concretization**: `CR-014` - Migrated HF provider to featherless-ai router (OpenAI completions format); filled comparison table with Meta-Llama-3-8B concrete values; removed developer-facing subtitle; all quality gates passing (111 tests) - **Completed**.
--   **Previous**: [S] **Hugging Face Inference API Provider Support**: `CR-013` - Extended frontier base-generate endpoint with dual-provider support (`FRONTIER_PROVIDER=huggingface|openai`); 7 new HF-specific unit tests; all quality gates passing - **Completed**.
 
 
 ## Next Priorities
--   [ ] [S] **Adaptation endpoint output length cap**: `/api/adaptation/generate` has no output length cap (unlike `base-generate`'s 4000-char limit). Low risk but inconsistent with the FrontierBaseChat pattern. Recommend adding `ADAPTATION_OUTPUT_MAX_CHARS` cap. (Minor deviation from CR-015; flagged by Tech Lead.)
--   [ ] [S] **`toRecord()` utility duplication**: `toRecord()` is now duplicated across `base-generate/route.ts`, `adaptation/generate/route.ts`, and `AdaptationChat.tsx`. Extract to `lib/server/` if a fourth route is added. (Flagged by Tech Lead in CR-015 retrospective.)
--   [ ] [S] **Comparison card heading rename**: `<h3>` reads "Model Comparison Template" — developer-facing language on a learner page. Rename to learner-facing copy (e.g., "Tiny vs Frontier: By the Numbers"). (Flagged by Tech Lead in CR-014 retrospective.)
--   [ ] [S] **`extractProviderOutput()` dead code cleanup**: HF array path (`Array.isArray(payload)`) is now unreachable for the `huggingface` provider after router migration. Candidate for removal once confirmed no other path exercises it. (Flagged by Tech Lead in CR-014 retrospective.)
--   [ ] [S] **Node.js environment upgrade**: System Node v16.20.1 is below documented minimum (>=20.x). Upgrade to v20+ to meet tooling standard. (Pre-existing from CR-013; escalated by Tech Lead in CR-014.)
+-   [ ] [S] **Host-level Node.js v20+ enforcement**: CR-017 added runtime contract artifacts (`package.json` engines + `.nvmrc`), but machine default still reports Node v16.20.1 outside policy. Upgrade host default/runtime bootstrap to v20+ so verification no longer depends on manual `nvm use 20`.
+-   [ ] [S] **Client-side `toRecord()` utility duplication**: `FrontierBaseChat.tsx` and `AdaptationChat.tsx` still keep local `toRecord()` helpers. Consider shared client utility if a third consumer appears (CR-017 Tech Lead recommendation).
 -   [ ] [M] Consider follow-up CR for advanced Model Adaptation simulation (beyond lightweight interaction baseline).
 -   [ ] [L] Implement RAG pipeline (Retrieval-Augmented Generation).
 -   [ ] [L] Setup Evaluation & Observability framework.
 
 ## Archive
+-   [S] **Hugging Face Inference API Provider Support**: `CR-013` - Extended frontier base-generate endpoint with dual-provider support (`FRONTIER_PROVIDER=huggingface|openai`); 7 new HF-specific unit tests; all quality gates passing - **Completed**.
 -   [M][TEST] **Transformers Stage Narrative Upgrade (Tiny -> Frontier -> Adaptation Bridge)**: `CR-012` - Reframed Stage 1 with `How -> Try -> Frontier -> Issues -> Next Stage`, added secure live/fallback frontier base inference, and synchronized API/component/E2E contracts - **Completed**.
 -   [M] **Server-First Rendering Boundary for UI Pages**: `CR-011` - Refactored Home, Transformers, and Model Adaptation to server-first composition with targeted client islands for user input; preserved styling system and quality gates - **Completed**.
 -   [S][TEST] **E2E Baseline Stabilization**: `CR-010` - Resolved landing-page selector/route assertion drift and transformer transient-state fragility; restored green full-suite E2E in local-equivalent execution - **Completed**.

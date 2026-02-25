@@ -3,12 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import logger from '@/lib/otel/logger';
 import { getTracer } from '@/lib/otel/tracing';
+import { toRecord } from '@/lib/utils/record';
 
 const ROUTE_PATH = '/api/adaptation/generate';
 const PROMPT_MAX_CHARS = 2000;
 const DEFAULT_TIMEOUT_MS = 8000;
 const MIN_TIMEOUT_MS = 1000;
 const MAX_TIMEOUT_MS = 20000;
+
+const ADAPTATION_OUTPUT_MAX_CHARS =
+    Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
 
 const STRATEGY_VALUES = ['full-finetuning', 'lora-peft', 'prompt-prefix'] as const;
 type StrategyId = typeof STRATEGY_VALUES[number];
@@ -180,10 +184,6 @@ function extractChatOutput(payload: unknown): string | null {
 
     const trimmed = content.trim();
     return trimmed.length > 0 ? trimmed : null;
-}
-
-function toRecord(value: unknown): Record<string, unknown> | null {
-    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
 
 function extractProviderErrorMessage(payload: unknown): string | null {
@@ -459,7 +459,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json<LiveModeResponse>(
                     {
                         mode: 'live',
-                        output: extractedOutput,
+                        output: extractedOutput.slice(0, ADAPTATION_OUTPUT_MAX_CHARS),
                         metadata: {
                             strategy,
                             modelId: config.modelId,

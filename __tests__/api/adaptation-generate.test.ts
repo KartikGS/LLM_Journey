@@ -90,6 +90,7 @@ describe('Integration: Adaptation Generate API', () => {
         delete process.env.ADAPTATION_LORA_MODEL_ID;
         delete process.env.ADAPTATION_PROMPT_PREFIX_MODEL_ID;
         delete process.env.FRONTIER_TIMEOUT_MS;
+        delete process.env.ADAPTATION_OUTPUT_MAX_CHARS;
         global.fetch = jest.fn();
     });
 
@@ -216,6 +217,29 @@ describe('Integration: Adaptation Generate API', () => {
         expect(body.output).toBe('Prompt prefix output');
         expect(body.metadata.strategy).toBe('prompt-prefix');
         expect(body.metadata.modelId).toBe(MODEL_IDS['prompt-prefix']);
+    });
+
+    it('should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters', async () => {
+        process.env.ADAPTATION_OUTPUT_MAX_CHARS = '10';
+        setConfigEnv('full-finetuning');
+        mockLiveResponse('This response is longer than ten characters');
+
+        // ADAPTATION_OUTPUT_MAX_CHARS is parsed at module load time, so we must
+        // re-import the route handler with the env var already set.
+        let isolatedPOST: typeof POST;
+        jest.isolateModules(() => {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            isolatedPOST = require('@/app/api/adaptation/generate/route').POST;
+        });
+
+        const req = createRequest({ prompt: 'Test cap.', strategy: 'full-finetuning' });
+        const res = await isolatedPOST!(req);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body.mode).toBe('live');
+        expect(body.output).toBe('This respo');
+        expect(body.output.length).toBe(10);
     });
 
     // ── System Prompt Injection ───────────────────────────────────────────────

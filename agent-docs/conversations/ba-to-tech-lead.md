@@ -1,153 +1,72 @@
 # BA to Tech Lead Handoff
 
-## Subject: CR-015 — Adaptation Page: Strategy-Linked Chat Interface
+## Subject
+`CR-017 — Small Backlog Fixes and Runtime Alignment`
 
----
+## Status
+`issued`
 
-## What & Why
+## Pre-Replacement Check (Conversation Freshness)
+- Prior outgoing BA handoff context: `CR-015`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md`
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md` status is `Done`
+- Result: replacement allowed for new CR context.
 
-**What:** Replace the `AdaptationStrategySelector` (passive radio buttons + detail card) on the Model Adaptation page with a live, strategy-linked chat interface. Three tabs — Full Fine-Tuning, LoRA/PEFT, Prompt/Prefix Tuning — each connect to a real model representing that adaptation strategy. The static comparison grid stays and is enriched with `bestFor` and `caution` content.
+## Objective
+Complete the five small `Next Priorities` items from `project-log.md:48-52` in one controlled pass, with no contract regressions.
 
-**Why:** The current page teaches adaptation through description only. A learner reads about trade-offs but cannot experience the behavioral differences. With a live chat interface per strategy, a learner can type the same prompt into each and observe directly how a fully fine-tuned instruct model, a LoRA-adapted specialist, and a base model steered by a system prompt respond differently. This converts a description page into a behavioral demonstration — the core promise of the "Learn with Tiny, Build with Large" dual-engine philosophy, now applied to Stage 2.
+## Linked CR
+- `agent-docs/requirements/CR-017-small-backlog-fixes-and-runtime-alignment.md`
 
----
+## Audience & Outcome Check
+- Human User intent: execute the five queued small tasks now.
+- Product End User audience: LLM Journey learners on Stage 1/2 pages.
+- Expected outcome: clearer learner copy, safer adaptation output behavior, reduced cleanup debt, and explicit Node runtime contract.
 
-## Scope Summary
+## Clarified Requirement Summary
+- Add adaptation output-length cap contract (`ADAPTATION_OUTPUT_MAX_CHARS`) and enforce it on live output.
+- Reduce duplicated server-side `toRecord()` helpers between adaptation and frontier API routes.
+- Rename Transformers comparison heading from developer-facing to learner-facing language.
+- Remove unreachable HF-array branch from `extractProviderOutput()` once dependency check confirms no valid path needs it.
+- Align repository runtime contract to Node `>=20.x` with explicit activation guidance.
 
-### Change 1: Enrich Comparison Grid (adaptation page)
+## Acceptance Criteria Mapping
+- [ ] AC-1: `/api/adaptation/generate` live output is capped by configurable maximum length.
+- [ ] AC-2: Output-cap environment contract is explicit and documented in `.env.example`.
+- [ ] AC-3: Server-side `toRecord()` duplication is reduced via shared utility with no API behavior regression.
+- [ ] AC-4: Transformers heading text no longer shows `Model Comparison Template`; learner-facing text is used.
+- [ ] AC-5: Unreachable `Array.isArray(payload)` branch in `extractProviderOutput()` is removed after validation.
+- [ ] AC-6: Node runtime contract is machine-readable as `>=20.x`, with explicit developer activation path.
+- [ ] AC-7: No route, `data-testid`, or accessibility semantic contracts change.
+- [ ] AC-8: `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` pass under compliant runtime.
 
-The `adaptation-strategy-comparison` section already renders `quality`, `cost`, `speed`. The `strategy-data.ts` already contains `bestFor` and `caution` fields that are currently only used by the selector.
-
-**Required:** Display `bestFor` and `caution` in each grid card inline. After this change, the grid is self-contained — the strategy selector's detail card becomes fully redundant.
-
-`data-testid="adaptation-strategy-comparison"` must be preserved.
-
-### Change 2: Remove `AdaptationStrategySelector`
-
-Remove the component and its containing `<section data-testid="adaptation-interaction">` from the page entirely.
-
-**Removed data-testid contracts** (Testing handoff required — see below):
-- `adaptation-interaction`
-- `adaptation-strategy-selector`
-- `strategy-button-full-finetuning`
-- `strategy-button-lora-peft`
-- `strategy-button-prompt-prefix`
-- `adaptation-interaction-output`
-
-### Change 3: New `AdaptationChat` Component
-
-New client component following the `FrontierBaseChat` visual and interaction pattern:
-- Tab/button selector for three strategies (embedded in the component, not page-level)
-- Left panel: model info card + clickable example prompts
-- Right panel: textarea input, send button, terminal-style output console
-- Status state machine: idle → loading → live / fallback / error
-
-**Per-strategy model targets:**
-
-| Strategy tab | Model ID | Notes |
-|---|---|---|
-| Full Fine-Tuning | `meta-llama/Meta-Llama-3-8B-Instruct` | English example prompts |
-| LoRA / PEFT | `swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA` | Italian example prompts mandatory; callout in info card: Italian-first specialist |
-| Prompt / Prefix Tuning | `meta-llama/Meta-Llama-3-8B` (base) | System prompt prepended server-side; info card explains the technique; no system prompt shown in UI |
-
-**Per-strategy model info card content (BA-owned copy):**
-
-*Full Fine-Tuning — Meta-Llama-3-8B-Instruct*
-- Origin: Meta AI — hundreds of engineers, multi-million GPU-hour training run
-- Adaptation: All 8 billion parameters retrained on instruction-following + RLHF data
-- Purpose: General-purpose assistant; the high-quality, high-cost benchmark of adaptation
-
-*LoRA / PEFT — LLaMAntino-3-ANITA-8B-Inst-DPO-ITA*
-- Origin: University of Bari Aldo Moro (SWAP-Uniba research group) — small academic team
-- Adaptation: LoRA + DPO on top of Meta-Llama-3-8B-Instruct, targeting Italian language tasks
-- Purpose: Italian-language specialist — demonstrates how a small team can produce a domain expert at a fraction of the full fine-tune cost
-- Callout: "This model was fine-tuned primarily for Italian. Try asking in Italian for best results."
-
-*Prompt / Prefix Tuning — Meta-Llama-3-8B (base)*
-- Origin: Meta AI
-- Adaptation: Zero parameter changes. A system prompt is prepended to every query server-side.
-- Purpose: Shows what prompt steering can and cannot achieve on a non-instruct base model. Response reliability is lower — this is intentional and educational.
-
-### Change 4: New API Endpoint — Adaptation Generate
-
-A new API route to serve the `AdaptationChat` component. The Tech Lead owns path naming, env var naming, and implementation approach.
-
-**Product contract (BA-owned, not negotiable):**
-- Accepts `{ prompt: string, strategy: 'full-finetuning' | 'lora-peft' | 'prompt-prefix' }`
-- Routes each strategy to its configured model ID
-- For `prompt-prefix`: prepends a system prompt to the user input server-side before upstream call (prompt content open — see Risks below)
-- Returns the same `mode: 'live' | 'fallback'` response shape as `base-generate`
-- Fallback text must be strategy-specific (not generic). Suggested themes:
-  - Full fine-tune: context about what instruction tuning achieves and costs
-  - LoRA: context about specialist models and parameter efficiency
-  - Prompt-prefix: context about prompt steering limitations on base models
-- Same OTel tracing pattern as `base-generate`
-
-**New env vars required (naming: Tech Lead decides):**
-- Model ID env var per strategy (3 total)
-- API URL and API key can be shared with existing `FRONTIER_*` config — Tech Lead to confirm if same provider serves all three models
-- `.env.local` and `.env.example` must be updated
-
----
-
-## Acceptance Criteria
-
-Canonical source: `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md`
-
-- AC-1: Comparison grid cards display `bestFor` and `caution`
-- AC-2: `AdaptationStrategySelector` and `adaptation-interaction` section removed from DOM
-- AC-3: New chat section renders with 3-tab strategy selector; tab switching changes content without page reload
-- AC-4: Each tab's model info card shows model ID, origin/team, adaptation method, purpose
-- AC-5: Full Fine-Tuning tab — calls adaptation API with `strategy: 'full-finetuning'`, English example prompts
-- AC-6: LoRA/PEFT tab — calls API with `strategy: 'lora-peft'`, Italian example prompts, Italian-first callout
-- AC-7: Prompt/Prefix tab — calls API with `strategy: 'prompt-prefix'`, system prompt applied server-side, not shown in UI; info card explains technique
-- AC-8: Strategy-specific fallback text for all three strategies when API unavailable
-- AC-9: API endpoint routes to correct model per strategy; system prompt prepended for `prompt-prefix`
-- AC-10: `pnpm lint`, `pnpm build`, `pnpm test` pass (≥111 unit tests)
-- AC-11: Light and dark themes correct for new component
-- AC-12: E2E tests updated for removed selectors and new `AdaptationChat` selectors (Testing handoff)
-
----
-
-## Testing Handoff Requirement
-
-Per `workflow.md` Testing Handoff Trigger Matrix:
-
-- `data-testid` removals: 6 selectors removed (listed above in Change 2)
-- New `data-testid` contracts will be introduced by `AdaptationChat` (Frontend to document in its completion report)
-- **A Testing handoff is required in this CR.** Testing must update affected E2E specs after the Frontend completion report documents new selectors.
-
-Recommended execution order: **Parallel** for Frontend + Backend → **Sequential** for Testing (waits on Frontend's new data-testid documentation).
-
----
+## Verification Mapping
+- Backend code + tests for AC-1/2/3/5.
+- Frontend file-level copy proof for AC-4.
+- Runtime artifact + command proof (`node -v`) for AC-6.
+- Explicit contract stability statement in completion report for AC-7.
+- Full quality-gate command evidence (sequence required) for AC-8.
 
 ## Constraints
+- Preserve response schemas for `/api/adaptation/generate` and `/api/frontier/base-generate`.
+- No visual redesign beyond heading copy.
+- No dependency installation or package churn.
+- Preserve observability failure-boundary behavior.
+- If any route/test-id/accessibility contract changes become necessary, pause and trigger Testing handoff per workflow matrix.
 
-- `FrontierBaseChat` visual and interaction pattern must be followed for `AdaptationChat`
-- System prompt for `prompt-prefix` is server-side only — never in client payload or UI
-- Italian example prompts for LLaMAntino tab are mandatory
-- No new npm packages
-- Preserved contracts: `adaptation-page`, `adaptation-hero`, `adaptation-strategy-comparison`, `adaptation-continuity-links`
+## Open Decisions
+- `none` (scope is explicit).
 
----
+## Risk Analysis
+- Runtime alignment may still require local environment action even after repo contract updates.
+- Dead-code cleanup must be validated against supported provider payload contracts before deletion.
+- Utility extraction should remain narrow (avoid broad refactor spillover).
 
-## Risks for Tech Lead to Resolve Before Delegation
+## Rationale (Why)
+These five items are low-risk but high-signal maintenance tasks that improve learner-facing clarity, consistency with existing API safety patterns, and engineering hygiene before larger roadmap items.
 
-| Risk | Required Action |
-|---|---|
-| LLaMAntino model availability on featherless-ai router | Verify before delegation. If unavailable, escalate to BA — the LoRA model choice may need to change. |
-| All three models on same provider/router | Confirm whether shared `FRONTIER_API_URL` + `FRONTIER_API_KEY` works, or separate config needed |
-| System prompt content for `prompt-prefix` | Decide or propose to Human User. Suggestion: `"You are a helpful assistant. Answer the following question clearly and concisely.\n\n"` |
-| `extractProviderOutput()` dead code (`Array.isArray` HF path) | This was flagged as a `Next Priority` in CR-014. If the new adaptation endpoint shares this utility, decide whether to clean it up in-scope or keep as-is |
-
----
-
-## Reference Files
-
-- CR: `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md`
-- Adaptation page: `app/models/adaptation/page.tsx`
-- Strategy data: `app/models/adaptation/components/strategy-data.ts`
-- Strategy selector (to be removed): `app/models/adaptation/components/AdaptationStrategySelector.tsx`
-- FrontierBaseChat (pattern reference): `app/foundations/transformers/components/FrontierBaseChat.tsx`
-- Existing frontier API route (pattern reference): `app/api/frontier/base-generate/route.ts`
-- Env example: `.env.example`
+## Evidence Expectations for Tech Lead Handoff
+- Command evidence in canonical sequence with exact commands and pass/fail summaries.
+- File-level evidence for each AC with precise paths/lines.
+- Runtime mismatch classification note if host runtime remains below policy even after repo updates.
+- Explicit note that route/selector/semantic contracts remained stable.

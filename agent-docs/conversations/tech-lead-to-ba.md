@@ -1,40 +1,62 @@
 # Handoff: Tech Lead → BA Agent
 
 ## Subject
-`CR-015 — Adaptation Page: Strategy-Linked Chat Interface`
+`CR-017 — Small Backlog Fixes and Runtime Alignment`
 
 ## Status
 `verified`
 
 ---
 
+## [CR-015 Historical Note]
+Prior CR-015 Tech Lead → BA content replaced per Conversation File Freshness Rule.
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md` ✓
+- Evidence 2 (prior CR closed): CR-015 status `verified` per prior `tech-lead-to-ba.md` ✓
+- Result: replacement allowed.
+
+---
+
 ## Technical Summary
 
-CR-015 replaced the passive `AdaptationStrategySelector` (radio buttons + detail card) on the Model Adaptation page with a live, strategy-linked chat interface (`AdaptationChat`). Three tabs — Full Fine-Tuning, LoRA/PEFT, Prompt/Prefix Tuning — each connect to a real model on the featherless-ai router via a new `/api/adaptation/generate` endpoint. The static comparison grid was enriched with `bestFor` and `caution` fields that were already in `strategy-data.ts` but not displayed.
+CR-017 bundled five small backlog items into a single low-risk cleanup pass across backend, frontend, and tooling layers:
+
+1. **Adaptation output cap** — `/api/adaptation/generate` now reads `ADAPTATION_OUTPUT_MAX_CHARS` from the environment (default 4000) and applies it via `.slice()` to live output, matching the existing `FRONTIER_OUTPUT_MAX_CHARS` safety pattern in `base-generate`.
+2. **`toRecord()` shared utility** — Duplicated local `toRecord()` helper extracted to `lib/utils/record.ts`; both API routes now import from the shared location. Local definitions removed from both route files.
+3. **Transformers heading rename** — `<h3>` heading on the Transformers page changed from the developer-facing `"Model Comparison Template"` to the learner-facing `"Tiny vs Frontier: By the Numbers"`. Copy-only change.
+4. **Dead code removal** — The unreachable `Array.isArray(payload)` branch in `extractProviderOutput()` in `base-generate/route.ts` was removed after confirming no supported code path depends on it (provider returns OpenAI-compat objects; all HF tests mock `{ choices: [...] }` format, not legacy array format).
+5. **Node.js runtime contract** — `package.json` now declares `"engines": { "node": ">=20.x" }`; `.nvmrc` created with value `20` to give developers an explicit activation path.
 
 **Scope boundaries preserved:**
-- Adaptation page route (`/models/adaptation`) unchanged.
-- Server Component structure of `page.tsx` unchanged — `AdaptationChat` is the new client island.
-- Stable testids (`adaptation-page`, `adaptation-hero`, `adaptation-strategy-comparison`, `adaptation-continuity-links`, continuity link hrefs) all preserved.
-- `app/api/frontier/base-generate/route.ts` frozen — no changes to the existing frontier endpoint.
-- No new npm packages introduced.
+- API response schemas for `/api/adaptation/generate` and `/api/frontier/base-generate` unchanged.
+- No visual redesign beyond the heading text change.
+- No new npm dependencies introduced.
+- Observability and fallback behaviors untouched.
+- No route-path, `data-testid`, or accessibility semantic contracts changed.
+
+**Execution delegation:**
+- Backend tasks (AC-1, AC-2 partial, AC-3, AC-5, and AC-8 gate): delegated to Backend Agent.
+- Frontend task (AC-4): delegated to Frontend Agent.
+- Tech Lead direct: `lib/utils/record.ts` creation, `.env.example` update, `package.json` engines field, `.nvmrc` creation.
 
 ---
 
 ## Evidence of AC Fulfillment
 
-- [x] **AC-1**: Comparison grid cards display `bestFor` and `caution` — `app/models/adaptation/page.tsx:35-36` (two new `<li>` entries per card rendering `strategy.bestFor` / `strategy.caution`).
-- [x] **AC-2**: `AdaptationStrategySelector` removed. `adaptation-interaction` section and all child testids absent from DOM — `AdaptationStrategySelector.tsx` deleted; `page.tsx` import and render removed; confirmed absent in E2E (12/12 pass with no assertion on old testids).
-- [x] **AC-3**: `AdaptationChat` renders with 3-tab selector; tab switching updates model info + chat interface without page reload — `AdaptationChat.tsx:239-265` (tablist + tab buttons); `handleTabChange` is synchronous client state; confirmed via `@critical` E2E tab-switch test (12/12 pass).
-- [x] **AC-4**: Each tab's model info card shows model ID, origin/team, adaptation method, purpose — `AdaptationChat.tsx:26-73` (`TAB_CONFIGS` array; all four fields rendered for `activeConfig` in lines 277-307).
-- [x] **AC-5 (Full Fine-Tuning)**: Calls adaptation API with `strategy: 'full-finetuning'`; English example prompts — `AdaptationChat.tsx:147-151` (fetch call with `strategy: activeTab`); `TAB_CONFIGS[0].examplePrompts` (English, lines 35-40).
-- [x] **AC-6 (LoRA/PEFT)**: Calls API with `strategy: 'lora-peft'`; Italian example prompts; Italian-first callout — `TAB_CONFIGS[1].examplePrompts` (Italian, lines 51-55); `callout` field rendered as amber alert box at `AdaptationChat.tsx:311-316`.
-- [x] **AC-7 (Prompt/Prefix)**: Calls API with `strategy: 'prompt-prefix'`; system prompt applied server-side, not in UI; info card explains technique — server-side injection at `route.ts:144-148` (`buildMessages()` adds system role only for `prompt-prefix`); `ADAPTATION_SYSTEM_PROMPT` constant only used in request body, absent from all response fields/logs/spans (audited); `TAB_CONFIGS[2].adaptation` explains the technique (`AdaptationChat.tsx:64`).
-- [x] **AC-8**: All 3 strategies return strategy-specific deterministic fallback text when unconfigured — `route.ts:20-27` (`FALLBACK_TEXT` record with exact strategy-specific strings); verified by 6 unit tests (3 missing_config + 3 exact fallback text assertions). Fallback texts are thematically specific per strategy.
-- [x] **AC-9**: Adaptation API routes to correct model per strategy; system prompt prepended for `prompt-prefix` — `route.ts:100-138` (`loadAdaptationConfig` reads strategy-specific env var); `route.ts:140-152` (`buildMessages` prepends system message for `prompt-prefix` only); verified by 3 model routing unit tests + 1 system prompt injection test.
-- [x] **AC-10**: All quality gates pass — `pnpm test`: 133 passed (22 new tests); `pnpm lint`: ✔ no errors; `pnpm exec tsc --noEmit`: exit 0; `pnpm build`: succeeded. Run by Tech Lead under Node v18.19.0 (nvm).
-- [x] **AC-11**: Light/dark themes correct — all Tailwind classes in `AdaptationChat.tsx` use `dark:` variants; no hardcoded colors; confirmed via source audit (adversarial diff review).
-- [x] **AC-12**: E2E tests updated — `navigation.spec.ts` Test 1 updated (6 new assertions, 3 removed); Test 2 rewritten with `@critical` tag preserved; `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` passes (12/12, chromium/firefox/webkit).
+- [x] **AC-1 (Adaptation output cap):** `ADAPTATION_OUTPUT_MAX_CHARS = Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000)` declared at `app/api/adaptation/generate/route.ts:14-15`; applied as `extractedOutput.slice(0, ADAPTATION_OUTPUT_MAX_CHARS)` at line 462. New test `'should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters'` verifies 10-char cap via `jest.isolateModules()` (see Deviations). `beforeEach` clears `process.env.ADAPTATION_OUTPUT_MAX_CHARS` to prevent test leakage.
+
+- [x] **AC-2 (Config contract):** `.env.example` — `ADAPTATION_OUTPUT_MAX_CHARS='4000'` added under the adaptation section with inline comment: `# Optional: max characters returned in live adaptation output (default 4000, matches frontier cap)`.
+
+- [x] **AC-3 (`toRecord` cleanup):** `lib/utils/record.ts` created with a single exported `toRecord(value: unknown): Record<string, unknown> | null` function. `app/api/adaptation/generate/route.ts:6` and `app/api/frontier/base-generate/route.ts:6` both now import from `@/lib/utils/record`. Local `toRecord()` definitions removed from both files (adaptation: was lines 185-187; base-generate: was lines 163-165). API behavior unchanged — confirmed by full test suite passing (134 tests, 0 regressions).
+
+- [x] **AC-4 (Heading rename):** `app/foundations/transformers/page.tsx:134` — `<h3>` text is `"Tiny vs Frontier: By the Numbers"`. No `data-testid`, role, or structural change. Parent `GlassCard` preserves `data-testid="transformers-comparison"`.
+
+- [x] **AC-5 (Dead code removal):** `Array.isArray(payload)` branch removed from `extractProviderOutput()` in `app/api/frontier/base-generate/route.ts`. Function now begins directly with `const root = toRecord(payload);`. Dead-code validation: (1) featherless-ai router returns OpenAI-compat objects, not legacy HF arrays; (2) `buildProviderRequestBody` for `huggingface` uses OpenAI completions format; (3) no test in `__tests__/api/frontier-base-generate.test.ts` mocks an array payload — all HF tests use `{ choices: [{ text: '...' }] }`.
+
+- [x] **AC-6 (Node runtime contract):** `package.json` — `"engines": { "node": ">=20.x" }` added after `"private": true`. `.nvmrc` created at project root with value `20`. Tech Lead verification run under Node v20.20.0 via `nvm use 20`. Backend sub-agent also confirmed v20.20.0 (`node -v` result in sub-agent report).
+
+- [x] **AC-7 (Contract stability):** No route-path, `data-testid`, or accessibility semantic contracts changed. Confirmed: Backend adversarial diff review found no testid additions/removals; Frontend report confirms no testid or role changes at `page.tsx:134`; all 134 unit tests pass with no selector/contract regressions.
+
+- [x] **AC-8 (Quality gates):** All four gates PASS under Node v20.20.0. See Verification Commands section below.
 
 ---
 
@@ -42,9 +64,9 @@ CR-015 replaced the passive `AdaptationStrategySelector` (radio buttons + detail
 
 **Unit + Integration tests (Tech Lead run):**
 - Command: `pnpm test`
-- Scope: full suite (17 test suites)
-- Execution Mode: local-equivalent/unsandboxed (Node v18.19.0 via nvm)
-- Result: **PASS** — 133 tests, 0 failures
+- Scope: full suite (17 suites)
+- Execution Mode: local-equivalent/unsandboxed (Node v20.20.0 via nvm)
+- Result: **PASS** — 134 tests, 0 failures (baseline was 133; +1 new cap test)
 
 **Lint (Tech Lead run):**
 - Command: `pnpm lint`
@@ -62,74 +84,78 @@ CR-015 replaced the passive `AdaptationStrategySelector` (radio buttons + detail
 - Command: `pnpm build`
 - Scope: full Next.js production build
 - Execution Mode: local-equivalent/unsandboxed
-- Result: **PASS** — `/api/adaptation/generate` in build output; `/models/adaptation` built; no type errors
-
-**E2E (Testing Agent run):**
-- Command: `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts`
-- Scope: navigation spec (4 tests × 3 browsers)
-- Execution Mode: local-equivalent/unsandboxed (Node v18.19.0 via nvm)
-- Browser Scope: chromium, firefox, webkit
-- Result: **PASS** — 12/12 passed
+- Result: **PASS** — all routes compiled; no type errors; `lib/utils/record.ts` included in bundle
 
 ---
 
 ## Failure Classification Summary
 
-- **CR-related**: none — all CR-015 scope items implemented and verified.
+- **CR-related**: none — all CR-017 scope items implemented and verified.
 - **Pre-existing**: none detected in CR scope.
-- **Environmental**: System Node.js v16.20.1 is below documented minimum (≥20.x). All verification run under Node v18.19.0 via nvm. Pre-existing since CR-013; tracked in project-log Next Priorities. Node v20+ upgrade recommended.
-- **Non-blocking warning**: `next lint` deprecation notice (pre-existing); Jest worker exit warning (pre-existing); OTel `require-in-the-middle` critical dependency warning in build (pre-existing — `lib/otel/client.ts`, `lib/otel/server.ts`).
+- **Environmental**: System Node.js v16.20.1 remains below documented minimum (≥20.x). Tech Lead verification ran under v20.20.0 via nvm. Frontend Agent used v18.19.0 (nvm v20 unavailable in that session). Pre-existing since CR-013; tracked in project-log Next Priorities. Node v20+ upgrade is the AC-6 partial mitigation (runtime contract is now machine-readable; host-level enforcement remains a future step).
+- **Non-blocking warning**: `next lint` deprecation notice (pre-existing, unrelated to CR); OTel `require-in-the-middle` critical dependency warning in `pnpm build` output (pre-existing — `lib/otel/client.ts`, `lib/otel/server.ts`; tracked from prior CRs).
 
 ---
 
 ## Adversarial Diff Review
 
-**`page.tsx`**: Clean. `AdaptationStrategySelector` import and render removed. `AdaptationChat` import and render added. `bestFor`/`caution` fields rendered correctly via new `<li>` entries. All stable testids and continuity links preserved. No debug artifacts.
+**`lib/utils/record.ts`**: Clean. Single exported function, no side effects. Type guard only — returns `Record<string, unknown> | null`. No logger calls, no span attributes. Correctly handles `null` (returns `null`, not `{}`).
 
-**`AdaptationChat.tsx`**: Clean. All 9 mandatory `data-testid` contracts present and match plan spec exactly. Split-panel `GlassCard` matches `FrontierBaseChat` pattern. Status state machine (`idle|live|fallback|error`) correctly implemented. Tab switch resets prompt/output/status state. Italian callout renders conditionally for LoRA tab only. No system prompt visible anywhere in UI. No debug artifacts. All colors use dual-theme Tailwind classes.
+**`app/api/adaptation/generate/route.ts`**: Clean. `ADAPTATION_OUTPUT_MAX_CHARS` is module-level (parsed once at load time — consistent with `FRONTIER_OUTPUT_MAX_CHARS` pattern). `parseInt` with `|| 4000` fallback guards against `NaN`. `Math.max(1, ...)` ensures cap is never ≤ 0. Slice applied only to live output, not fallback text. No debug artifacts. Telemetry boundary untouched — no span attributes added or removed for the cap feature.
 
-**`route.ts` (adaptation/generate)**: Clean. `ADAPTATION_SYSTEM_PROMPT` constant used only in `buildMessages()` — absent from all response fields, logger calls, and span attributes (audited line by line). Strategy-specific fallback texts match plan spec exactly. Config loading validates URL eagerly. Error mapping (429/401/403/5xx/timeout) mirrors `base-generate` pattern faithfully.
+**`app/api/frontier/base-generate/route.ts`**: Clean. Dead code branch removal leaves `extractProviderOutput()` leaner and starting directly with `const root = toRecord(payload);`. Remaining logic (OpenAI choices path, Anthropic-like content path) is identical to pre-CR behavior for supported payload shapes. No behavior change for configured routes.
 
-**`adaptation-generate.test.ts`**: Clean. 22 tests. All test names accurately describe behavior. System prompt injection verified by inspecting the outgoing fetch request body. Exact fallback text asserted with `toBe()`. Test isolation via `beforeEach` env cleanup confirmed correct (config loaded at request time, not module load time).
+**`__tests__/api/adaptation-generate.test.ts`**: Clean. Cap test assertion is exact: `expect(body.output).toBe('This respo')` and `expect(body.output.length).toBe(10)`. `beforeEach` cleanup for `ADAPTATION_OUTPUT_MAX_CHARS` prevents leakage. `jest.isolateModules()` pattern is the correct approach for module-level constants (see Deviations).
 
-**`navigation.spec.ts`**: Clean. Test 1 updated exactly as specified. Test 2 fully rewritten — no live API dependency, asserts terminal label change (client-side constant, not API response). `@critical` tag preserved. Test 3 untouched. No brittle assertions.
+**`app/foundations/transformers/page.tsx`**: Clean. Only line 134 changed. `data-testid="transformers-comparison"` on parent `GlassCard` preserved. No structural, accessibility, or navigation contract changes. Heading is purely presentational copy.
 
-**Residual risk noted**: The adaptation route has no output length cap (unlike `base-generate`'s `FRONTIER_OUTPUT_MAX_CHARS = 4000`). Chat completions from instruct models can be verbose. Minor safety concern — see Tech Lead Recommendations.
+**No residual risks identified.**
+
+---
+
+## Technical Retrospective
+
+**Trade-offs accepted:**
+- `ADAPTATION_OUTPUT_MAX_CHARS` is a module-level constant for consistency with `FRONTIER_OUTPUT_MAX_CHARS`. This means changing the env var requires a process restart — acceptable given the config-at-startup pattern already used across the project.
+- `jest.isolateModules()` for the cap test is slightly more complex than a direct `POST` call, but it is the only correct approach for module-level constants. The pattern is well-understood and the test accurately validates the feature.
+
+**Out-of-scope items deferred (per CR constraints):**
+- Client-side `toRecord()` definitions remain in `FrontierBaseChat.tsx` and `AdaptationChat.tsx`. These are client-side components; the CR explicitly scoped cleanup to server-side API routes only. If a third component needs the helper, extraction to a shared client utility is warranted (see Recommendations).
 
 ---
 
 ## Tech Lead Recommendations
 
-1. **Adaptation endpoint output length cap** — `app/api/adaptation/generate/route.ts` returns `extractedOutput` without slicing. `base-generate` caps at 4000 chars (`FRONTIER_OUTPUT_MAX_CHARS`). Recommend adding a cap in a follow-up CR. Low priority (instruct models are generally more concise, fallback kicks in on empty output). Suggest: add to project-log Next Priorities.
+1. **Client-side `toRecord()` duplication** — `FrontierBaseChat.tsx` and `AdaptationChat.tsx` each have local `toRecord()` definitions that are functionally identical to `lib/utils/record.ts`. The CR constrained cleanup to server-side routes. Recommend: add to project-log Next Priorities for a future lib-cleanup CR if a third client component needs the helper. No immediate urgency.
 
-2. **`toRecord()` utility duplication** — Backend Agent noted `toRecord()` is now locally duplicated in `base-generate/route.ts`, `adaptation/generate/route.ts`, and `AdaptationChat.tsx` (client-side). If a fourth route is added, extraction to `lib/server/` would be warranted. Out of scope for this CR. Suggest: defer to a future lib cleanup CR.
-
-3. **Node.js v20+ upgrade** — System Node v16.20.1 remains below documented minimum (≥20.x). Pre-existing since CR-013. Should be a Next Priority to remove the nvm dependency from the verification workflow. Already in project-log Next Priorities.
+2. **Host-level Node.js v20+ enforcement** — AC-6 formalizes the runtime contract in `package.json` and `.nvmrc`, but the host machine still runs v16.20.1. Verification continues to depend on `nvm use 20`. Recommend: retain in project-log Next Priorities. No new action required at this CR boundary.
 
 ---
 
 ## Deployment Notes
 
-**New env vars required** (`.env.local` must be updated before the adaptation chat will show live responses):
-```
-ADAPTATION_API_URL='https://router.huggingface.co/featherless-ai/v1/chat/completions'
-ADAPTATION_FULL_FINETUNE_MODEL_ID='meta-llama/Meta-Llama-3-8B-Instruct'
-ADAPTATION_LORA_MODEL_ID='swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA'
-ADAPTATION_PROMPT_PREFIX_MODEL_ID='meta-llama/Meta-Llama-3-8B'
-```
-API key: shared with existing `FRONTIER_API_KEY`. No new key required.
+**New optional env var** (`ADAPTATION_OUTPUT_MAX_CHARS`):
+- Default behavior if absent: cap of 4000 characters (matching frontier cap).
+- To override: add `ADAPTATION_OUTPUT_MAX_CHARS='<integer>'` to `.env.local`.
+- No `.env.local` changes required for existing deployments — default is safe.
 
-**Fallback behavior**: If env vars are absent or invalid, all three strategy tabs return strategy-specific deterministic fallback text. The page renders correctly in both configured and unconfigured environments.
-
-**No infrastructure changes**: No new dependencies, no CSP changes, no middleware changes, no new routes in the navigation config.
+**No other deployment impact:**
+- No new npm packages.
+- No new API routes or route renames.
+- No CSP or middleware changes.
+- No infrastructure changes.
+- `lib/utils/record.ts` is a shared server-side utility with no runtime dependencies.
 
 ---
 
 ## Link to Updated Docs
 
-- Plan: `agent-docs/plans/CR-015-plan.md`
-- CR: `agent-docs/requirements/CR-015-adaptation-strategy-chat-interface.md`
-- Frontend handoff: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Plan: `agent-docs/plans/CR-017-plan.md`
+- CR: `agent-docs/requirements/CR-017-small-backlog-fixes-and-runtime-alignment.md`
 - Backend handoff: `agent-docs/conversations/tech-lead-to-backend.md`
-- Testing handoff: `agent-docs/conversations/tech-lead-to-testing.md`
-- Sub-agent reports: `frontend-to-tech-lead.md`, `backend-to-tech-lead.md`, `testing-to-tech-lead.md`
+- Frontend handoff: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Sub-agent reports: `backend-to-tech-lead.md`, `frontend-to-tech-lead.md`
+
+---
+*Report created: 2026-02-25*
+*Tech Lead Agent*

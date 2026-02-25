@@ -1,33 +1,33 @@
 # Report: Backend → Tech Lead
 
 ## Subject
-`CR-015 - Adaptation Page: New /api/adaptation/generate Endpoint`
+`CR-017 — Small Backlog Fixes: Route Cleanup (Output Cap + toRecord + Dead Code)`
 
 ## Status
 `completed`
 
 ---
 
-## [CR-014 Historical Note]
-Prior CR-014 backend-to-tech-lead content replaced per Conversation File Freshness Rule. CR-014 status was `completed`. Artifacts preserved in `agent-docs/requirements/CR-014-hf-router-migration.md` and `agent-docs/plans/CR-014-plan.md`.
+## [CR-015 Historical Note]
+Prior CR-015 backend-to-tech-lead content replaced per Conversation File Freshness Rule.
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md` ✓
+- Evidence 2 (prior CR closed): CR-015 status `completed` per prior `backend-to-tech-lead.md` and `project-log.md` ✓
+- Result: replacement allowed.
 
 ---
 
 ## Preflight: Assumptions
 
-1. `FRONTIER_API_KEY` env var name confirmed in `app/api/frontier/base-generate/route.ts` line 100 — correct, reused as-is.
-2. `parseTimeout()` pattern from `base-generate/route.ts` (lines 84–95) is clear; implemented locally as specified (no cross-file import).
-3. Featherless-ai router returns standard OpenAI chat completions format `{ choices: [{ message: { content: string } }] }` — confirmed by handoff spec.
-4. `.env.example` already updated by Tech Lead — not modified.
+1. `lib/utils/record.ts` exists and exports `toRecord` — **confirmed** (file present with correct signature).
+2. The `Array.isArray(payload)` branch in `extractProviderOutput()` is not exercised by any test in `__tests__/api/frontier-base-generate.test.ts` — **confirmed**. All HF tests mock `{ choices: [{ text: 'HF output text' }] }` (OpenAI-compatible completions format), not the legacy `[{ generated_text: "" }]` array format.
+3. `process.env.ADAPTATION_OUTPUT_MAX_CHARS` is not yet read anywhere in `adaptation/generate/route.ts` — **confirmed**. No prior reference exists.
 
 ## Preflight: Adjacent Risks
 
-1. **System prompt security**: `ADAPTATION_SYSTEM_PROMPT` must not appear in response payload, logger calls, or OTel span attributes. Audited all code paths — the constant is only used in `buildMessages()` to construct the outgoing provider request body, and is not referenced anywhere in response construction, logger calls, or span attribute assignments.
-2. **Node runtime**: `node -v` reports `v16.20.1` (below documented minimum of v20.x). nvm fallback to `v18.19.0` activated for this session — pnpm runs on v18.19.0. Classified as **environmental mismatch** (pre-existing from CR-014).
-3. **Outer catch fallback strategy**: The top-level `catch` fires only for truly unexpected post-parse errors where `strategy` is not in scope. Uses `'full-finetuning'` as sentinel strategy — same "safety net" pattern as `base-generate/route.ts`.
+1. **Module-level constant testability**: `ADAPTATION_OUTPUT_MAX_CHARS` is parsed once at module load time (matching `FRONTIER_OUTPUT_MAX_CHARS` pattern in `base-generate`). Tests that set the env var *after* module import won't see the new value. The new cap test uses `jest.isolateModules()` to re-import the route with the env var already set — this is a minor deviation from the handoff test spec (see Deviations section).
+2. **Client-side `toRecord()` duplication**: `AdaptationChat.tsx` and `FrontierBaseChat.tsx` still have local `toRecord()` definitions. These are client-side and explicitly out-of-scope per the handoff.
 
 ## Preflight: Open Questions
-
 - none
 
 ## Preflight Status
@@ -38,88 +38,71 @@ Prior CR-014 backend-to-tech-lead content replaced per Conversation File Freshne
 ## Scope Check
 
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
-- Files created:
+- Files modified:
   - `app/api/adaptation/generate/route.ts`
+  - `app/api/frontier/base-generate/route.ts`
   - `__tests__/api/adaptation-generate.test.ts`
 - Scope compliance:
-  - [x] All created files are in Backend ownership or explicitly delegated.
-  - [x] Test file created under explicit Tech Lead delegation (handoff: "Test scope: delegated to Backend Agent for unit tests only").
-  - [x] `.env.example` NOT modified (already updated by Tech Lead as stated in handoff).
-  - [x] `app/api/frontier/base-generate/route.ts` NOT modified (frozen per handoff).
+  - [x] All modified files are in Backend ownership or explicitly delegated.
+  - [x] Test file modified under explicit Tech Lead delegation (handoff: test scope delegated to Backend for output cap test).
 
 ## Changes Made
 
-**`app/api/adaptation/generate/route.ts`** (new):
-- POST handler at `/api/adaptation/generate`.
-- Zod schema with `prompt` (string, 1–2000 chars) and `strategy` (enum: `full-finetuning | lora-peft | prompt-prefix`).
-- Validation: returns `invalid_strategy` (400) for bad strategy, `invalid_prompt` (400) for bad prompt — distinguished via `parsed.error.issues`.
-- Per-strategy config loading: reads `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, and strategy-specific model ID env var. Missing/invalid config → immediate fallback.
-- `buildMessages()`: returns `[system, user]` for `prompt-prefix`, `[user]` for other strategies.
-- Local `extractChatOutput()`: chat completions format only (`choices[0].message.content`).
-- Local `parseTimeout()`: same clamped parsing as `base-generate`.
-- Strategy-specific deterministic fallback text from `FALLBACK_TEXT` record (exact strings from handoff spec).
-- OTel span `adaptation.generate` with attributes: `adaptation.strategy`, `adaptation.configured`, `adaptation.model_id`, `adaptation.mode`, `adaptation.reason_code` (fallback paths), `adaptation.upstream_status` (non-OK HTTP).
-- Response shape matches `base-generate` contract exactly (`mode`, `output`, `reason`, `metadata`). `metadata` uses `AdaptationModelMetadata` type `{ strategy, modelId }`.
+### `app/api/adaptation/generate/route.ts`
+- Added import: `import { toRecord } from '@/lib/utils/record';`
+- Added module-level constant: `const ADAPTATION_OUTPUT_MAX_CHARS = Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);`
+- Removed local `toRecord()` definition (was lines 185-187).
+- Applied `.slice(0, ADAPTATION_OUTPUT_MAX_CHARS)` to `extractedOutput` in the `LiveModeResponse` return.
 
-**`__tests__/api/adaptation-generate.test.ts`** (new):
-- 22 unit tests covering all 18 rows from the handoff test table (some rows produce multiple tests for per-strategy coverage).
+### `app/api/frontier/base-generate/route.ts`
+- Added import: `import { toRecord } from '@/lib/utils/record';`
+- Removed local `toRecord()` definition (was lines 163-165).
+- Removed the `Array.isArray(payload)` dead code branch from `extractProviderOutput()` (was lines 210-218). Function body now starts directly with `const root = toRecord(payload);`.
+
+### `__tests__/api/adaptation-generate.test.ts`
+- Added `delete process.env.ADAPTATION_OUTPUT_MAX_CHARS;` to `beforeEach` cleanup.
+- Added new test: `'should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters'` — uses `jest.isolateModules()` to re-import the route with `ADAPTATION_OUTPUT_MAX_CHARS=10`, verifying output is capped to 10 chars.
+
+---
 
 ## Verification Results
 
-**Environmental note:** System Node.js v16.20.1 — below documented minimum (>=20.x). Classified as **environmental mismatch** (pre-existing). Verification ran under Node.js v18.19.0 via `~/.nvm/versions/node/v18.19.0`.
+### Runtime Preflight
+- Command: `node -v`
+- Result: `v20.20.0` ✓ (≥ 20.x satisfied)
 
-**1. `pnpm test`** — PASS
+### 1. `pnpm test`
+- Command: `pnpm test`
+- Scope: full suite
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — 17 suites, **134 tests passed**, 0 failed, 0 snapshots
+- Total test count: **134** (was 133 baseline; +1 new cap test)
 
-```
-PASS __tests__/api/adaptation-generate.test.ts
-  Integration: Adaptation Generate API
-    ✓ should return 400 invalid_prompt for empty prompt (9 ms)
-    ✓ should return 400 invalid_prompt for prompt exceeding 2000 chars (2 ms)
-    ✓ should return 400 invalid_strategy for unknown strategy (2 ms)
-    ✓ should return fallback with missing_config for full-finetuning when env vars absent (2 ms)
-    ✓ should return fallback with missing_config for lora-peft when env vars absent (1 ms)
-    ✓ should return fallback with missing_config for prompt-prefix when env vars absent (5 ms)
-    ✓ should return live mode response for full-finetuning when configured (2 ms)
-    ✓ should return live mode response for lora-peft when configured (2 ms)
-    ✓ should return live mode response for prompt-prefix when configured (2 ms)
-    ✓ should include system message as first message for prompt-prefix strategy (2 ms)
-    ✓ should NOT include system message for full-finetuning strategy (1 ms)
-    ✓ should route to full-finetuning model ID (1 ms)
-    ✓ should route to lora-peft model ID (1 ms)
-    ✓ should route to prompt-prefix model ID (1 ms)
-    ✓ should return fallback with quota_limited when upstream returns 429 (1 ms)
-    ✓ should return fallback with upstream_auth when upstream returns 401 (1 ms)
-    ✓ should return fallback with upstream_error when upstream returns 503 (1 ms)
-    ✓ should return fallback with timeout when fetch is aborted (2 ms)
-    ✓ should return fallback with empty_provider_output when provider returns empty content (1 ms)
-    ✓ should return exact fallback text for full-finetuning strategy (1 ms)
-    ✓ should return exact fallback text for lora-peft strategy (1 ms)
-    ✓ should return exact fallback text for prompt-prefix strategy
+### 2. `pnpm lint`
+- Command: `pnpm lint`
+- Scope: full project
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — `✔ No ESLint warnings or errors`
+- Note: pre-existing `next lint` deprecation notice (unrelated to CR)
 
-Test Suites: 17 passed, 17 total
-Tests:       133 passed, 133 total
-Snapshots:   0 total
-Time:        2.702 s
-```
+### 3. `pnpm exec tsc --noEmit`
+- Command: `pnpm exec tsc --noEmit`
+- Scope: full project
+- Execution Mode: local-equivalent/unsandboxed
+- Result: **PASS** — exit code 0, no output
 
-New tests: 22 (≥18 required). Total: 133 (was 111 baseline; 133 ≥ 111 ✓).
+### DoD Checklist
+- [x] `adaptation/generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
+- [x] `base-generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
+- [x] `Array.isArray(payload)` branch removed from `extractProviderOutput()` in `base-generate/route.ts` (AC-5)
+- [x] `ADAPTATION_OUTPUT_MAX_CHARS` constant parsed from env in `adaptation/generate/route.ts`; applied via `.slice(0, ADAPTATION_OUTPUT_MAX_CHARS)` to live output (AC-1)
+- [x] New cap test added and passing; `ADAPTATION_OUTPUT_MAX_CHARS` cleared in `beforeEach` (AC-1 test coverage)
+- [x] `pnpm test` passes — 134 total, no regression vs. 133 baseline (AC-8)
+- [x] `pnpm lint` passes (AC-8)
+- [x] `pnpm exec tsc --noEmit` passes (AC-8)
+- [x] No route/testid/accessibility contract changes (AC-7)
 
-**2. `pnpm lint`** — PASS
-`✔ No ESLint warnings or errors` (pre-existing `next lint` deprecation notice — unrelated to CR).
-
-**3. `pnpm exec tsc --noEmit`** — PASS
-Exit code 0, no output.
-
-**DoD checklist:**
-- [x] POST `/api/adaptation/generate` routes to correct model per strategy (AC-9) — verified by "correct model routing" tests for all 3 strategies
-- [x] `prompt-prefix` strategy prepends system prompt server-side; system prompt NOT in response payload (AC-7, AC-9) — verified by system prompt injection test; response payloads checked in all live tests
-- [x] All 3 strategies return strategy-specific deterministic fallback text when unconfigured (AC-8) — verified by missing_config and fallback text tests
-- [x] Request validation rejects: invalid strategy (400 `invalid_strategy`), empty prompt (400 `invalid_prompt`), prompt >2000 chars (400 `invalid_prompt`)
-- [x] OTel span `adaptation.generate` emitted with `adaptation.strategy` attribute — instrumented in POST handler
-- [x] Unit tests: 22 new tests covering all rows in handoff test table (≥18 ✓)
-- [x] `pnpm test` passes — 133 total tests, no regressions
-- [x] `pnpm lint` passes — ✔ No ESLint warnings or errors
-- [x] `pnpm exec tsc --noEmit` passes — exit code 0
+---
 
 ## Out-of-Scope Requests Detected
 none
@@ -130,18 +113,21 @@ none
 ## Failure Classification
 - `CR-related`: none
 - `pre-existing`: none
-- `environmental`: System Node.js v16.20.1 below documented minimum (>=20.x); verified under Node v18.19.0 (nvm). Not a CR regression.
+- `environmental`: none (Node v20.20.0 used via nvm — satisfies documented minimum)
 - `non-blocking warning`: `next lint` deprecation notice — pre-existing, unrelated to this CR.
 
 ## Deviations
-none
+
+1. **Cap test uses `jest.isolateModules()` instead of direct `POST` call** (Minor).
+   - *Rationale*: `ADAPTATION_OUTPUT_MAX_CHARS` is parsed at module load time (top-level `const`). Setting `process.env.ADAPTATION_OUTPUT_MAX_CHARS` after the module is already imported has no effect. The handoff spec's test code calls the already-imported `POST`, which would always use the default `4000` cap. Using `jest.isolateModules()` forces a fresh module load with the env var already set, making the test actually verify the cap behavior. This matches the existing pattern where `FRONTIER_OUTPUT_MAX_CHARS` in `base-generate` is also module-level.
+   - *Impact*: None on production behavior. Test correctly validates the feature. No contract change.
 
 ## Ready for Next Agent
 yes
 
 ## Follow-up Recommendations
-- The `toRecord()` utility is locally duplicated in `route.ts` and `base-generate/route.ts`. If a third route needs it, consider extracting to `lib/server/`. Out of scope for this CR.
+- The client-side `toRecord()` in `FrontierBaseChat.tsx` and `AdaptationChat.tsx` remains duplicated (out-of-scope per handoff). Consider extracting to a shared client-side utility if a third component needs it.
 
 ---
-*Report created: 2026-02-23*
+*Report created: 2026-02-25*
 *Backend Agent*

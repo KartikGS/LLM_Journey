@@ -131,7 +131,7 @@ export default function BaseLLMPage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Model Comparison Template</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tiny vs Frontier: By the Numbers</h3>
             </div>
           </div>
 

@@ -1,237 +1,207 @@
 # Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-015 - Adaptation Page: New /api/adaptation/generate Endpoint`
+`CR-017 — Small Backlog Fixes: Route Cleanup (Output Cap + toRecord + Dead Code)`
 
 ## Status
 `issued`
+
+## Pre-Replacement Check (Conversation Freshness)
+- Prior content: `CR-015` (`Adaptation Page: New /api/adaptation/generate Endpoint`)
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-015-plan.md` ✓
+- Evidence 2 (prior CR closed): `CR-015` status `Done` per `agent-docs/project-log.md` ✓
+- Result: replacement allowed.
 
 ---
 
 ## Objective
 
-Create a new POST API route at `/api/adaptation/generate` that accepts a `strategy` parameter and routes to the correct model per strategy. The endpoint also applies a server-side system prompt for the `prompt-prefix` strategy. Fallback behavior (deterministic strategy-specific text) is required when the API is unconfigured or unavailable.
+Three focused backend changes:
+1. Add a configurable output-length cap to `/api/adaptation/generate` live responses (AC-1/AC-2).
+2. Migrate both API routes to import `toRecord()` from the new shared utility `lib/utils/record.ts`, removing the two inline local definitions (AC-3).
+3. Remove the unreachable `Array.isArray(payload)` branch from `extractProviderOutput()` in `base-generate/route.ts` (AC-5).
 
 ---
 
 ## Rationale (Why)
 
-The `AdaptationChat` frontend component (being built in parallel by the Frontend Agent) needs a backend route to call. The existing `/api/frontier/base-generate` route is hardcoded to a single model via env vars — it cannot be reused for multi-strategy routing. A new endpoint is required that:
-1. Accepts a `strategy` parameter to select the correct model.
-2. Applies a server-side system prompt for the `prompt-prefix` strategy (educational: shows prompt steering without weight changes).
-3. Returns the same response shape as `base-generate` so the frontend can apply identical rendering logic.
+- **Output cap (AC-1)**: The adaptation route has no output length ceiling. The frontier route already caps at 4000 chars via `FRONTIER_OUTPUT_MAX_CHARS`. Without a matching cap, an upstream model could return very long responses and degrade learner UX. Consistency with the existing safety pattern is the goal.
+- **toRecord extraction (AC-3)**: The same 3-line utility is defined locally in two server-side routes. Extracting to `lib/utils/record.ts` (already created by Tech Lead) removes duplication without changing any behavior. If a third route needs it, the shared utility is already in place.
+- **Dead code removal (AC-5)**: The `Array.isArray(payload)` branch in `extractProviderOutput()` handled a legacy HF inference API format (`[{ generated_text: "" }]`). After the CR-014 featherless-ai migration, the HF provider now uses OpenAI-compatible completions format (`choices[].text`). The array branch is unreachable by any supported provider path and no existing test exercises it. Removing it reduces confusion for future maintainers.
 
 ---
 
-## Constraints
+## Known Environmental Caveats
 
-### Technical
-- **Pattern**: Follow `app/api/frontier/base-generate/route.ts` exactly as the implementation template (OTel tracing, zod validation, config loading, fallback logic, response shape).
-- **Provider format**: OpenAI **chat completions** format (`messages` array) for all three strategies. NOT text completions format. Endpoint: `ADAPTATION_API_URL` (separate env var, defaults to `https://router.huggingface.co/featherless-ai/v1/chat/completions`).
-- **API key**: Shared with `FRONTIER_API_KEY`. No new API key env var.
-- **Timeout**: Shared `FRONTIER_TIMEOUT_MS`. No new timeout env var.
-- **No new packages**: `zod`, `@opentelemetry/api`, `next/server`, `@/lib/otel/*` from the existing stack are sufficient.
-- **Response shape** (must match `base-generate` exactly so frontend code is identical):
-  ```ts
-  // Success (live)
-  { mode: 'live', output: string, metadata: AdaptationModelMetadata }
-  // Success (fallback)
-  { mode: 'fallback', output: string, reason: { code: string, message: string }, metadata: AdaptationModelMetadata }
-  // Validation error (400)
-  { error: { code: 'invalid_json' | 'invalid_prompt' | 'invalid_strategy', message: string } }
-  ```
-- **Security**: System prompt for `prompt-prefix` must NEVER appear in the client-side response payload or in any logged field exposed to clients. It is applied in the server-side request body only.
-- **TypeScript strict mode** is enabled. All types must be explicit.
-
-### Ownership
-- Backend-owned files:
-  - `app/api/adaptation/generate/route.ts` (new)
-  - `__tests__/api/adaptation-generate.test.ts` (new)
-- `.env.example` update: **already done by Tech Lead**. Do NOT modify `.env.example`.
-- Test scope: **delegated to Backend Agent** for unit tests only (see below). E2E tests are handled separately by the Testing Agent.
-
----
-
-## Env Vars (Already Added to `.env.example`)
-
-```
-ADAPTATION_API_URL          # e.g. https://router.huggingface.co/featherless-ai/v1/chat/completions
-ADAPTATION_FULL_FINETUNE_MODEL_ID   # e.g. meta-llama/Meta-Llama-3-8B-Instruct
-ADAPTATION_LORA_MODEL_ID            # e.g. swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA
-ADAPTATION_PROMPT_PREFIX_MODEL_ID   # e.g. meta-llama/Meta-Llama-3-8B
-
-# Shared (read-only — no new vars for these):
-FRONTIER_API_KEY            # same key as used by frontier endpoint
-FRONTIER_TIMEOUT_MS         # same timeout config
-```
-
----
-
-## Implementation Specification (Tech Lead Owned — Use Exactly)
-
-### 1. Request Schema (zod)
-```ts
-const STRATEGY_VALUES = ['full-finetuning', 'lora-peft', 'prompt-prefix'] as const;
-type StrategyId = typeof STRATEGY_VALUES[number];
-
-const requestSchema = z.object({
-  prompt: z.string().trim().min(1).max(2000),
-  strategy: z.enum(STRATEGY_VALUES),
-});
-```
-Return `{ error: { code: 'invalid_strategy', message: '...' } }` with HTTP 400 if strategy is invalid. Use the existing `invalid_prompt` code for prompt validation failures.
-
-### 2. Config Loading
-Load per-strategy model IDs from env. Configuration is considered valid only when `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, AND the specific strategy's model ID are all non-empty and the URL is a valid URL. If any of those three are missing/invalid for the requested strategy, return a `missing_config` or `invalid_config` fallback immediately (same pattern as `base-generate`).
-
-### 3. System Prompt (prompt-prefix strategy only)
-```ts
-const ADAPTATION_SYSTEM_PROMPT =
-  'You are a helpful assistant. Answer the following question clearly and concisely.\n\n';
-```
-For `prompt-prefix`: prepend as a system message in the messages array:
-```ts
-messages: [
-  { role: 'system', content: ADAPTATION_SYSTEM_PROMPT },
-  { role: 'user', content: prompt },
-]
-```
-For `full-finetuning` and `lora-peft`: messages array is just `[{ role: 'user', content: prompt }]`.
-
-**The system prompt string must NOT appear in any response payload field, log message, or span attribute.**
-
-### 4. Request Body to Provider (all strategies — chat completions format)
-```ts
-{
-  model: modelId,
-  messages: [...],  // system + user, or user only per strategy
-  temperature: 0.4,
-}
-```
-
-### 5. Output Extraction
-For chat completions format: `choices[0].message.content`. Implement a local extraction function (do NOT import from `base-generate/route.ts`). The extraction must handle:
-- `choices[0].message.content` as a string → return trimmed string
-- Empty string or null → return null (triggers `empty_provider_output` fallback)
-
-### 6. Strategy-Specific Fallback Text (use exactly — do not paraphrase)
-```ts
-const FALLBACK_TEXT: Record<StrategyId, string> = {
-  'full-finetuning':
-    'Full fine-tuning retrains all model weights on task-specific data, producing highly aligned behavior at the cost of significant compute. This is a deterministic fallback — the live fine-tuned model is not configured for this environment.',
-  'lora-peft':
-    'LoRA adapts a frozen base model with small rank-decomposed matrices, achieving specialization at a fraction of full fine-tune cost. This is a deterministic fallback — the LLaMAntino specialist model is not available in this environment.',
-  'prompt-prefix':
-    'Prompt steering prepends a fixed instruction to every query without touching model weights — fastest to iterate, least robust. Base models respond less predictably than instruct variants. This is a deterministic fallback — the base model endpoint is not configured.',
-};
-```
-Fallback selection: use the same hash-based deterministic selector pattern from `base-generate` (hash prompt, `% FALLBACK_TEXT[strategy].length` — but since there's one text per strategy, just use `FALLBACK_TEXT[strategy]` directly).
-
-### 7. OTel Span
-- Span name: `adaptation.generate`
-- Attributes: `adaptation.strategy`, `adaptation.configured`, `adaptation.mode`, `adaptation.reason_code` (on fallback), `adaptation.model_id`
-- Same `SpanKind.SERVER` and `SpanStatusCode` pattern as `base-generate`.
-
-### 8. Metadata Type
-```ts
-type AdaptationModelMetadata = {
-  strategy: StrategyId;
-  modelId: string;
-};
-```
-
----
-
-## Unit Test Requirements (`__tests__/api/adaptation-generate.test.ts`)
-
-Write unit tests covering all of the following. Follow the test structure in `__tests__/api/frontier-base-generate.test.ts` as the template.
-
-**Required test coverage:**
-
-| Test | Description |
-|---|---|
-| Missing config — full-finetuning | No env vars set → returns `mode: 'fallback'`, `reason.code: 'missing_config'`, strategy-specific fallback text |
-| Missing config — lora-peft | Same for lora-peft strategy |
-| Missing config — prompt-prefix | Same for prompt-prefix strategy |
-| Live response — full-finetuning | Valid config + mock 200 → returns `mode: 'live'`, correct output, `metadata.strategy: 'full-finetuning'` |
-| Live response — lora-peft | Same for lora-peft |
-| Live response — prompt-prefix | Same for prompt-prefix |
-| System prompt injection — prompt-prefix | Verify the outgoing request body includes `{ role: 'system', content: ADAPTATION_SYSTEM_PROMPT }` as first message |
-| System prompt absent — full-finetuning | Verify request body does NOT contain a system message |
-| Correct model routing — each strategy | Verify `model` field in request body matches the strategy's configured model ID |
-| Request validation — empty prompt | Returns 400 `invalid_prompt` |
-| Request validation — invalid strategy | Returns 400 `invalid_strategy` |
-| Request validation — prompt too long (>2000 chars) | Returns 400 `invalid_prompt` |
-| Upstream 429 | Returns `mode: 'fallback'`, `reason.code: 'quota_limited'` |
-| Upstream 401 | Returns `mode: 'fallback'`, `reason.code: 'upstream_auth'` |
-| Upstream 503 | Returns `mode: 'fallback'`, `reason.code: 'upstream_error'` |
-| Timeout | Returns `mode: 'fallback'`, `reason.code: 'timeout'` |
-| Empty provider output | Returns `mode: 'fallback'`, `reason.code: 'empty_provider_output'` |
-| Strategy-specific fallback text | Verify fallback output for each strategy matches the exact strings from the plan |
-
-Minimum: cover all rows above. This adds at least 18 tests. Total test count must remain ≥ 111 (current baseline).
+- **Node.js runtime**: System runtime may be below `>=20.x` (documented minimum). Run `node -v` first. If below 20.x, activate via `nvm use 20`. If nvm is unavailable, classify as `environmental` in your report — do not skip verification.
+- **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
+- **Port**: Dev server is on `3001` if needed. Not required for unit test verification.
 
 ---
 
 ## Assumptions To Validate (Mandatory)
 
-1. `FRONTIER_API_KEY` is the correct env var name for the shared API key (already in codebase — just verify it is set consistently in your test env setup).
-2. The `FRONTIER_TIMEOUT_MS` env var follows the same parsing logic as `base-generate` — reuse `parseTimeout()` pattern directly (implement locally, not imported from the other route).
-3. The featherless-ai router returns chat completions format `{ choices: [{ message: { content: string } }] }` — standard OpenAI chat response.
+1. `lib/utils/record.ts` exists and exports `toRecord` — **already created by Tech Lead**. Verify the file is present before modifying routes.
+2. The `Array.isArray(payload)` branch in `extractProviderOutput()` is not exercised by any test in `__tests__/api/frontier-base-generate.test.ts`. Confirm by inspecting the test file — no mock should return an array payload.
+3. `process.env.ADAPTATION_OUTPUT_MAX_CHARS` is not yet read anywhere in `adaptation/generate/route.ts`. Confirm before adding.
 
 ---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
 
-- Do NOT modify `app/api/frontier/base-generate/route.ts`. It is frozen.
-- Do NOT modify `__tests__/api/frontier-base-generate.test.ts`.
-- Do NOT modify `.env.example` (already updated by Tech Lead).
-- If you find that `extractProviderOutput()` in `base-generate/route.ts` needs changes to support the adaptation endpoint — **stop and flag it**. The adaptation endpoint uses its own local extraction function.
+- Do NOT modify client-side components (`FrontierBaseChat.tsx`, `AdaptationChat.tsx`) — they also have local `toRecord()` definitions but are out of scope for this CR.
+- Do NOT modify `__tests__/api/frontier-base-generate.test.ts` for any purpose other than confirming tests still pass after dead code removal.
+- Do NOT modify `.env.example` — already updated by Tech Lead.
+- If you discover the `Array.isArray` branch IS exercised by any existing test, **stop and flag it** before removing. Do not delete tested code without Tech Lead approval.
 
 ---
 
 ## Scope
 
-### Files to Create
-- `app/api/adaptation/generate/route.ts` — new POST handler
-- `__tests__/api/adaptation-generate.test.ts` — new unit test suite
+### Files to Modify
+- `app/api/adaptation/generate/route.ts`:
+  - Remove local `toRecord()` definition (line 185-187)
+  - Add import: `import { toRecord } from '@/lib/utils/record';` at top with other imports
+  - Add `ADAPTATION_OUTPUT_MAX_CHARS` env read (see spec below)
+  - Apply output cap to live response (see spec below)
+
+- `app/api/frontier/base-generate/route.ts`:
+  - Remove local `toRecord()` definition (line 163-165)
+  - Add import: `import { toRecord } from '@/lib/utils/record';` at top with other imports
+  - Remove `Array.isArray(payload)` branch from `extractProviderOutput()` (lines 211-218)
+
+- `__tests__/api/adaptation-generate.test.ts`:
+  - Add one new test: verify live output is capped when provider returns content longer than `ADAPTATION_OUTPUT_MAX_CHARS`
+
+---
+
+## Implementation Specification (Tech Lead Owned — Use Exactly)
+
+### 1. ADAPTATION_OUTPUT_MAX_CHARS — module-level constant
+
+Add near the top of `adaptation/generate/route.ts`, after the existing constants (`PROMPT_MAX_CHARS`, `DEFAULT_TIMEOUT_MS`, etc.):
+
+```ts
+const ADAPTATION_OUTPUT_MAX_CHARS =
+    Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
+```
+
+This is parsed once at module load. The `|| 4000` fallback handles `NaN` from a non-numeric env value. `Math.max(1, ...)` prevents a zero or negative cap.
+
+### 2. Apply cap to live output
+
+In `adaptation/generate/route.ts`, locate the `LiveModeResponse` return (currently around line 459):
+
+```ts
+// CURRENT — no cap:
+return NextResponse.json<LiveModeResponse>(
+    {
+        mode: 'live',
+        output: extractedOutput,
+        metadata: { strategy, modelId: config.modelId },
+    },
+    { status: 200 }
+);
+
+// CHANGE TO:
+return NextResponse.json<LiveModeResponse>(
+    {
+        mode: 'live',
+        output: extractedOutput.slice(0, ADAPTATION_OUTPUT_MAX_CHARS),
+        metadata: { strategy, modelId: config.modelId },
+    },
+    { status: 200 }
+);
+```
+
+### 3. Remove dead code from extractProviderOutput()
+
+In `base-generate/route.ts`, remove the `Array.isArray` block (currently lines 211-218):
+
+```ts
+// DELETE THIS ENTIRE BLOCK:
+// HF: [{ generated_text: "..." }]
+if (Array.isArray(payload) && payload.length > 0) {
+    const first = toRecord(payload[0]);
+    const text = first?.generated_text;
+    if (typeof text === 'string' && text.trim().length > 0) {
+        return text.trim();
+    }
+    return null; // HF array found but no usable text → empty_provider_output fallback
+}
+```
+
+After removal, `extractProviderOutput()` body should start directly with `const root = toRecord(payload);`.
+
+### 4. New test for output cap
+
+Add to `__tests__/api/adaptation-generate.test.ts`, in the Live Response section:
+
+```ts
+it('should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters', async () => {
+    process.env.ADAPTATION_OUTPUT_MAX_CHARS = '10';
+    setConfigEnv('full-finetuning');
+    mockLiveResponse('This response is longer than ten characters');
+
+    const req = createRequest({ prompt: 'Test cap.', strategy: 'full-finetuning' });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.mode).toBe('live');
+    expect(body.output).toBe('This respo');
+    expect(body.output.length).toBe(10);
+});
+```
+
+**Important**: Add `delete process.env.ADAPTATION_OUTPUT_MAX_CHARS;` to the `beforeEach` cleanup block alongside the other `delete process.env.*` lines.
 
 ---
 
 ## Definition of Done
 
-- [ ] POST `/api/adaptation/generate` routes to correct model per strategy (AC-9).
-- [ ] `prompt-prefix` strategy prepends system prompt server-side; system prompt not in response payload (AC-7, AC-9).
-- [ ] All 3 strategies return strategy-specific deterministic fallback text when unconfigured (AC-8).
-- [ ] Request validation rejects: invalid strategy, empty prompt, prompt >2000 chars.
-- [ ] OTel span `adaptation.generate` emitted with `adaptation.strategy` attribute.
-- [ ] Unit tests: ≥18 new tests covering all rows in the test table above.
-- [ ] `pnpm test` passes (≥111 total tests, no regressions).
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
+- [ ] `adaptation/generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
+- [ ] `base-generate/route.ts` imports `toRecord` from `@/lib/utils/record`; no local `toRecord` definition remains (AC-3)
+- [ ] `Array.isArray(payload)` branch removed from `extractProviderOutput()` in `base-generate/route.ts` (AC-5)
+- [ ] `ADAPTATION_OUTPUT_MAX_CHARS` constant parsed from env in `adaptation/generate/route.ts`; applied via `.slice(0, ADAPTATION_OUTPUT_MAX_CHARS)` to live output (AC-1)
+- [ ] New cap test added and passing; `ADAPTATION_OUTPUT_MAX_CHARS` cleared in `beforeEach` (AC-1 test coverage)
+- [ ] `pnpm test` passes — no regression vs. 133 baseline (AC-8); report total test count
+- [ ] `pnpm lint` passes (AC-8)
+- [ ] `pnpm exec tsc --noEmit` passes (AC-8)
+- [ ] No route/testid/accessibility contract changes (AC-7)
 
 ---
 
 ## Clarification Loop (Mandatory)
 
-- Before implementation, post preflight concerns/questions to `agent-docs/conversations/backend-to-tech-lead.md`.
+- Post preflight concerns/questions to `agent-docs/conversations/backend-to-tech-lead.md`.
 - Tech Lead responds in the same file.
-- If an open question can change the API contract, `data-testid`, or system prompt exposure: **pause and wait for Tech Lead response** before implementing.
+- If any open question reveals the dead code is not actually dead, or changes the API contract: **pause and wait** for Tech Lead response before implementing.
 
 ---
 
 ## Verification
 
+Run in sequence (not parallel):
 ```
+node -v
 pnpm test
 pnpm lint
 pnpm exec tsc --noEmit
 ```
 
-Include the exact output of `pnpm test` (test count summary) in your report.
+Report using canonical Command Evidence Standard format:
+- Command: `[exact command]`
+- Scope: `[full suite | impacted files]`
+- Execution Mode: `[sandboxed | local-equivalent/unsandboxed]`
+- Result: `[PASS/FAIL + key counts]`
+
+Include total test count from `pnpm test` output.
 
 ---
 
 ## Report Back
 
 Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`.
+
+Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
