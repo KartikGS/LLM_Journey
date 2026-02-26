@@ -77,7 +77,6 @@ Provide Stage 1 frontier interaction for Transformers page by returning live bas
 
 ## Fallback Reason Codes
 - `missing_config`
-- `invalid_config`
 - `quota_limited`
 - `timeout`
 - `upstream_auth`
@@ -95,10 +94,7 @@ Provide Stage 1 frontier interaction for Transformers page by returning live bas
 | Invalid prompt | `400` | `error` |
 
 ## Environment Contract
-- `FRONTIER_API_URL`
-- `FRONTIER_MODEL_ID`
-- `FRONTIER_API_KEY` (secret)
-- `FRONTIER_TIMEOUT_MS` (optional)
+- `FRONTIER_API_KEY` (secret) — the only required env variable for generation auth. All other settings (provider, URL, model ID, timeout) are versioned in `lib/config/generation.ts`.
 
 ## Observability Contract
 - Span name: `frontier.base_generate`
@@ -116,4 +112,5 @@ Provide Stage 1 frontier interaction for Transformers page by returning live bas
 - Validation failures are explicit HTTP `400` with `error.code`.
 
 ## Change Log
+- `2026-02-25`: CR-019 — non-secret generation settings moved to `lib/config/generation.ts`; `invalid_config` reason code removed (no longer reachable); Environment Contract updated to `FRONTIER_API_KEY`-only.
 - `2026-02-16`: Initial contract added for CR-012.

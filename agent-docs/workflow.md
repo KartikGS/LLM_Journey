@@ -67,6 +67,24 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
 - **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's conversation content is captured in its plan, completion report, or CR artifact. **Minimum evidence**: `plans/CR-XXX-plan.md` exists AND the outgoing conversation file or CR artifact shows `status: completed` (or equivalent closure signal) for the prior CR. Do not replace until this is verified.
 
+#### CR-Scoped Naming for Ephemeral Coordination Files (Guidance)
+When a CR requires temporary coordination files beyond the standard role-pair files (e.g., `backend-to-tech-lead.md`), name them with the CR ID to prevent collision and aid discovery:
+- Pattern: `[purpose]-CR-XXX.md` (e.g., `scope-clarification-CR-020.md`, `tl-notes-CR-020.md`).
+- Standard role-pair files (`ba-to-tech-lead.md`, `backend-to-tech-lead.md`, etc.) keep their canonical names — the freshness rule governs these at CR boundaries.
+- Freshness gate mechanism is **unchanged**: the Pre-Replacement Check still applies to role-pair files at every CR boundary.
+- CR-scoped ephemeral files are single-CR artifacts; close or delete them after CR closure.
+
+#### Pre-Replacement Check: Prefilled Stub (Efficiency Guidance)
+To reduce ceremony at CR boundaries, pre-populate the check at the top of the incoming CR content using this structure — fill in the blanks during replacement:
+
+    ## Pre-Replacement Check (Conversation Freshness)
+    - Prior outgoing [role] handoff context: `[prior CR-ID]`
+    - Evidence 1 (plan artifact exists): `agent-docs/plans/[prior CR-ID]-plan.md`
+    - Evidence 2 (prior CR closed): `agent-docs/requirements/[prior CR-ID]-[slug].md` status is `Done`
+    - Result: replacement allowed for new CR context.
+
+The gate is not weakened — Evidence 2 still requires reading the prior CR artifact to confirm closure status. The stub removes the formatting ceremony, not the verification step.
+
 #### Delegation Mode Rules
 - **Parallel Mode**
   1. Create handoffs for all independent sub-agents in one batch.
@@ -106,6 +124,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 
 ### Code & Git Standards
 - All contributions must follow the rules defined in `agent-docs/development/contribution-guidelines.md`.
+- **Parallel-CR branch strategy (deferred policy decision)**: One-branch-per-CR policy and CR-number collision strategy for concurrent CR execution are explicitly deferred as a pending Human User policy decision. Do not implement without explicit user authorization. Current working assumption: single active feature branch per session. See `project-log.md` Next Priorities.
 
 
 
@@ -225,6 +244,7 @@ Closed CRs are immutable records and must not be normalized retroactively.
 - Legacy format variance across older CRs is acceptable.
 - Standardization requirements apply to new CRs going forward.
 - If historical evidence needs clarification, append an amendment note or create a linked follow-up artifact rather than rewriting intent/history.
+- **Retention policy**: Closed CR artifacts in `requirements/`, `plans/`, and `reports/` are **retained, not deleted**. Archive/index strategies (moving older artifacts to a subdirectory, creating a searchable index) are permitted for organizational improvement. Deletion of closed CR artifacts requires explicit Human User authorization and is out of scope for any standard CR.
 
 ### 4. Scope Extension Invariant
 When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).

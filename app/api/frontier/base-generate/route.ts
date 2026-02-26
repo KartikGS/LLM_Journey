@@ -1,6 +1,7 @@
 import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { FRONTIER_GENERATION_CONFIG, type FrontierProvider } from '@/lib/config/generation';
 import logger from '@/lib/otel/logger';
 import {
     safeMetric,
@@ -10,7 +11,6 @@ import {
 import { getTracer } from '@/lib/otel/tracing';
 import {
     type FallbackReasonCode,
-    parseTimeout,
     extractProviderErrorMessage,
     mapProviderFailure,
 } from '@/lib/server/generation/shared';
@@ -71,7 +71,7 @@ type FrontierConfig = {
     timeoutMs: number;
     configured: boolean;
     issueCode?: 'missing_config' | 'invalid_config';
-    provider: 'openai' | 'huggingface';
+    provider: FrontierProvider;
 };
 
 const metadataForModel = (modelId: string): BaseModelMetadata => ({
@@ -85,60 +85,27 @@ const metadataForModel = (modelId: string): BaseModelMetadata => ({
 
 
 function loadFrontierConfig(): FrontierConfig {
-    const apiUrl = process.env.FRONTIER_API_URL?.trim() ?? '';
-    const modelId = process.env.FRONTIER_MODEL_ID?.trim() ?? '';
     const apiKey = process.env.FRONTIER_API_KEY?.trim() ?? '';
-    const timeoutMs = parseTimeout(process.env.FRONTIER_TIMEOUT_MS);
-    const rawProvider = process.env.FRONTIER_PROVIDER?.trim();
 
-    if (rawProvider && rawProvider !== 'openai' && rawProvider !== 'huggingface') {
+    if (!apiKey) {
         return {
-            apiUrl,
-            modelId,
+            apiUrl: FRONTIER_GENERATION_CONFIG.apiUrl,
+            modelId: FRONTIER_GENERATION_CONFIG.modelId,
             apiKey,
-            timeoutMs,
-            configured: false,
-            issueCode: 'invalid_config',
-            provider: 'openai',
-        };
-    }
-
-    const provider: 'openai' | 'huggingface' = rawProvider === 'huggingface' ? 'huggingface' : 'openai';
-
-    if (!apiUrl || !modelId || !apiKey) {
-        return {
-            apiUrl,
-            modelId,
-            apiKey,
-            timeoutMs,
+            timeoutMs: FRONTIER_GENERATION_CONFIG.timeoutMs,
             configured: false,
             issueCode: 'missing_config',
-            provider,
-        };
-    }
-
-    try {
-        // Validate URL eagerly so failures stay deterministic.
-        new URL(apiUrl);
-    } catch {
-        return {
-            apiUrl,
-            modelId,
-            apiKey,
-            timeoutMs,
-            configured: false,
-            issueCode: 'invalid_config',
-            provider,
+            provider: FRONTIER_GENERATION_CONFIG.provider,
         };
     }
 
     return {
-        apiUrl,
-        modelId,
+        apiUrl: FRONTIER_GENERATION_CONFIG.apiUrl,
+        modelId: FRONTIER_GENERATION_CONFIG.modelId,
         apiKey,
-        timeoutMs,
+        timeoutMs: FRONTIER_GENERATION_CONFIG.timeoutMs,
         configured: true,
-        provider,
+        provider: FRONTIER_GENERATION_CONFIG.provider,
     };
 }
 
@@ -172,7 +139,7 @@ function extractContentText(content: unknown): string | null {
 }
 
 function buildProviderRequestBody(
-    provider: 'openai' | 'huggingface',
+    provider: FrontierProvider,
     prompt: string,
     modelId: string
 ): Record<string, unknown> {

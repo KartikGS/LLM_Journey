@@ -6,6 +6,11 @@ CR-XXX - [Short title]
 ## Status
 `verified`
 
+## Exact Artifact Paths
+- Requirement: `agent-docs/requirements/CR-XXX-[slug].md`
+- Plan: `agent-docs/plans/CR-XXX-plan.md`
+- Sub-agent report(s): `agent-docs/conversations/[role]-to-tech-lead.md`
+
 ## Technical Summary
 - [What was implemented and why]
 - [Scope boundaries that were preserved]

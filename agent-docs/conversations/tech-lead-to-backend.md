@@ -1,39 +1,33 @@
 # Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-018 — Generation API Hardening Parity: Backend Implementation`
+`CR-019 — Generation Config Centralization: Backend Implementation`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior content: `CR-017`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md` ✓
-- Evidence 2 (prior CR closed): CR-017 status `Done` per `agent-docs/project-log.md` ✓
+- Prior content: `CR-018`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-018-plan.md` ✓
+- Evidence 2 (prior CR closed): CR-018 status `Done` per `agent-docs/project-log.md` ✓
 - Result: replacement allowed.
 
 ---
 
 ## Objective
 
-Implement hardening parity between the generation API routes and the existing OTEL proxy boundary. Concretely:
-
-1. Extract four duplicated generation-route utilities into a shared server module.
-2. Add middleware abuse-control entries for both generation routes (rate limit + body size).
-3. Add route-level metrics (request + fallback counters) for both generation routes.
-4. Create the missing API contract doc for the adaptation route.
+Refactor both generation route handlers and the shared generation utility to source all non-secret runtime settings from `lib/config/generation.ts` instead of environment variables. After this change, `process.env.FRONTIER_API_KEY` is the **only** env read in any generation route.
 
 ---
 
 ## Rationale (Why)
 
-The OTEL proxy has explicit middleware enforcement (rate limit + body-size), route-level metrics, and a contract doc. The two generation routes were introduced incrementally and never received equivalent treatment. This creates:
-- **Governance drift**: identical logic duplicated in two files with no single source of truth.
-- **Security exposure**: no middleware-layer body-size enforcement on interactive generation endpoints.
-- **Observability gap**: no metrics signal for generation request volume or fallback rates.
-- **Traceability gap**: no contract artifact for `/api/adaptation/generate`.
+Nine non-secret generation settings (`FRONTIER_API_URL`, `FRONTIER_MODEL_ID`, `FRONTIER_PROVIDER`, `FRONTIER_TIMEOUT_MS`, `ADAPTATION_API_URL`, all three adaptation model IDs, `ADAPTATION_OUTPUT_MAX_CHARS`) were resolved at runtime from env vars. This creates:
+- Configuration sprawl across env files with no single versioned source.
+- Risk of environment-specific behavioral drift.
+- Unnecessary coupling between deployment env and non-sensitive settings.
 
-This CR closes all four gaps while preserving both public route contracts exactly.
+This CR establishes `lib/config/generation.ts` as the single source of truth for non-secret generation settings. The config file has already been created by the Tech Lead (see Scope below). Your task is to update the route handlers and shared utility to use it.
 
 ---
 
@@ -41,472 +35,199 @@ This CR closes all four gaps while preserving both public route contracts exactl
 
 - **Node.js runtime**: System may be below `>=20.x` documented minimum. Run `node -v` first. If below v20, activate via `nvm use 20`. If nvm is unavailable, classify as `environmental` and document — do not skip verification.
 - **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
-- **Port**: Dev server runs on port `3001`. Not required for unit/lint/type verification.
-- **E2E**: Not in scope for this handoff. Testing Agent handles full quality gates in Step 2.
+- **Port**: Dev server runs on port `3001`. Not required for lint/type verification.
+- **E2E**: Not in scope for this handoff. Testing Agent handles test file updates and full quality gates.
 
 ---
 
 ## Constraints
 
 ### Technical Constraints
-- No new package dependencies — all implementation uses existing OTel, Zod, Next.js, and TypeScript.
-- All metric calls MUST be wrapped in `safeMetric(() => ...)`. Metric failures must never crash a route.
-- Do NOT introduce high-cardinality metric dimensions (no prompt text, no model ID, no user identifier as labels).
-- Middleware thresholds are hardcoded constants — do NOT make them env-configurable in this CR.
-- Preserve all existing route response envelopes exactly. No route-path, `data-testid`, or accessibility contract changes (AC-9).
+- `process.env.FRONTIER_API_KEY` is the **only** env read that must remain in both route handlers. No other `process.env.*` reads may remain in either generation route.
+- No new package dependencies.
+- Preserve all existing route response envelopes exactly. No route-path, `data-testid`, or accessibility contract changes (AC-4).
+- Do not add error handling for config-sourced values — they are trusted TypeScript constants, not user input.
 
 ### Ownership Constraints
-- Files in scope: `lib/server/generation/shared.ts` (new), `app/api/frontier/base-generate/route.ts`, `app/api/adaptation/generate/route.ts`, `middleware.ts`, `lib/otel/metrics.ts`, `agent-docs/api/adaptation-generate.md` (new).
-- Do NOT modify `__tests__/` files — the Testing Agent handles all test work in Step 2.
-- Do NOT modify `agent-docs/api/frontier-base-generate.md` unless a frontier route contract detail actually changes (none expected).
+- Files in scope: `app/api/frontier/base-generate/route.ts`, `app/api/adaptation/generate/route.ts`, `lib/server/generation/shared.ts`.
+- Do **not** modify `__tests__/` files — the Testing Agent updates all test files in Step 2.
+- Do **not** modify `lib/config/generation.ts` — it is Tech Lead-owned and already final.
 
 ---
 
-## Assumptions To Validate (Mandatory)
+## Assumptions To Validate (Mandatory — Before Starting)
 
-1. `lib/server/generation/shared.ts` does NOT yet exist — you create it. Verify with a file check before creating.
-2. `parseTimeout`, `extractProviderErrorMessage`, and `mapProviderFailure` are byte-for-byte identical in both routes. Confirm by re-reading both files before extracting. If any divergence is found, **stop and flag** — do not silently reconcile.
-3. `ADAPTATION_SYSTEM_PROMPT` (defined in `adaptation/generate/route.ts`) must never appear in any response payload, log field, or span attribute. Confirm this is already the case before making changes.
-4. `FRONTIER_API_KEY` must never appear in any response payload, log field, or span attribute. Confirm the existing spans/logs are already clean.
-5. `safeMetric` is exported from `@/lib/otel/metrics` (it is — confirmed by Tech Lead read).
-6. `validateContentLength` is already imported in `middleware.ts` from `@/lib/security/contentLength` (it is — confirmed). No new imports needed for middleware body-size enforcement.
+1. **Config file exists**: `lib/config/generation.ts` was created by Tech Lead. Read it before starting. Confirm it exports `FRONTIER_GENERATION_CONFIG`, `ADAPTATION_GENERATION_CONFIG`, and `FrontierProvider`.
+2. **No other consumers of removed env vars**: Grep for `FRONTIER_API_URL`, `FRONTIER_MODEL_ID`, `FRONTIER_PROVIDER`, `FRONTIER_TIMEOUT_MS`, `ADAPTATION_API_URL`, `ADAPTATION_FULL_FINETUNE_MODEL_ID`, `ADAPTATION_LORA_MODEL_ID`, `ADAPTATION_PROMPT_PREFIX_MODEL_ID`, `ADAPTATION_OUTPUT_MAX_CHARS` in source files (excluding `.env*`, `agent-docs/`, and `__tests__/`). If any consumer outside the two route files reads these vars, **stop and flag** before proceeding.
+3. **`parseTimeout` has no external callers**: Confirm `parseTimeout` is only imported by the two route files. If any other file imports it, **stop and flag**.
+4. **`FRONTIER_API_KEY` security**: Confirm the existing span attributes and log fields in both routes do not expose `FRONTIER_API_KEY`. (This was verified in CR-018 — re-confirm after your changes.)
 
 ---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
 
-- If you find that any existing route test references the local `parseTimeout`, `extractProviderErrorMessage`, or `mapProviderFailure` by import — **stop and flag**. Do not delete from routes until confirmed safe.
-- If you discover that any span attribute or logger call currently includes `FRONTIER_API_KEY` or `ADAPTATION_SYSTEM_PROMPT` text — **stop and flag before completing** (AC-5 blocker).
-- Do NOT add streaming support, response envelope changes, or new HTTP status codes beyond what is spec'd here.
-- Client-side `toRecord()` helpers in `FrontierBaseChat.tsx` and `AdaptationChat.tsx` are out of scope (tracked as a Next Priority in project-log.md).
+- If any file outside the two route handlers reads a generation env var that this CR removes — **stop and flag**. Do not silently migrate an unexpected consumer.
+- If during implementation you discover that `ADAPTATION_OUTPUT_MAX_CHARS` is read in any component or client file — **stop and flag** (this would be an architecture violation).
+- Do not add streaming support, response-envelope changes, or new HTTP status codes.
 
 ---
 
 ## Scope
 
-### Files to Create
-- `lib/server/generation/shared.ts`: new shared generation utility module (spec below)
-- `agent-docs/api/adaptation-generate.md`: adaptation route contract doc (spec below)
+### Config File (already created — read-only for Backend)
+- `lib/config/generation.ts`: already exists. Read it. Do not modify.
 
 ### Files to Modify
-- `app/api/frontier/base-generate/route.ts`: import from shared module; add metric calls
-- `app/api/adaptation/generate/route.ts`: import from shared module; add metric calls
-- `middleware.ts`: add generation route entries to `API_CONFIG`
-- `lib/otel/metrics.ts`: add 4 new metric getter functions
+
+**`lib/server/generation/shared.ts`**
+- Remove `parseTimeout` function and its supporting constants: `DEFAULT_TIMEOUT_MS`, `MIN_TIMEOUT_MS`, `MAX_TIMEOUT_MS`.
+- Keep: `FallbackReasonCode` type, `extractProviderErrorMessage`, `mapProviderFailure`.
+- After removal, the file should contain only the three exports above.
+
+**`app/api/frontier/base-generate/route.ts`**
+- Add import: `import { FRONTIER_GENERATION_CONFIG, type FrontierProvider } from '@/lib/config/generation';`
+- Remove: local `FrontierProvider` type definition (currently embedded in the `FrontierConfig` type block). Import it from config instead.
+- Remove: `parseTimeout` import from `@/lib/server/generation/shared`.
+- Refactor `loadFrontierConfig()` — replace all env reads with config values. Required behavior:
+  - Read `FRONTIER_API_KEY` from `process.env.FRONTIER_API_KEY?.trim() ?? ''`.
+  - Use `FRONTIER_GENERATION_CONFIG.apiUrl`, `.modelId`, `.provider`, `.timeoutMs` for all other fields.
+  - Remove the URL validation block (no longer needed — URL is a trusted config constant).
+  - Remove the `rawProvider` validation block (no longer needed — provider is a trusted config constant).
+  - `configured` is `true` if and only if `apiKey` is non-empty; `false` otherwise with `issueCode: 'missing_config'`.
+  - The `invalid_config` branch is intentionally removed — it was only reachable via bad env input.
+
+  Target shape of `loadFrontierConfig()` after migration:
+  ```typescript
+  function loadFrontierConfig(): FrontierConfig {
+      const apiKey = process.env.FRONTIER_API_KEY?.trim() ?? '';
+
+      if (!apiKey) {
+          return {
+              apiUrl: FRONTIER_GENERATION_CONFIG.apiUrl,
+              modelId: FRONTIER_GENERATION_CONFIG.modelId,
+              apiKey,
+              timeoutMs: FRONTIER_GENERATION_CONFIG.timeoutMs,
+              configured: false,
+              issueCode: 'missing_config',
+              provider: FRONTIER_GENERATION_CONFIG.provider,
+          };
+      }
+
+      return {
+          apiUrl: FRONTIER_GENERATION_CONFIG.apiUrl,
+          modelId: FRONTIER_GENERATION_CONFIG.modelId,
+          apiKey,
+          timeoutMs: FRONTIER_GENERATION_CONFIG.timeoutMs,
+          configured: true,
+          provider: FRONTIER_GENERATION_CONFIG.provider,
+      };
+  }
+  ```
+
+**`app/api/adaptation/generate/route.ts`**
+- Add import: `import { ADAPTATION_GENERATION_CONFIG } from '@/lib/config/generation';`
+- Remove: `parseTimeout` import from `@/lib/server/generation/shared`.
+- Remove: the `STRATEGY_MODEL_ENV` constant (it mapped strategy names to env var name strings — no longer needed).
+- Replace the module-load-time env-based constant:
+  ```typescript
+  // OLD (remove this):
+  const ADAPTATION_OUTPUT_MAX_CHARS =
+      Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
+  ```
+  Replace with a direct config import reference. You may define a local alias:
+  ```typescript
+  const ADAPTATION_OUTPUT_MAX_CHARS = ADAPTATION_GENERATION_CONFIG.outputMaxChars;
+  ```
+  Or reference `ADAPTATION_GENERATION_CONFIG.outputMaxChars` directly at the usage site. Either is acceptable.
+- Refactor `loadAdaptationConfig()` — replace all env reads with config values. Required behavior:
+  - Read `FRONTIER_API_KEY` from `process.env.FRONTIER_API_KEY?.trim() ?? ''`.
+  - Use `ADAPTATION_GENERATION_CONFIG.apiUrl` and `.timeoutMs` for those fields.
+  - Use `ADAPTATION_GENERATION_CONFIG.models[strategy]` for the model ID (replaces `process.env[STRATEGY_MODEL_ENV[strategy]]`).
+  - Remove the URL validation block.
+  - `configured` is `true` if and only if `apiKey` is non-empty; `false` otherwise with `issueCode: 'missing_config'`.
+
+  Target shape of `loadAdaptationConfig()` after migration:
+  ```typescript
+  function loadAdaptationConfig(strategy: StrategyId): AdaptationConfig {
+      const apiKey = process.env.FRONTIER_API_KEY?.trim() ?? '';
+      const modelId = ADAPTATION_GENERATION_CONFIG.models[strategy];
+
+      if (!apiKey) {
+          return {
+              apiUrl: ADAPTATION_GENERATION_CONFIG.apiUrl,
+              modelId,
+              apiKey,
+              timeoutMs: ADAPTATION_GENERATION_CONFIG.timeoutMs,
+              configured: false,
+              issueCode: 'missing_config',
+          };
+      }
+
+      return {
+          apiUrl: ADAPTATION_GENERATION_CONFIG.apiUrl,
+          modelId,
+          apiKey,
+          timeoutMs: ADAPTATION_GENERATION_CONFIG.timeoutMs,
+          configured: true,
+      };
+  }
+  ```
 
 ---
 
-## Implementation Specification (Tech Lead Owned — Follow Exactly)
+## Important: Expected Test Failures (Do Not Modify Tests)
 
-### 1. Create `lib/server/generation/shared.ts`
+After your route changes, `pnpm test` **will report failures** in `__tests__/api/frontier-base-generate.test.ts` and `__tests__/api/adaptation-generate.test.ts`. This is **expected and acceptable**. The existing tests set env vars like `FRONTIER_API_URL`, `FRONTIER_MODEL_ID`, etc. to configure the route; those env reads no longer exist in the routes after migration. The Testing Agent will update all test files in Step 2.
 
-Create this file with exactly this content:
-
-```typescript
-/**
- * Shared utilities for server-side generation API routes.
- * Extracted from /api/frontier/base-generate and /api/adaptation/generate.
- */
-
-const DEFAULT_TIMEOUT_MS = 8000;
-const MIN_TIMEOUT_MS = 1000;
-const MAX_TIMEOUT_MS = 20000;
-
-export type FallbackReasonCode =
-    | 'missing_config'
-    | 'invalid_config'
-    | 'quota_limited'
-    | 'timeout'
-    | 'upstream_auth'
-    | 'upstream_error'
-    | 'invalid_provider_response'
-    | 'empty_provider_output';
-
-export function parseTimeout(rawTimeout: string | undefined): number {
-    if (!rawTimeout) {
-        return DEFAULT_TIMEOUT_MS;
-    }
-
-    const parsed = Number.parseInt(rawTimeout, 10);
-    if (!Number.isFinite(parsed)) {
-        return DEFAULT_TIMEOUT_MS;
-    }
-
-    return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, parsed));
-}
-
-export function extractProviderErrorMessage(payload: unknown): string | null {
-    if (typeof payload !== 'object' || payload === null) {
-        return null;
-    }
-
-    const root = payload as Record<string, unknown>;
-
-    const directMessage = root.message;
-    if (typeof directMessage === 'string' && directMessage.trim().length > 0) {
-        return directMessage.trim();
-    }
-
-    const errorObj = root.error;
-    if (typeof errorObj === 'object' && errorObj !== null) {
-        const errorRecord = errorObj as Record<string, unknown>;
-        const nestedMessage = errorRecord.message;
-        if (typeof nestedMessage === 'string' && nestedMessage.trim().length > 0) {
-            return nestedMessage.trim();
-        }
-    }
-
-    return null;
-}
-
-export function mapProviderFailure(
-    status: number,
-    providerMessage: string | null
-): { code: FallbackReasonCode; message: string } {
-    if (status === 429) {
-        return {
-            code: 'quota_limited',
-            message: 'Live provider quota is currently unavailable. Showing deterministic fallback output.',
-        };
-    }
-
-    if (status === 401 || status === 403) {
-        return {
-            code: 'upstream_auth',
-            message: 'Live provider rejected authentication. Showing deterministic fallback output.',
-        };
-    }
-
-    if (status >= 500) {
-        return {
-            code: 'upstream_error',
-            message: 'Live provider is temporarily unavailable. Showing deterministic fallback output.',
-        };
-    }
-
-    return {
-        code: 'upstream_error',
-        message: providerMessage ?? 'Live provider request failed. Showing deterministic fallback output.',
-    };
-}
-```
-
-**Important**: The `extractProviderErrorMessage` implementation above uses inline object narrowing rather than `toRecord()` to avoid a dependency on `lib/utils/record`. This is intentional — the shared utility must not depend on other domain-specific utilities that may evolve independently.
+**Do NOT modify test files.** Run `pnpm test` and report:
+- How many tests fail, and which files.
+- Classify as: `expected — test setup uses removed env vars; awaiting Testing Agent`.
+- Confirm `pnpm lint` and `pnpm exec tsc --noEmit` pass cleanly.
 
 ---
 
-### 2. Update `app/api/frontier/base-generate/route.ts`
+## Meta Observations (CR-019) — Required in Your Report
 
-**Step A — Replace local definitions with imports.**
+Your `backend-to-tech-lead.md` report must include a **`Meta Observations (CR-019)`** section covering all five pointers with evidence from this CR's execution and at least one actionable recommendation per pointer:
 
-Remove the following local definitions (they are fully replaced by the shared module):
-- The `FallbackReasonCode` type (lines 26–34)
-- The `parseTimeout` function
-- The `extractProviderErrorMessage` function
-- The `mapProviderFailure` function
+1. Confusion from historical-artifact vs procedure misalignment — did you encounter any during this handoff? What helped or hurt?
+2. Freshness-rule efficiency for conversation files after CR closure — any friction in the current pre-replacement check protocol?
+3. Long-term retention/deletion policy for old CR artifacts — any concern with growing file count in `requirements/` or `plans/`?
+4. Parallel CR execution across branches — any process or file-ownership issues you foresee?
+5. Agent workload limits and load-management strategy — any context pressure signals during this execution?
 
-Add this import at the top of the file alongside existing imports:
-
-```typescript
-import {
-    type FallbackReasonCode,
-    parseTimeout,
-    extractProviderErrorMessage,
-    mapProviderFailure,
-} from '@/lib/server/generation/shared';
-```
-
-**Step B — Add metric imports.**
-
-Add to the existing metrics/otel imports section:
-
-```typescript
-import {
-    safeMetric,
-    getFrontierGenerateRequestsCounter,
-    getFrontierGenerateFallbacksCounter,
-} from '@/lib/otel/metrics';
-```
-
-**Step C — Add metric call sites in the POST handler.**
-
-Read the full `POST` function before making these changes.
-
-Place a **request counter call** immediately after the two `span.setAttribute` calls at the top of the span callback (before the outer `try` block):
-
-```typescript
-span.setAttribute('http.method', 'POST');
-span.setAttribute('http.route', ROUTE_PATH);
-safeMetric(() => getFrontierGenerateRequestsCounter().add(1)); // ← ADD HERE
-```
-
-Place a **fallback counter call** immediately before each `return NextResponse.json<FallbackModeResponse>(...)` inside the POST handler. There are exactly six fallback return sites:
-
-1. **Missing/invalid config fallback** (inside `if (!frontierConfig.configured)`):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: issueCode }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-2. **Fetch network/abort error fallback** (inside the `catch (error)` for the `await fetch(...)` call):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: reasonCode }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-3. **Upstream non-OK status fallback** (inside `if (!upstreamResponse.ok)`):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: mappedFailure.code }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-4. **Unreadable response payload fallback** (inside the `catch` for `await upstreamResponse.json()`):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'invalid_provider_response' }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-5. **Empty provider output fallback** (inside `if (!extractedOutput)`):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-6. **Outer catch-all fallback** (inside the outermost `catch (error)` block):
-   ```typescript
-   safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'upstream_error' }));
-   return NextResponse.json<FallbackModeResponse>(...);
-   ```
-
-The **live success path** (when `extractedOutput` is non-empty and response is `mode: 'live'`) receives NO fallback counter — only the request counter.
-
----
-
-### 3. Update `app/api/adaptation/generate/route.ts`
-
-**Step A — Replace local definitions with imports.**
-
-Remove the following local definitions:
-- The `FallbackReasonCode` type
-- The `parseTimeout` function
-- The `extractProviderErrorMessage` function
-- The `mapProviderFailure` function
-
-Add this import:
-
-```typescript
-import {
-    type FallbackReasonCode,
-    parseTimeout,
-    extractProviderErrorMessage,
-    mapProviderFailure,
-} from '@/lib/server/generation/shared';
-```
-
-**Step B — Add metric imports.**
-
-```typescript
-import {
-    safeMetric,
-    getAdaptationGenerateRequestsCounter,
-    getAdaptationGenerateFallbacksCounter,
-} from '@/lib/otel/metrics';
-```
-
-**Step C — Add metric call sites in the POST handler.**
-
-Place the **request counter call** immediately after the two `span.setAttribute` calls at the top of the span callback:
-
-```typescript
-span.setAttribute('http.method', 'POST');
-span.setAttribute('http.route', ROUTE_PATH);
-safeMetric(() => getAdaptationGenerateRequestsCounter().add(1)); // ← ADD HERE
-```
-
-Place **fallback counter calls** immediately before each `return NextResponse.json<FallbackModeResponse>(...)`. There are exactly six fallback return sites (same pattern as frontier):
-
-1. **Missing/invalid config fallback** (inside `if (!config.configured)`):
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: issueCode }));
-   ```
-
-2. **Fetch network/abort error fallback**:
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: reasonCode }));
-   ```
-
-3. **Upstream non-OK status fallback**:
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: mappedFailure.code }));
-   ```
-
-4. **Unreadable response payload fallback**:
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'invalid_provider_response' }));
-   ```
-
-5. **Empty provider output fallback**:
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
-   ```
-
-6. **Outer catch-all fallback**:
-   ```typescript
-   safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'upstream_error' }));
-   ```
-
----
-
-### 4. Update `middleware.ts`
-
-Add two new entries to the `API_CONFIG` object. Place them after the existing `/api/otel/trace` entry:
-
-```typescript
-'/api/frontier/base-generate': {
-    rateLimit_windowMs: ONE_MINUTE,
-    rateLimit_max: 20,
-    contentLengthRequired: false,
-    maxBodySize: 8_192,
-},
-'/api/adaptation/generate': {
-    rateLimit_windowMs: ONE_MINUTE,
-    rateLimit_max: 20,
-    contentLengthRequired: false,
-    maxBodySize: 8_192,
-},
-```
-
-**Threshold rationale (do not deviate without flagging):**
-- `rateLimit_max: 20` — interactive learner endpoint; 20/min is 4–6× a typical session peak; blocks automation.
-- `maxBodySize: 8_192` — 4× the theoretical maximum for a 2000-char prompt JSON body; not brittle.
-- `contentLengthRequired: false` — Browser `fetch()` JSON POST does not guarantee a `Content-Length` header. Enforcement applies when the header is present; absence is not rejected.
-
-No other middleware logic changes.
-
----
-
-### 5. Update `lib/otel/metrics.ts`
-
-Add four new module-level variables (after the existing OTEL proxy variable declarations):
-
-```typescript
-// Pre-defined metrics for frontier generation
-let frontierGenerateRequests: Counter | null = null;
-let frontierGenerateFallbacks: Counter | null = null;
-
-// Pre-defined metrics for adaptation generation
-let adaptationGenerateRequests: Counter | null = null;
-let adaptationGenerateFallbacks: Counter | null = null;
-```
-
-Add four new getter functions (after the existing `getOtelProxyErrorsCounter` function):
-
-```typescript
-/**
- * Counter for total frontier base-generate requests
- */
-export function getFrontierGenerateRequestsCounter(): Counter {
-    if (!frontierGenerateRequests) {
-        frontierGenerateRequests = getMeter().createCounter('frontier_generate.requests', {
-            description: 'Total number of frontier base-generate requests',
-            unit: '1',
-        });
-    }
-    return frontierGenerateRequests;
-}
-
-/**
- * Counter for frontier base-generate fallback outcomes by reason code
- */
-export function getFrontierGenerateFallbacksCounter(): Counter {
-    if (!frontierGenerateFallbacks) {
-        frontierGenerateFallbacks = getMeter().createCounter('frontier_generate.fallbacks', {
-            description: 'Total number of frontier base-generate fallback outcomes',
-            unit: '1',
-        });
-    }
-    return frontierGenerateFallbacks;
-}
-
-/**
- * Counter for total adaptation generate requests
- */
-export function getAdaptationGenerateRequestsCounter(): Counter {
-    if (!adaptationGenerateRequests) {
-        adaptationGenerateRequests = getMeter().createCounter('adaptation_generate.requests', {
-            description: 'Total number of adaptation generate requests',
-            unit: '1',
-        });
-    }
-    return adaptationGenerateRequests;
-}
-
-/**
- * Counter for adaptation generate fallback outcomes by reason code
- */
-export function getAdaptationGenerateFallbacksCounter(): Counter {
-    if (!adaptationGenerateFallbacks) {
-        adaptationGenerateFallbacks = getMeter().createCounter('adaptation_generate.fallbacks', {
-            description: 'Total number of adaptation generate fallback outcomes',
-            unit: '1',
-        });
-    }
-    return adaptationGenerateFallbacks;
-}
-```
-
-No existing functions are changed. The `Counter` and `Histogram` types are already imported at the top of the file.
-
----
-
-### 6. Create `agent-docs/api/adaptation-generate.md`
-
-Create this contract document. Read `agent-docs/api/route-contract-template.md` and `agent-docs/api/frontier-base-generate.md` first for structural reference.
-
-The adaptation route contract must cover:
-- **Route**: `POST /api/adaptation/generate`
-- **Purpose**: Stage 2 adaptation interaction — live model output per strategy when configured; deterministic strategy-specific fallback when not configured.
-- **Ownership**: Backend implements, Frontend + Testing consume.
-- **Request contract**: `{ "prompt": string (1–2000 chars), "strategy": "full-finetuning" | "lora-peft" | "prompt-prefix" }`
-- **Response contracts** (live mode, fallback mode, and validation error — see route code for exact shapes).
-- **Fallback reason codes**: same 8-value enum as frontier.
-- **Status code matrix**: `200` for live and fallback; `400` for invalid JSON, invalid prompt, invalid strategy.
-- **Environment contract**: `ADAPTATION_API_URL`, `FRONTIER_API_KEY`, `ADAPTATION_FULL_FINETUNE_MODEL_ID`, `ADAPTATION_LORA_MODEL_ID`, `ADAPTATION_PROMPT_PREFIX_MODEL_ID`, `FRONTIER_TIMEOUT_MS` (optional), `ADAPTATION_OUTPUT_MAX_CHARS` (optional).
-- **Observability contract**: Span name `adaptation.generate`; span attributes include `adaptation.strategy`, `adaptation.configured`, `adaptation.model_id`, `adaptation.mode`, `adaptation.reason_code`; logs must not include `FRONTIER_API_KEY` or `ADAPTATION_SYSTEM_PROMPT` content.
-- **Security notes**: `FRONTIER_API_KEY` is server-only; `ADAPTATION_SYSTEM_PROMPT` is server-only; neither appears in responses, logs, or span attributes.
-- **Consumer notes**: Frontend branches on `mode` (`live` vs `fallback`); validation errors are explicit `400` with `error.code`.
-- **Change log**: `2026-02-25`: Initial contract added for CR-018.
+Keep each response evidence-based and scoped to what you directly observed.
 
 ---
 
 ## Definition of Done
 
-- [ ] `lib/server/generation/shared.ts` created; exports `FallbackReasonCode`, `parseTimeout`, `extractProviderErrorMessage`, `mapProviderFailure` (AC-2).
-- [ ] `app/api/frontier/base-generate/route.ts` imports all four items from `@/lib/server/generation/shared`; no local definitions of those four items remain (AC-2).
-- [ ] `app/api/adaptation/generate/route.ts` imports all four items from `@/lib/server/generation/shared`; no local definitions of those four items remain (AC-2).
-- [ ] `middleware.ts` has entries for both `/api/frontier/base-generate` and `/api/adaptation/generate` with rate limit 20/min, body size 8192, contentLengthRequired false (AC-3).
-- [ ] `lib/otel/metrics.ts` exports 4 new getter functions: `getFrontierGenerateRequestsCounter`, `getFrontierGenerateFallbacksCounter`, `getAdaptationGenerateRequestsCounter`, `getAdaptationGenerateFallbacksCounter` (AC-4).
-- [ ] Both generation routes call request counter once per request entry and fallback counter at each of the 6 fallback return sites, all wrapped in `safeMetric()` (AC-4).
-- [ ] `FRONTIER_API_KEY` is confirmed absent from all response payloads, log fields, and span attributes. `ADAPTATION_SYSTEM_PROMPT` is confirmed absent from all response payloads, log fields, and span attributes (AC-5).
-- [ ] `agent-docs/api/adaptation-generate.md` created following contract template (AC-6).
-- [ ] No route-path, `data-testid`, or accessibility-semantic contract changes made (AC-9).
-- [ ] `pnpm lint` passes.
-- [ ] `pnpm exec tsc --noEmit` passes.
-- [ ] `pnpm test` passes — report total test count and confirm no regression vs 134 baseline (AC-8, scoped verification before Testing Agent runs full gates).
+- [ ] `lib/config/generation.ts` imported in both route files; no modification to config file.
+- [ ] `app/api/frontier/base-generate/route.ts`: `loadFrontierConfig()` reads only `process.env.FRONTIER_API_KEY`; all other values from config; URL and provider validation blocks removed; `FrontierProvider` type imported from config.
+- [ ] `app/api/adaptation/generate/route.ts`: `loadAdaptationConfig()` reads only `process.env.FRONTIER_API_KEY`; all other values from config; `STRATEGY_MODEL_ENV` constant removed; module-load-time env cap replaced with config reference.
+- [ ] `lib/server/generation/shared.ts`: `parseTimeout`, `DEFAULT_TIMEOUT_MS`, `MIN_TIMEOUT_MS`, `MAX_TIMEOUT_MS` removed; three exports remain (`FallbackReasonCode`, `extractProviderErrorMessage`, `mapProviderFailure`).
+- [ ] `pnpm lint` passes with zero errors.
+- [ ] `pnpm exec tsc --noEmit` passes with zero errors.
+- [ ] `pnpm test` run and results reported; test failures classified as expected (removed env var setup) or unexpected (flag immediately).
+- [ ] `FRONTIER_API_KEY` confirmed absent from all response payloads, log fields, and span attributes in both routes.
+- [ ] Meta Observations section included in report.
 
 ---
 
 ## Clarification Loop (Mandatory)
 
-- Before implementation, Backend posts preflight concerns/questions in `agent-docs/conversations/backend-to-tech-lead.md`.
-- Tech Lead responds in the same file.
-- If any assumption is invalidated (e.g., a divergence found in the supposedly identical functions, an existing span attribute leaking a secret) — **stop and flag before proceeding**.
+Before implementation, post a preflight note to `agent-docs/conversations/backend-to-tech-lead.md` covering:
+- Assumptions confirmed (or invalidated).
+- Any adjacent risks not in current scope.
+- Open questions (if any).
+
+If any open question changes route contracts or scope, pause and wait for Tech Lead clarification before proceeding.
 
 ---
 
 ## Verification
 
-Run in sequence. Report using the Command Evidence Standard format.
+Run in sequence. Report each using the Command Evidence Standard format.
 
 ```
 node -v
@@ -517,11 +238,11 @@ pnpm test
 
 For each command:
 - **Command**: `[exact command]`
-- **Scope**: `[full suite | targeted files]`
+- **Scope**: `[full suite | targeted]`
 - **Execution Mode**: `[sandboxed | local-equivalent/unsandboxed]`
 - **Result**: `[PASS/FAIL + key counts or error summary]`
 
-Include total test count from `pnpm test` output. Confirm no regression vs 134 baseline.
+For `pnpm test`: report total test count, pass count, fail count. Classify failures.
 
 ---
 
@@ -532,7 +253,10 @@ Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` us
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 Include in report:
-- Summary of each file changed (what was added/removed/modified)
-- AC-5 security confirmation (exact span attributes and log fields verified clean)
-- Deviations from this spec (if any), classified per the Deviation Protocol
-- Verification evidence in Command Evidence Standard format
+- Preflight note (assumptions confirmed/invalidated).
+- Summary of each file changed.
+- Verification evidence in Command Evidence Standard format.
+- Test failure classification (expected vs unexpected).
+- Security confirmation (`FRONTIER_API_KEY` absent from responses/logs/spans).
+- Deviations from this spec (if any), classified per the Deviation Protocol.
+- **Meta Observations (CR-019)** section (all 5 pointers).

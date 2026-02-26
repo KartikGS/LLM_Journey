@@ -73,7 +73,6 @@ Stage 2 adaptation interaction — live model output per strategy when configure
 
 ## Fallback Reason Codes
 - `missing_config`
-- `invalid_config`
 - `quota_limited`
 - `timeout`
 - `upstream_auth`
@@ -92,13 +91,7 @@ Stage 2 adaptation interaction — live model output per strategy when configure
 | Invalid strategy | `400` | `error` |
 
 ## Environment Contract
-- `ADAPTATION_API_URL`
-- `FRONTIER_API_KEY` (secret)
-- `ADAPTATION_FULL_FINETUNE_MODEL_ID`
-- `ADAPTATION_LORA_MODEL_ID`
-- `ADAPTATION_PROMPT_PREFIX_MODEL_ID`
-- `FRONTIER_TIMEOUT_MS` (optional)
-- `ADAPTATION_OUTPUT_MAX_CHARS` (optional)
+- `FRONTIER_API_KEY` (secret) — the only required env variable for generation auth. All other settings (URL, model IDs, timeout, output cap) are versioned in `lib/config/generation.ts`.
 
 ## Observability Contract
 - Span name: `adaptation.generate`
@@ -115,4 +108,5 @@ Stage 2 adaptation interaction — live model output per strategy when configure
 - Validation failures are explicit HTTP `400` with `error.code`.
 
 ## Change Log
+- `2026-02-25`: CR-019 — non-secret generation settings moved to `lib/config/generation.ts`; `invalid_config` reason code removed (no longer reachable); Environment Contract updated to `FRONTIER_API_KEY`-only.
 - `2026-02-25`: Initial contract added for CR-018.

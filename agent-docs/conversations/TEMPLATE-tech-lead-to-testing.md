@@ -6,6 +6,12 @@
 ## Status
 `issued`
 
+## Exact Artifact Paths (Mandatory)
+- Requirement: `agent-docs/requirements/[CR-ID]-[slug].md`
+- Plan: `agent-docs/plans/[CR-ID]-plan.md`
+- Upstream report (if sequential): `agent-docs/conversations/[upstream-role]-to-tech-lead.md`
+- Report back to: `agent-docs/conversations/testing-to-tech-lead.md`
+
 ## Objective
 [Outcome-focused testing objective.]
 
@@ -68,6 +74,21 @@
 
 ## Verification
 [Use command evidence standard: Command, Scope, Execution Mode, Browser Scope (if E2E), Result.]
+
+## Execution Checklist (Mandatory)
+Before starting:
+- [ ] Read this handoff completely.
+- [ ] Read the plan at `agent-docs/plans/[CR-ID]-plan.md`.
+- [ ] If sequential: read the upstream report at the path listed in Exact Artifact Paths before writing tests.
+- [ ] Write preflight note to `testing-to-tech-lead.md` (assumptions + open questions). Wait for TL response if any question affects test scope or contracts.
+
+Before reporting:
+- [ ] All Definition of Done items checked.
+- [ ] `pnpm test` passes (full suite or targeted scope per handoff).
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
+- [ ] `pnpm build` passes (when delegated in scope).
+- [ ] Completion report written to `testing-to-tech-lead.md` using the template.
 
 ## Report Back
 Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.

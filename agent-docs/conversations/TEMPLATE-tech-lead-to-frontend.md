@@ -6,6 +6,11 @@
 ## Status
 `issued`
 
+## Exact Artifact Paths (Mandatory)
+- Requirement: `agent-docs/requirements/[CR-ID]-[slug].md`
+- Plan: `agent-docs/plans/[CR-ID]-plan.md`
+- Report back to: `agent-docs/conversations/frontend-to-tech-lead.md`
+
 ## Execution Mode (Mandatory)
 `feature-ui` | `architecture-only`
 If `architecture-only`, include freeze constraints (`no visual redesign`, `no copy rewrite`, `no route rename`).

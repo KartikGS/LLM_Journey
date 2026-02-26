@@ -52,11 +52,7 @@ describe('Integration: Frontier Base Generate API', () => {
         jest.clearAllMocks();
         mockAdd.mockClear();
         process.env = { ...originalEnv };
-        delete process.env.FRONTIER_API_URL;
-        delete process.env.FRONTIER_MODEL_ID;
         delete process.env.FRONTIER_API_KEY;
-        delete process.env.FRONTIER_TIMEOUT_MS;
-        delete process.env.FRONTIER_PROVIDER;
         global.fetch = jest.fn();
     });
 
@@ -97,7 +93,7 @@ describe('Integration: Frontier Base Generate API', () => {
         expect(body.output.length).toBeGreaterThan(0);
         expect(body.metadata).toEqual({
             label: 'Frontier Base Model',
-            modelId: 'model-not-configured',
+            modelId: 'meta-llama/Meta-Llama-3-8B',
             assistantTuned: false,
             adaptation: 'none',
             note: 'Pretrained on internet-scale text; not assistant fine-tuned.',
@@ -107,10 +103,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
     describe('HF Provider Path', () => {
         const HF_ENV = {
-            FRONTIER_API_URL: 'https://router.huggingface.co/featherless-ai/v1/completions',
-            FRONTIER_MODEL_ID: 'meta-llama/Meta-Llama-3-8B',
             FRONTIER_API_KEY: 'hf-secret-key',
-            FRONTIER_PROVIDER: 'huggingface',
         };
 
         function setHfEnv() {
@@ -231,28 +224,11 @@ describe('Integration: Frontier Base Generate API', () => {
             expect(body.reason.code).toBe('empty_provider_output');
         });
 
-        it('should return invalid_config fallback and not call fetch for unknown FRONTIER_PROVIDER', async () => {
-            process.env.FRONTIER_API_URL = HF_ENV.FRONTIER_API_URL;
-            process.env.FRONTIER_MODEL_ID = HF_ENV.FRONTIER_MODEL_ID;
-            process.env.FRONTIER_API_KEY = HF_ENV.FRONTIER_API_KEY;
-            process.env.FRONTIER_PROVIDER = 'unknown_provider';
 
-            const req = createRequest({ prompt: 'Explain scaling.' });
-            const res = await POST(req);
-            const body = await res.json();
-
-            expect(res.status).toBe(200);
-            expect(body.mode).toBe('fallback');
-            expect(body.reason.code).toBe('invalid_config');
-            expect(global.fetch).not.toHaveBeenCalled();
-        });
     });
 
     it('should return live envelope when upstream provider succeeds', async () => {
-        process.env.FRONTIER_API_URL = 'https://provider.example/v1/chat/completions';
-        process.env.FRONTIER_MODEL_ID = 'frontier-base-live';
         process.env.FRONTIER_API_KEY = 'secret-key';
-        process.env.FRONTIER_TIMEOUT_MS = '5000';
 
         (global.fetch as jest.Mock).mockResolvedValueOnce(
             new Response(
@@ -283,7 +259,7 @@ describe('Integration: Frontier Base Generate API', () => {
             output: 'Live provider output',
             metadata: {
                 label: 'Frontier Base Model',
-                modelId: 'frontier-base-live',
+                modelId: 'meta-llama/Meta-Llama-3-8B',
                 assistantTuned: false,
                 adaptation: 'none',
                 note: 'Pretrained on internet-scale text; not assistant fine-tuned.',
@@ -291,7 +267,7 @@ describe('Integration: Frontier Base Generate API', () => {
         });
 
         expect(global.fetch).toHaveBeenCalledWith(
-            'https://provider.example/v1/chat/completions',
+            'https://router.huggingface.co/featherless-ai/v1/completions',
             expect.objectContaining({
                 method: 'POST',
                 headers: expect.objectContaining({
@@ -304,10 +280,7 @@ describe('Integration: Frontier Base Generate API', () => {
 
     describe('Metrics and Security', () => {
         const HF_ENV = {
-            FRONTIER_API_URL: 'https://router.huggingface.co/featherless-ai/v1/completions',
-            FRONTIER_MODEL_ID: 'meta-llama/Meta-Llama-3-8B',
             FRONTIER_API_KEY: 'sk-secret-frontier-key',
-            FRONTIER_PROVIDER: 'huggingface',
         };
 
         it('increments frontier_generate.requests counter on every POST', async () => {

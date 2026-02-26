@@ -2,48 +2,86 @@
 
 > **Purpose:** Written by the Tech Lead at the end of Session A to enable a clean Session B start.
 > Session B reads this file as primary context — do NOT rely on session compressor summaries for verification decisions.
-> Delete or overwrite this file at the start of the next CR.
+> Overwrite this file at the start of the next CR.
 
 ---
 
 ## CR
 
-**CR ID:** <!-- e.g. CR-019 -->
-**Date (Session A):** <!-- YYYY-MM-DD -->
+**CR ID:** [CR-XXX — Title]
+**Date (Session A):** [YYYY-MM-DD]
 
 ---
 
-## Backend Delegation Outcome
+## Exact Artifact Paths
 
-**Status:** <!-- Completed / Pending / Blocked -->
-**Handoff file:** `agent-docs/conversations/tech-lead-to-backend.md`
-**Completion report:** `agent-docs/conversations/backend-to-tech-lead.md`
-
-**Summary of what Backend delivered:**
-<!-- 3-5 bullet points: files changed, key decisions made, any deviations from the plan -->
--
--
--
-
-**Known gaps or deviations to verify in adversarial review:**
-<!-- List anything the Backend flagged as "assumed", incomplete, or divergent -->
--
+- Requirement: `agent-docs/requirements/CR-XXX-[slug].md`
+- Plan: `agent-docs/plans/CR-XXX-plan.md`
+- BA handoff in: `agent-docs/conversations/ba-to-tech-lead.md`
+- Sub-agent handoff out: `agent-docs/conversations/tech-lead-to-[role].md`
+- Sub-agent report in: `agent-docs/conversations/[role]-to-tech-lead.md`
 
 ---
 
-## Pending Session B Tasks
+## Pre-Replacement Check (Conversation Freshness)
 
-Complete these tasks in order during Session B:
+- Prior outgoing BA handoff context: `[prior CR-ID]`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/[prior CR-ID]-plan.md`
+- Evidence 2 (prior CR closed): `agent-docs/requirements/[prior CR-ID]-[slug].md` status is `Done`
+- Result: replacement allowed for new CR context.
 
-- [ ] **Backend adversarial review** — re-read all files Backend modified; verify no security/logic regressions, ownership violations, or unresolved deviations from the plan
-- [ ] **Testing handoff** — write `agent-docs/conversations/tech-lead-to-testing.md`; include spec table and snippet-first stubs (≤30 lines inline; larger specs in `agent-docs/specs/CR-XXX-test-spec.md`)
-- [ ] **Testing adversarial review** — re-read new test blocks; verify coverage, mock correctness, and non-regression
-- [ ] **BA handoff** — write `agent-docs/conversations/tech-lead-to-ba.md`; AC IDs/text must match the CR exactly
+---
+
+## Session A: Execution Checklist
+
+- [ ] Context loaded per `tech-lead.md` required readings (Layer 1 + Layer 2 + role-specific).
+- [ ] BA handoff reviewed: `ba-to-tech-lead.md` subject confirms active CR.
+- [ ] Technical plan created: `agent-docs/plans/CR-XXX-plan.md`.
+- [ ] Pre-Implementation Self-Check completed (all target files classified as permitted or delegated).
+- [ ] Go/No-Go submitted to user; approval received.
+- [ ] Tech Lead direct changes completed (list each file below).
+- [ ] Sub-agent handoff(s) written and issued.
+- [ ] This session-state file written.
+
+## Session A: Tech Lead Direct Changes
+
+- `[file-path]` — **[created|updated]**: [one-line summary].
+
+---
+
+## Delegation Outcome — [Role] Agent
+
+**Status:** [issued | completed | blocked]
+**Handoff file:** `agent-docs/conversations/tech-lead-to-[role].md`
+**Completion report:** `agent-docs/conversations/[role]-to-tech-lead.md`
+
+**Summary of what [Role] delivered:**
+- `[file-path]`: [change summary].
+
+**Environmental note:** [Runtime/env caveats, or "none".]
+
+---
+
+## Gap Items / Known Risks (Session B Adversarial Review Focus)
+
+Use this list as the primary focus when conducting Session B adversarial review.
+Each item should be a specific verification check — not a generic reminder.
+
+- [ ] [Specific thing to verify, e.g. "Confirm X constant is fully removed, not just unused"]
+- [ ] [Another specific check, e.g. "Confirm Y is imported from config, not re-declared locally"]
+
+---
+
+## Session B: Tasks
+
+- [ ] **[Role] adversarial review** — [PASS/FAIL]. [Brief findings.]
+- [ ] **[Next role] handoff** — issued to `agent-docs/conversations/tech-lead-to-[role].md`.
+- [ ] **[Next role] adversarial review** — [PASS/FAIL]. [Brief findings.]
+- [ ] **Quality gates** — `pnpm test` [PASS/count], `pnpm lint` [PASS], `pnpm exec tsc --noEmit` [PASS], `pnpm build` [PASS].
+- [ ] **BA handoff** — written to `agent-docs/conversations/tech-lead-to-ba.md`. All ACs evidenced.
 
 ---
 
 ## Context Notes for Session B
 
-<!-- Anything the Tech Lead needs to remember that won't be in the completion reports -->
-<!-- e.g. security containment decisions, known environmental constraints, open questions -->
--
+- [Key facts Session B needs that are not captured in the structured sections above.]

@@ -1,75 +1,75 @@
 # BA to Tech Lead Handoff
 
 ## Subject
-`CR-018 — Generation API Hardening Parity`
+`CR-020 — CR Process Hardening and Artifact Organization`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing BA handoff context: `CR-017`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md`
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-017-small-backlog-fixes-and-runtime-alignment.md` status is `Done`
+- Prior outgoing BA handoff context: `CR-019`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-019-plan.md`
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-019-generation-config-centralization-with-meta-observations.md` status is `Done`
 - Result: replacement allowed for new CR context.
 
 ## Objective
-Close hardening/governance drift between generation APIs and the OTEL boundary while preserving existing learner-facing route contracts.
+Implement the accepted CR-019 meta outcomes for process hardening (items 1,2,3,5), evaluate CR-artifact foldering feasibility for item 4, and keep branch-strategy policy explicitly deferred.
 
 ## Linked Artifacts
-- CR: `agent-docs/requirements/CR-018-generation-api-hardening-parity.md`
-- Investigation: `agent-docs/reports/INVESTIGATION-CR-018-route-hardening-parity.md`
+- CR: `agent-docs/requirements/CR-020-cr-process-hardening-and-artifact-organization.md`
 
 ## Audience & Outcome Check
-- Human User intent: validate and execute hardening parity for new generation routes versus OTEL baseline.
-- Product End User audience: Stage 1 and Stage 2 learners using frontier/adaptation interactive flows.
-- Expected outcome: reliable and secure generation interactions with stronger route-level controls and clearer operational diagnostics, without UX/contract regression.
+- Human User intent: execute agreed process updates now, explore CR-artifact foldering, and defer git strategy decision.
+- Product End User audience: all website learners (indirect impact via better delivery reliability and lower coordination overhead).
+- Developer-contributor audience: engineers building and maintaining the application (direct impact via lower coordination overhead and reduced context-switch cost).
+- Expected outcome: faster and safer CR execution with clearer handoffs, lower artifact-discovery cost, and measurably smoother contributor workflow.
 
 ## Clarified Requirement Summary
-- Keep `/api/frontier/base-generate` and `/api/adaptation/generate` as separate external contracts.
-- Reduce duplicated server-side logic across generation routes where behavior is equivalent.
-- Add abuse-protection parity for generation routes (rate/body constraints) using explicit policy.
-- Add route-level non-blocking metrics parity for generation routes in addition to current tracing/logging.
-- Ensure contract-documentation parity in `agent-docs/api/` for touched routes.
-- Add tests for new controls and negative-path containment checks.
+- Standardize handoff templates with execution checklists and exact-path sections.
+- Add/standardize `gap items / known risks` in TL session-state workflow artifacts.
+- Enforce CR-scoped naming guidance for ephemeral conversation files while preserving freshness checks.
+- Preserve historical artifact retention posture (archive/index allowed, deletion out of scope).
+- Produce a feasibility artifact for CR-artifact foldering options and migration impact.
+- Keep one-branch-per-CR policy decision deferred and explicitly recorded.
 
 ## Acceptance Criteria Mapping
-- [ ] AC-1: Separate public route contracts preserved (frontier/adaptation).
-- [ ] AC-2: Duplicated generation-route server logic reduced via shared internal module/utility.
-- [ ] AC-3: Explicit abuse controls (rate + body-size) applied to generation routes with controlled responses.
-- [ ] AC-4: Route-level metrics added for generation request/failure/fallback outcomes, non-blocking by design.
-- [ ] AC-5: No secret/system-prompt leakage in responses/logs/span attributes.
-- [ ] AC-6: API contract docs updated for all touched routes (minimum adaptation route doc added).
-- [ ] AC-7: Tests added/updated to verify new controls and observability safety behavior.
-- [ ] AC-8: `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` pass.
-- [ ] AC-9: No route-path, `data-testid`, or accessibility-semantic contract changes.
+- [ ] AC-1: Execution-checklist section exists in Backend/Testing/Tech Lead handoff templates.
+- [ ] AC-2: TL session-state template includes `gap items / known risks`.
+- [ ] AC-3: Handoff templates require exact-path references to active CR artifacts.
+- [ ] AC-4: CR-scoped naming guidance exists for ephemeral conversation files, with freshness-rule compatibility.
+- [ ] AC-5: Freshness efficiency improved via prefilled stub guidance without weakening the gate.
+- [ ] AC-6: Historical CR artifact retention stance is explicit (`retain/archive`, not delete).
+- [ ] AC-7: CR-artifact foldering feasibility artifact produced (options + impact + recommendation).
+- [ ] AC-8: Git strategy decision remains explicitly deferred as user-owned policy decision.
+- [ ] AC-9: Verification evidence recorded for touched docs/process artifacts.
 
 ## Verification Mapping
-- Route behavior + regression proof: focused API tests for frontier/adaptation routes.
-- Abuse-control proof: middleware/API tests with threshold-edge and reset-window checks.
-- Observability proof: metrics emission assertions plus non-blocking telemetry-failure test(s).
-- Security containment proof: explicit negative assertions/audit for prohibited data leakage.
-- Full quality gates in canonical sequence for closure evidence.
+- Template/workflow evidence for AC-1 to AC-5.
+- Policy-language evidence for AC-6 and AC-8.
+- Feasibility artifact evidence for AC-7.
+- Verification command evidence for AC-9 in `tech-lead-to-ba.md`.
 
 ## Constraints
-- Preserve current route paths and response envelopes for frontier/adaptation consumers.
-- Preserve ADR-0001 telemetry-failure boundary behavior.
-- Avoid high-cardinality metrics dimensions and avoid logging sensitive payload fields.
-- No package installation unless scope extension is explicitly approved.
-- If route/selector/accessibility contracts must change, pause and request scope-extension decision.
+- Do not delete historical CR artifacts in this CR.
+- Do not standardize branch strategy in this CR; keep it deferred.
+- Preserve freshness-rule and traceability invariants.
+- No dependency installation unless scope extension is explicitly approved.
+- If foldering options conflict with canonical-path assumptions, document and defer instead of forcing migration.
 
 ## Open Decisions
-- `none` at BA stage.
+- CR-artifact foldering decision details (owner: Tech Lead proposes options; Human User confirms direction).
+- One-branch-per-CR strategy remains deferred (owner: Human User).
 
 ## Risk Analysis
-- Too-strict abuse thresholds may degrade legitimate interactions.
-- Shared internal refactor can accidentally widen change scope.
-- Metrics additions can become noisy if dimensions are not tightly bounded.
+- Process-doc edits can cause policy drift if scope expands beyond accepted items.
+- CR-scoped naming transition can create short-term confusion without explicit migration notes.
+- Foldering proposal can conflict with current path assumptions if not analyzed before action.
 
 ## Rationale (Why)
-This CR addresses your three questions directly: keep product-intent route separation, but remove maintainability drift by aligning generation-route hardening, testing, and observability posture with the established OTEL boundary standards.
+This CR operationalizes the decisions you already approved, so process improvements move from recommendation to enforceable workflow artifacts, while still separating deferred policy questions from immediate execution standards.
 
 ## Evidence Expectations for Tech Lead Handoff
-- One-line evidence per AC (file/line and command outputs).
-- Explicit contract-stability declaration (routes, selectors, semantics).
-- Clear classification of any environmental limitations vs CR-related defects.
-- Updated API contract doc references for every touched endpoint contract.
+- One-line evidence per AC with file/line references.
+- Explicit note that branch strategy remained deferred per user decision.
+- Feasibility artifact link for CR-artifact foldering with options and recommendation.
+- Clear classification of any immediate follow-up vs deferred/policy-candidate items.

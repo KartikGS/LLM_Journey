@@ -1,6 +1,7 @@
 import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { ADAPTATION_GENERATION_CONFIG } from '@/lib/config/generation';
 import logger from '@/lib/otel/logger';
 import {
     safeMetric,
@@ -10,7 +11,6 @@ import {
 import { getTracer } from '@/lib/otel/tracing';
 import {
     type FallbackReasonCode,
-    parseTimeout,
     extractProviderErrorMessage,
     mapProviderFailure,
 } from '@/lib/server/generation/shared';
@@ -18,8 +18,7 @@ import {
 const ROUTE_PATH = '/api/adaptation/generate';
 const PROMPT_MAX_CHARS = 2000;
 
-const ADAPTATION_OUTPUT_MAX_CHARS =
-    Math.max(1, parseInt(process.env.ADAPTATION_OUTPUT_MAX_CHARS ?? '4000', 10) || 4000);
+const ADAPTATION_OUTPUT_MAX_CHARS = ADAPTATION_GENERATION_CONFIG.outputMaxChars;
 
 const STRATEGY_VALUES = ['full-finetuning', 'lora-peft', 'prompt-prefix'] as const;
 type StrategyId = typeof STRATEGY_VALUES[number];
@@ -35,12 +34,6 @@ const FALLBACK_TEXT: Record<StrategyId, string> = {
         'LoRA adapts a frozen base model with small rank-decomposed matrices, achieving specialization at a fraction of full fine-tune cost. This is a deterministic fallback — the LLaMAntino specialist model is not available in this environment.',
     'prompt-prefix':
         'Prompt steering prepends a fixed instruction to every query without touching model weights — fastest to iterate, least robust. Base models respond less predictably than instruct variants. This is a deterministic fallback — the base model endpoint is not configured.',
-};
-
-const STRATEGY_MODEL_ENV: Record<StrategyId, string> = {
-    'full-finetuning': 'ADAPTATION_FULL_FINETUNE_MODEL_ID',
-    'lora-peft': 'ADAPTATION_LORA_MODEL_ID',
-    'prompt-prefix': 'ADAPTATION_PROMPT_PREFIX_MODEL_ID',
 };
 
 const requestSchema = z.object({
@@ -90,41 +83,25 @@ type AdaptationConfig = {
 
 
 function loadAdaptationConfig(strategy: StrategyId): AdaptationConfig {
-    const apiUrl = process.env.ADAPTATION_API_URL?.trim() ?? '';
     const apiKey = process.env.FRONTIER_API_KEY?.trim() ?? '';
-    const timeoutMs = parseTimeout(process.env.FRONTIER_TIMEOUT_MS);
-    const modelId = process.env[STRATEGY_MODEL_ENV[strategy]]?.trim() ?? '';
+    const modelId = ADAPTATION_GENERATION_CONFIG.models[strategy];
 
-    if (!apiUrl || !apiKey || !modelId) {
+    if (!apiKey) {
         return {
-            apiUrl,
+            apiUrl: ADAPTATION_GENERATION_CONFIG.apiUrl,
             modelId,
             apiKey,
-            timeoutMs,
+            timeoutMs: ADAPTATION_GENERATION_CONFIG.timeoutMs,
             configured: false,
             issueCode: 'missing_config',
         };
     }
 
-    try {
-        // Validate URL eagerly so failures stay deterministic.
-        new URL(apiUrl);
-    } catch {
-        return {
-            apiUrl,
-            modelId,
-            apiKey,
-            timeoutMs,
-            configured: false,
-            issueCode: 'invalid_config',
-        };
-    }
-
     return {
-        apiUrl,
+        apiUrl: ADAPTATION_GENERATION_CONFIG.apiUrl,
         modelId,
         apiKey,
-        timeoutMs,
+        timeoutMs: ADAPTATION_GENERATION_CONFIG.timeoutMs,
         configured: true,
     };
 }

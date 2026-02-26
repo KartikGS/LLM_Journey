@@ -3,10 +3,6 @@
  * Extracted from /api/frontier/base-generate and /api/adaptation/generate.
  */
 
-const DEFAULT_TIMEOUT_MS = 8000;
-const MIN_TIMEOUT_MS = 1000;
-const MAX_TIMEOUT_MS = 20000;
-
 export type FallbackReasonCode =
     | 'missing_config'
     | 'invalid_config'
@@ -16,19 +12,6 @@ export type FallbackReasonCode =
     | 'upstream_error'
     | 'invalid_provider_response'
     | 'empty_provider_output';
-
-export function parseTimeout(rawTimeout: string | undefined): number {
-    if (!rawTimeout) {
-        return DEFAULT_TIMEOUT_MS;
-    }
-
-    const parsed = Number.parseInt(rawTimeout, 10);
-    if (!Number.isFinite(parsed)) {
-        return DEFAULT_TIMEOUT_MS;
-    }
-
-    return Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, parsed));
-}
 
 export function extractProviderErrorMessage(payload: unknown): string | null {
     if (typeof payload !== 'object' || payload === null) {

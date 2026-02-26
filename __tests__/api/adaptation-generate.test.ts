@@ -71,11 +71,7 @@ describe('Integration: Adaptation Generate API', () => {
     }
 
     function setConfigEnv(strategy: 'full-finetuning' | 'lora-peft' | 'prompt-prefix') {
-        process.env.ADAPTATION_API_URL = ADAPTATION_API_URL;
         process.env.FRONTIER_API_KEY = FRONTIER_API_KEY;
-        process.env.ADAPTATION_FULL_FINETUNE_MODEL_ID = MODEL_IDS['full-finetuning'];
-        process.env.ADAPTATION_LORA_MODEL_ID = MODEL_IDS['lora-peft'];
-        process.env.ADAPTATION_PROMPT_PREFIX_MODEL_ID = MODEL_IDS['prompt-prefix'];
         // Satisfy TypeScript — strategy parameter used for documentation clarity only here
         void strategy;
     }
@@ -93,13 +89,7 @@ describe('Integration: Adaptation Generate API', () => {
         jest.clearAllMocks();
         mockAdd.mockClear();
         process.env = { ...originalEnv };
-        delete process.env.ADAPTATION_API_URL;
         delete process.env.FRONTIER_API_KEY;
-        delete process.env.ADAPTATION_FULL_FINETUNE_MODEL_ID;
-        delete process.env.ADAPTATION_LORA_MODEL_ID;
-        delete process.env.ADAPTATION_PROMPT_PREFIX_MODEL_ID;
-        delete process.env.FRONTIER_TIMEOUT_MS;
-        delete process.env.ADAPTATION_OUTPUT_MAX_CHARS;
         global.fetch = jest.fn();
     });
 
@@ -229,14 +219,23 @@ describe('Integration: Adaptation Generate API', () => {
     });
 
     it('should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters', async () => {
-        process.env.ADAPTATION_OUTPUT_MAX_CHARS = '10';
         setConfigEnv('full-finetuning');
         mockLiveResponse('This response is longer than ten characters');
 
-        // ADAPTATION_OUTPUT_MAX_CHARS is parsed at module load time, so we must
-        // re-import the route handler with the env var already set.
         let isolatedPOST: typeof POST;
         jest.isolateModules(() => {
+            jest.mock('@/lib/config/generation', () => ({
+                ADAPTATION_GENERATION_CONFIG: {
+                    apiUrl: 'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+                    timeoutMs: 8000,
+                    outputMaxChars: 10,
+                    models: {
+                        'full-finetuning': 'meta-llama/Meta-Llama-3-8B-Instruct',
+                        'lora-peft': 'swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA',
+                        'prompt-prefix': 'meta-llama/Meta-Llama-3-8B',
+                    },
+                },
+            }));
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             isolatedPOST = require('@/app/api/adaptation/generate/route').POST;
         });
@@ -430,11 +429,7 @@ describe('Integration: Adaptation Generate API', () => {
 
     describe('Metrics and Security', () => {
         const VALID_ENV = {
-            ADAPTATION_API_URL: 'https://router.huggingface.co/v1/chat/completions',
             FRONTIER_API_KEY: 'sk-secret-key',
-            ADAPTATION_FULL_FINETUNE_MODEL_ID: 'model-ff',
-            ADAPTATION_LORA_MODEL_ID: 'model-lora',
-            ADAPTATION_PROMPT_PREFIX_MODEL_ID: 'model-pp',
         };
 
         it('increments adaptation_generate.requests counter on every POST', async () => {
