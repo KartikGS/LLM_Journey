@@ -245,15 +245,34 @@ Present the **complete plan** to the USER, including:
 
 ---
 
-### Two-Session Execution Model
+### CR Execution Model (Multi-Sub-Agent)
 
-**Trigger:** Apply this model for any CR with both Backend AND Testing sub-agents. Single-sub-agent CRs may fit in one session.
+**Tech Lead session scope (all CRs):** context load → discovery → planning → direct permitted changes → `TL-session-state.md` authoring → BA handoff authoring. The Tech Lead does not read implementation files, perform adversarial diff review, or run quality gates after Session A — those are CR Coordinator responsibilities.
 
-**Session A:** context load → discovery → planning → Backend handoff (delegate). Before closing Session A, write a handover artifact at `agent-docs/coordination/TL-session-state.md` recording: (1) the CR ID, (2) the Backend delegation outcome summary, (3) pending verification tasks for Session B.
+**CR Coordinator scope (one session per sub-agent round-trip):** receives TL-authored handoff → issues to sub-agent → performs adversarial diff review of the completion report → runs quality gates → returns a verified conclusion summary to the Tech Lead. The CR Coordinator does NOT modify the plan or make architecture decisions.
 
-**Session B (new session):** Load `agent-docs/coordination/TL-session-state.md` as primary context — do NOT rely on session compressor summaries for verification decisions. Then: Backend adversarial review → Testing handoff (delegate) → Testing adversarial review → BA handoff.
+**Authority boundary:**
 
-> **Note:** The Role Scope Review trigger (per `meta-improvement-protocol.md`) was exercised for this model in CR-018. The two-session split is the outcome: structural context saturation is expected for any Backend+Testing CR and should be planned for, not treated as incidental.
+| Responsibility | Owner |
+|---|---|
+| Architecture planning, direct permitted changes | Tech Lead |
+| `TL-session-state.md` authorship | Tech Lead |
+| `tech-lead-to-ba.md` authorship | Tech Lead |
+| Adversarial diff review of sub-agent completion reports | CR Coordinator |
+| Quality gate execution per sub-agent cycle | CR Coordinator |
+| `tech-lead-to-<role>.md` handoff issuance | CR Coordinator |
+
+**Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. Parallel Coordinator cycles reduce wall-clock time but not session count.
+
+**Sequential execution model:**
+- TL Session A → CR Coordinator ↔ Backend → CR Coordinator ↔ Frontend → CR Coordinator ↔ Testing → TL Session B → BA
+
+**Parallel execution model (when sub-agents are independent):**
+- TL Session A → [CR Coordinator ↔ Backend] + [CR Coordinator ↔ Frontend] → CR Coordinator ↔ Testing → TL Session B → BA
+
+**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions, (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state.
+
+> **Note:** The two-session model from CR-018 was insufficient for 3-sub-agent CRs — CR-021 required four saturated sessions despite the two-session fix. The CR Coordinator model supersedes the two-session model and scales linearly to N sub-agents by narrowing each session's file-read scope to one sub-agent's work.
 
 ---
 
@@ -306,14 +325,13 @@ ADRs live in:
 
 ---
 
-### Verification & BA Handoff
+### CR Coordinator: Adversarial Review & Quality Gates
 
-> **Context boundary for `[M]`/`[L]` CRs:** Each Wait State is a natural reset point. When re-entering after a sub-agent completes, start a new session loading only the plan + the sub-agent's report + the files they modified. Do not reload Layer 1/2 project standards — the plan already captures all decisions, and re-reading standards adds context cost without adding verification value.
-> - **Parallel mode**: one reset point — start fresh here for the full verification pass.
-> - **Sequential mode**: reset at every Wait State cycle — each re-entry is a new session loading only the plan + latest report.
-> If context saturation is experienced at any cycle, record it in the Workflow Health Signal section of the lightweight meta pass.
+> **This section is the CR Coordinator's operational spec.** The Tech Lead does not execute these steps — the CR Coordinator does, one session per sub-agent round-trip. The Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
+>
+> **CR Coordinator context boundary:** At each session start, load only: (1) `agent-docs/coordination/TL-session-state.md`, (2) the sub-agent's completion report, (3) the files the sub-agent modified. Do not reload Layer 1/2 project standards — TL-session-state.md carries all relevant plan decisions. If context saturation is experienced, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing the session.
 
-Before handing off to BA Agent, complete the **Verification Checklist**:
+Complete the **Adversarial Review Checklist** before returning a conclusion summary to the Tech Lead:
 
 #### Verification Checklist
 
@@ -329,6 +347,21 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
     - **Check**: If the diff includes `data-testid` additions, removals, or renames, or route path changes, verify an instruction to update `testing-contract-registry.md` is included in the Testing or BA handoff before issuing the Wait State.
     - **Check**: For each security constraint of the form "X must/must not appear in Y," verify the test table includes both the positive assertion (X appears in the allowed location) and the negative assertion (X does not appear in the disallowed location). A positive-only test does not satisfy a containment invariant.
     - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
+    - **Deviation severity classification (portable — applies to every sub-agent report):**
+
+      | Class | Signal | Required action |
+      |---|---|---|
+      | **AC-blocking** | Finding violates an explicit Acceptance Criterion — behavior, contract, or security invariant is wrong | Block closure; re-delegate to responsible sub-agent before proceeding |
+      | **Tech Lead Recommendation** | Quality concern not covered by any AC; content is correct but sub-optimal | Document in BA handoff `## Tech Lead Recommendations`; do not fold into current CR scope without scope extension approval |
+      | **Process-only** | Sub-agent violated a process rule (e.g., modified an undelegated file) but the content of the change is correct and non-regressive | Non-blocking; record in adversarial review outcome note; no AC impact |
+
+    - **Portable adversarial review dimensions (apply to every sub-agent; extend per-CR in TL-session-state.md — do not regenerate from scratch):**
+      - Changes are scoped to delegated files — no undeclared file modifications.
+      - No debug artifacts (`console.log`, commented-out blocks, TODO markers) in production code paths.
+      - `[Changes Made]` and `[Deviations]` in the report match actual file changes line-by-line. Any undisclosed change must be classified per the table above.
+      - Security constraints from the CR Non-Functional Requirements are independently verified — do not accept sub-agent attestation alone for negative assertions (X must NOT appear in Y).
+      - Test names accurately describe current behavior after any format/contract change.
+      - No pre-existing test failures introduced or unmasked (classify as CR-related vs. pre-existing).
     - **Risk-differentiated review scope** (exception to the default full-read rule):
       - **Source file changes:** Full re-read required. Review question: did any existing behavior change?
       - **Test-only additions** (new `describe`/`it` blocks added, zero modifications to existing test content): Targeted review of the new blocks only is sufficient. Review question: are the new tests present, correctly structured, and non-regressive? Re-reading unchanged existing test content is not required.
@@ -343,7 +376,8 @@ Before handing off to BA Agent, complete the **Verification Checklist**:
 - [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision. Do not rely solely on the handoff file to persist this constraint.
 - [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries whose root causes are resolved by this CR.
 - [ ] Verify documentation updates
-- [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
+- [ ] **[CR Coordinator: return verified conclusion summary to Tech Lead]** — Coordinator closes its session here. Remaining steps below belong to the Tech Lead (Session B).
+- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: After receiving all Coordinator conclusion summaries, write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
 
 #### Quality Gate Fallback (Sub-Agent Environment Failure)
 If a sub-agent cannot run required verification commands because of environment constraints (for example, `pnpm` or browser runtime incompatibility), Tech Lead must run all quality gates before issuing the BA handoff. In `tech-lead-to-ba.md`, document:

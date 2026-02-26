@@ -337,7 +337,9 @@ This mode is intended to run in parallel with feature CRs without forcing a full
 
 ## Role Health Indicators
 
-Workflows accumulate responsibilities over time. Use these signals to detect when a role or workflow phase has grown beyond what a single session can hold effectively. The Tech Lead filling in the Workflow Health Signal section of the lightweight meta pass is the primary data source.
+Workflows accumulate responsibilities over time. Use these signals to detect when a role or workflow phase has grown beyond what a single session can hold effectively.
+
+**Primary input surface:** The `## Workflow Health Signal` section of `agent-docs/coordination/TL-session-state.md` (populated per-session during CR execution). Secondary input: the Workflow Health Signal section of the lightweight meta pass (post-CR synthesis). Together these give both real-time and post-hoc health data per CR.
 
 ### Threshold Definitions
 

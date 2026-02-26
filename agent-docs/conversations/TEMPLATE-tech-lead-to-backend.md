@@ -28,6 +28,7 @@
   - [Test scope delegated? yes/no + reason]
 
 ## Assumptions To Validate (Mandatory)
+- **Live-path availability**: [yes — API key present, live provider reachable | no — API key absent | unknown — verify before starting]. If `no` or `unknown`: classify any assumption that requires live provider behavior as `unverifiable without live credentials` and flag it explicitly in your preflight note. Do not block implementation on an unverifiable external assumption — document it and proceed with the verifiable scope.
 - [Assumption 1]
 - [Assumption 2]
 

@@ -103,10 +103,21 @@ If E2E fails, classify using this sequence:
 - Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
 
 ### Provider-Backed E2E Determinism
-For E2E flows that can hit external model providers:
-- Default policy: prefer deterministic local behavior (for example fallback-mode path) unless the CR explicitly requires live-provider verification.
-- If live-provider behavior is required by CR:
-  - document environment prerequisites in handoff/report, and
+
+**Coverage path classification (required for every provider-backed CR):**
+
+| Coverage path | When applicable | Required environment prerequisite |
+|---|---|---|
+| **Fallback-path only** | Default — CR does not touch the live-provider code path, or live credentials are absent | No API key required; deterministic |
+| **Live-path required** | CR explicitly changes streaming/live-provider behavior AND the change is not exercisable via the fallback path | API key present; explicitly stated in handoff `Live-path availability` field |
+| **Both paths** | CR changes shared infrastructure that affects both live and fallback behaviors | API key present for live path; note which assertions apply to which path |
+
+Classify the required coverage path in the Testing handoff and assessment table before writing tests. Do not assume live-path coverage is possible — verify `Live-path availability` in the handoff caveats first.
+
+- Default policy: prefer fallback-path coverage when the CR's core change is exercisable without live credentials. Reserve live-path coverage for changes that are only observable via the live provider path.
+- If live-path coverage is required:
+  - confirm `Live-path availability: yes` in the handoff,
+  - document environment prerequisites in the handoff/report, and
   - classify provider/network flakiness separately from UI contract regressions.
 
 ### E2E Selector Reliability Ladder (Mandatory)

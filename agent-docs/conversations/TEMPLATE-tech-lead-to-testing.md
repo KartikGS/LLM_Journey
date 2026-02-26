@@ -36,6 +36,7 @@
 - [Layout-coupled selector not allowed]
 
 ## Known Environmental Caveats (Mandatory)
+- **Live-path availability**: [yes — API key present, live provider exercisable | no — API key absent, live-provider path will be bypassed | unknown — check `FRONTIER_API_KEY` in environment before starting]
 - [Sandbox/startup/runtime caveat]
 - [How to classify if reproduced]
 
@@ -50,6 +51,20 @@
 ## Scope
 ### Files to Modify
 - `path/to/test.spec.ts`: [change summary]
+
+## Assessment Targets (Mandatory)
+
+Use this table for any coverage or timeout decision that has a conditional dimension. Each row must have a `Validation Condition` so that assessments are not interpreted as environment-independent defaults.
+
+| Target | Assessment | Validation Condition | Default if condition unmet |
+|---|---|---|---|
+| [e.g., E2E submit timeout] | [e.g., 30 000 ms] | [e.g., live-path available: API key present] | [e.g., 15 000 ms (fallback path only)] |
+| [e.g., live-provider E2E coverage] | [e.g., required] | [e.g., `FRONTIER_API_KEY` set in environment] | [e.g., skip live-path assertions; cover fallback path only] |
+
+## Expected Test Count Delta (Mandatory)
+- Tests added by this handoff: `+[N]` (list affected spec files)
+- Tests added by parallel agents in same CR (if any): `+[N]` at `[spec file]` — do not double-count
+- Net expected change to suite total: `[+N / ±0 / other]`
 
 ## Verification Depth
 - `baseline` or `boundary-focused`

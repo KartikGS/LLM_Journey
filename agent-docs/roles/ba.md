@@ -34,6 +34,7 @@ The BA agent **does NOT**:
 The BA agent **MAY**:
 - Run diagnostic verification commands (for example `pnpm test`, `pnpm lint`, `pnpm test:e2e`) to gather evidence for requirement clarification and blocker classification.
 - Collect command outputs and artifact references for CR evidence.
+- **Read implementation code files** during the Technical Sanity Check to ground AC specificity — for example, to identify `data-testid` contracts, API route shapes, or interface signatures needed for accurate AC definition. The BA must not modify these files.
 - The BA must still not modify implementation code to make tests pass.
 
 ---
@@ -158,6 +159,7 @@ Use this matrix to decide the minimum BA action before drafting/finalizing a CR:
 | Incident/regression (`test/lint/build/runtime mismatch`) | Load `testing-strategy.md` and collect at least one command baseline (`exact command + result`). **For external API failures** where no local command can reproduce the failure: collect code-reading evidence and qualify the root cause claim as "suspected cause — requires Tech Lead live API probe to confirm." Do not block CR finalization on an unverifiable external failure. |
 | Multiple plausible root causes or cross-cutting risk (security/telemetry/build pipeline) | Create investigation report before final CR handoff |
 | Request implies architectural/process policy change | Draft CR scope + escalate to Tech Lead for feasibility/verification before treating as policy |
+| User introduces scope expansion after clarification session is complete (mid-session pivot) | Classify as one of: (a) **within-CR extension** — capture the delta in the AC set and notify Tech Lead of the change before handoff; (b) **new-CR candidate** — close current CR scope at its current boundary, create a separate CR artifact for the expanded item; (c) **requires-user-decision** — if scope compatibility is ambiguous, surface the conflict explicitly and wait for user direction before proceeding. Document the classification choice in the CR artifact. |
 
 ### BA Execution Mode Rubric (Fast / Standard / Heavy)
 
@@ -179,7 +181,7 @@ Before declaring a CR closed, complete all items:
 - [ ] Human-facing closure note sent with outcome + residual risks (if any)
 - [ ] No debug artifacts spotted in verified production code paths. If found after TL verification: flag in CR Notes, notify user directly. Does not block closure.
 - [ ] If this CR changed any `data-testid` contracts or route contracts (additions, removals, renames): confirm `testing-contract-registry.md` is updated, or create a follow-up tracking item in project-log `Next Priorities` with the Testing Agent as responsible party.
-- [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant.
+- [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant. **Graduation path**: if `tech-lead-to-ba.md` includes **specific cited TL adversarial evidence** (file path + line number + assertion type) demonstrating the negative assertion was independently verified during adversarial review, the BA may accept that citation in place of a separate code-path audit. Log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`. A general `"reviewed and confirmed"` note does not qualify.
 - [ ] If `tech-lead-to-ba.md` reports that Tech Lead ran quality gates on behalf of a sub-agent (environment constraint), accept only when: mismatch is pre-existing in project-log, all required gates passed, and Tech Lead adversarial review confirms no runtime-specific gaps. Log this as an environmental note, not a CR deviation.
 - [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.

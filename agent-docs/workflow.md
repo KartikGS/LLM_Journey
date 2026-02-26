@@ -34,11 +34,12 @@
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
-8. **Session Scope Management (for `[M]`/`[L]` CRs):** Each Wait State is a natural context reset point. The strategy differs by delegation mode:
-   - **Parallel mode**: Two sessions. Session 1 — full context load → plan → direct changes → all handoffs → Wait State. Session 2 — load only sub-agent reports + modified files → adversarial review → verification gates → BA handoff.
-   - **Sequential mode**: Fresh session at each Wait State cycle. Each re-entry loads only the plan + the latest sub-agent report — not the full Layer 1/2 context. The plan already captures all decisions; re-reading standards docs adds context cost without adding value at review time.
-   - **`[S]` CRs**: single session is acceptable unless context pressure was observed in a prior lightweight meta pass for this role.
-   - **Record in lightweight pass**: if context saturation was experienced at any cycle, record it in the Workflow Health Signal section.
+8. **Session Scope Management (for `[M]`/`[L]` CRs):** Apply the CR Coordinator model (canonical spec in `agent-docs/roles/tech-lead.md` / CR Execution Model). Summary:
+   - **Tech Lead Session A**: full context load → plan → direct changes → `TL-session-state.md` → Wait State.
+   - **CR Coordinator sessions**: one session per sub-agent. Load only `TL-session-state.md` + sub-agent report + modified files → adversarial review → quality gates → conclusion summary → Wait State.
+   - **Tech Lead Session B**: load Coordinator conclusion summaries → BA handoff authoring.
+   - **`[S]` CRs**: single Tech Lead session is acceptable unless context pressure was observed in a prior meta pass.
+   - **Record health signal**: if context saturation is experienced at any cycle, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing that session.
 9. **Architecture-Only Mode (Conditional):** If a CR is intended as rendering-boundary/architecture-only (no product behavior redesign), Tech Lead MUST state this explicitly in plan + handoff and include:
    - UI/copy/IA freeze statement (`no visual redesign, no content rewrite, no route rename`),
    - contract preservation list (`routes`, `data-testid`, accessibility semantics),
@@ -65,7 +66,8 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
 - Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
-- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's conversation content is captured in its plan, completion report, or CR artifact. **Minimum evidence**: `plans/CR-XXX-plan.md` exists AND the outgoing conversation file or CR artifact shows `status: completed` (or equivalent closure signal) for the prior CR. Do not replace until this is verified.
+- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's work is archived in a non-conversation artifact. **Non-circular evidence only** — do not cite the outgoing conversation file itself as evidence (it is the artifact being replaced). Minimum evidence: (a) `plans/CR-XXX-plan.md` exists, AND (b) `requirements/CR-XXX-<slug>.md` shows `status: Done` or equivalent closure signal. Do not replace until both are confirmed.
+- **Trust model (sub-agent attestation)**: If the incoming handoff (`tech-lead-to-<role>.md`) already contains a completed Pre-Replacement Check stub at the top, the sub-agent receiving the handoff may trust this attestation without independently re-verifying plan artifacts or CR status. The Tech Lead's (or CR Coordinator's) check satisfies the gate for that sub-agent. Sub-agents still complete their own Pre-Replacement Check when replacing their own outgoing report file (e.g., `backend-to-tech-lead.md`).
 
 #### CR-Scoped Naming for Ephemeral Coordination Files (Guidance)
 When a CR requires temporary coordination files beyond the standard role-pair files (e.g., `backend-to-tech-lead.md`), name them with the CR ID to prevent collision and aid discovery:
@@ -83,7 +85,7 @@ To reduce ceremony at CR boundaries, pre-populate the check at the top of the in
     - Evidence 2 (prior CR closed): `agent-docs/requirements/[prior CR-ID]-[slug].md` status is `Done`
     - Result: replacement allowed for new CR context.
 
-The gate is not weakened — Evidence 2 still requires reading the prior CR artifact to confirm closure status. The stub removes the formatting ceremony, not the verification step.
+The gate is not weakened — Evidence 2 requires reading the prior CR requirement artifact (`requirements/CR-XXX-<slug>.md`), not the outgoing conversation file. The stub removes formatting ceremony, not the verification step. Citing the outgoing conversation file as Evidence 2 is not permitted (circular).
 
 #### Delegation Mode Rules
 - **Parallel Mode**
@@ -188,7 +190,7 @@ Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any dire
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
 2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (file + line number). Apply graduated verification:
-   - **Security constraints** (data must/must not appear, auth invariants) and **deleted contracts** (removed testids, removed files, changed APIs): independently re-read the cited file/line to confirm.
+   - **Security constraints** (data must/must not appear, auth invariants) and **deleted contracts** (removed testids, removed files, changed APIs): independently re-read the cited file/line to confirm — **unless** the `tech-lead-to-ba.md` handoff includes **specific cited TL adversarial evidence** (file path + line number + assertion type) for that constraint. In that case, the BA may accept the TL citation in place of an independent re-read and must log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`. A general `"reviewed and confirmed"` note does not qualify as specific cited TL adversarial evidence.
    - **Additive changes** (new components, copy changes, dark mode, UI layout): trust the Tech Lead's citation with a brief source audit note.
    Do not bulk-accept all ACs with a single pass. Each AC must have a distinct evidence reference.
 3. **Assumed Gate Fallback (Mandatory)**: If `tech-lead-to-ba.md` marks any verification gate result as "assumed" (rather than confirmed with a specific command output), those "assumed" citations are not sufficient for BA acceptance. The BA must rerun the specific assumed gates directly and include the result in the AC evidence annotation. An "assumed" gate citation from the Tech Lead handoff does not satisfy AC evidence for the corresponding acceptance criterion.

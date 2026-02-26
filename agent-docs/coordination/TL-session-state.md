@@ -3,6 +3,15 @@
 ## CR ID
 `CR-021 — Frontier and Adaptation Response Streaming`
 
+## Workflow Health Signal
+- Session A (Tech Lead): `none` — no context saturation observed
+- CR Coordinator — Backend: `none`
+- CR Coordinator — Frontend: `none`
+- CR Coordinator — Testing: `none`
+- Session B (Tech Lead): `none`
+
+> Populate each entry with `none` or a brief description of context saturation (phase + symptom). This field is the input surface for the Role Health threshold mechanism in `meta-improvement-protocol.md`. For future CRs: copy this section into each new TL-session-state.md and update as sessions complete.
+
 ## Session A Outcome
 - Tech Lead direct change completed: `lib/config/generation.ts` `timeoutMs` updated to `30000` for both configs.
 - Backend handoff issued: `agent-docs/conversations/tech-lead-to-backend.md`

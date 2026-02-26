@@ -16,6 +16,47 @@
 -   When creating or modifying utilities in `lib/server/`, apply the Leaf Utility Isolation principle documented in Development Standards — keep them dependency-free.
 -   After any function extraction task, audit the source file for newly unused imports and constants and remove them before running lint.
 
+## Observability
+
+### OTel Span Lifecycle During Streaming
+
+Streaming routes require a non-obvious span lifecycle pattern. Do not call `span.end()` immediately after the route handler returns — the span must remain open for the duration of the stream.
+
+**Required pattern:** Use a `streamingActive` flag to defer `span.end()` until the stream fully resolves.
+
+```ts
+// In the route handler:
+let streamingActive = false;
+try {
+  streamingActive = true;
+  const stream = new ReadableStream({ ... });
+  // Pass span into streaming callbacks — do NOT call span.end() here
+  return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
+} catch (err) {
+  if (!streamingActive) {
+    span.recordException(err);
+    span.end();  // Only end here if streaming never started
+  }
+  throw err;
+} finally {
+  // Do NOT call span.end() in finally — the stream may still be open
+}
+```
+
+The span is ended via callbacks (`onDone`, `onMidStreamError`) that fire inside the `ReadableStream` controller after the last byte is flushed. Reference implementation: `lib/server/generation/streaming.ts`.
+
+### SSE Client-Side Parsing
+
+When parsing SSE streams on the client using `TextDecoder`, always pass `{ stream: true }` to prevent multi-byte character corruption across chunk boundaries:
+
+```ts
+const decoder = new TextDecoder('utf-8', { stream: true });
+// In the ReadableStream pump loop:
+const text = decoder.decode(value, { stream: true });
+```
+
+Omitting `{ stream: true }` causes characters split across chunks (e.g., multi-byte Unicode) to be decoded independently, producing replacement characters (`\uFFFD`).
+
 ## Verification Scope
 
 Check the handoff DoD before applying any default here. If the DoD specifies a verification scope (e.g., full-suite `pnpm test`), that takes precedence. The role-doc default applies only when the DoD is silent on verification scope.
