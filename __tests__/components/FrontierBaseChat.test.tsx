@@ -27,11 +27,30 @@ describe('Integration: FrontierBaseChat UI', () => {
     it('should submit prompt and render live mode output', async () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
-            json: async () => ({
-                mode: 'live',
-                output: 'Live frontier response',
-                metadata: { modelId: 'frontier-base-test' },
-            }),
+            headers: {
+                get: (name: string) => (name.toLowerCase() === 'content-type' ? 'text/event-stream' : null),
+            },
+            body: {
+                getReader: () => {
+                    const events = [
+                        'event: start\ndata: {"metadata":{"modelId":"frontier-base-test"}}\n\n',
+                        'event: token\ndata: {"text":"Live "}\n\n',
+                        'event: token\ndata: {"text":"frontier "}\n\n',
+                        'event: token\ndata: {"text":"response"}\n\n',
+                        'event: done\ndata: {}\n\n',
+                    ];
+                    let index = 0;
+                    return {
+                        read: async () => {
+                            if (index < events.length) {
+                                return { value: new TextEncoder().encode(events[index++]), done: false };
+                            }
+                            return { value: undefined, done: true };
+                        },
+                        releaseLock: () => { },
+                    };
+                },
+            },
         });
 
         render(<FrontierBaseChat />);
@@ -56,6 +75,9 @@ describe('Integration: FrontierBaseChat UI', () => {
     it('should render fallback mode output and reason when backend returns fallback envelope', async () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
+            headers: {
+                get: (name: string) => (name.toLowerCase() === 'content-type' ? 'application/json' : null),
+            },
             json: async () => ({
                 mode: 'fallback',
                 output: 'Deterministic fallback output',
@@ -82,6 +104,9 @@ describe('Integration: FrontierBaseChat UI', () => {
     it('should render validation error from backend 400 payload', async () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: false,
+            headers: {
+                get: (name: string) => (name.toLowerCase() === 'content-type' ? 'application/json' : null),
+            },
             json: async () => ({
                 error: {
                     code: 'invalid_prompt',

@@ -14,7 +14,7 @@ import {
     extractProviderErrorMessage,
     mapProviderFailure,
 } from '@/lib/server/generation/shared';
-import { toRecord } from '@/lib/utils/record';
+import { parseCompletionsChunk, createSseRelayStream } from '@/lib/server/generation/streaming';
 
 const ROUTE_PATH = '/api/frontier/base-generate';
 const PROMPT_MAX_CHARS = 2000;
@@ -48,12 +48,6 @@ type FallbackModeResponse = {
         code: FallbackReasonCode;
         message: string;
     };
-    metadata: BaseModelMetadata;
-};
-
-type LiveModeResponse = {
-    mode: 'live';
-    output: string;
     metadata: BaseModelMetadata;
 };
 
@@ -117,27 +111,6 @@ function selectFallbackSample(prompt: string): string {
     return FALLBACK_SAMPLES[hash % FALLBACK_SAMPLES.length];
 }
 
-function extractContentText(content: unknown): string | null {
-    if (typeof content === 'string') {
-        const trimmed = content.trim();
-        return trimmed.length > 0 ? trimmed : null;
-    }
-
-    if (!Array.isArray(content)) {
-        return null;
-    }
-
-    for (const item of content) {
-        const record = toRecord(item);
-        const text = record?.text;
-        if (typeof text === 'string' && text.trim().length > 0) {
-            return text.trim();
-        }
-    }
-
-    return null;
-}
-
 function buildProviderRequestBody(
     provider: FrontierProvider,
     prompt: string,
@@ -149,6 +122,7 @@ function buildProviderRequestBody(
             prompt,
             max_tokens: HF_MAX_NEW_TOKENS,
             temperature: 0.4,
+            stream: true,
         };
     }
 
@@ -158,51 +132,6 @@ function buildProviderRequestBody(
         temperature: 0.4,
     };
 }
-
-function extractProviderOutput(payload: unknown): string | null {
-    const root = toRecord(payload);
-    if (!root) {
-        return null;
-    }
-
-    const choices = root.choices;
-    if (Array.isArray(choices) && choices.length > 0) {
-        const firstChoice = toRecord(choices[0]);
-        if (firstChoice) {
-            const message = toRecord(firstChoice.message);
-            const messageText = extractContentText(message?.content);
-            if (messageText) {
-                return messageText;
-            }
-
-            const text = firstChoice.text;
-            if (typeof text === 'string' && text.trim().length > 0) {
-                return text.trim();
-            }
-        }
-    }
-
-    const anthropicLike = root.content;
-    if (Array.isArray(anthropicLike) && anthropicLike.length > 0) {
-        for (const item of anthropicLike) {
-            const record = toRecord(item);
-            if (!record) {
-                continue;
-            }
-
-            const text = record.text;
-            if (typeof text === 'string' && text.trim().length > 0) {
-                return text.trim();
-            }
-        }
-    }
-
-    return null;
-}
-
-
-
-
 
 function createFallbackResponse(
     prompt: string,
@@ -231,6 +160,8 @@ export async function POST(req: NextRequest) {
             span.setAttribute('http.method', 'POST');
             span.setAttribute('http.route', ROUTE_PATH);
             safeMetric(() => getFrontierGenerateRequestsCounter().add(1));
+
+            let streamingActive = false;
 
             try {
                 let rawBody: unknown;
@@ -305,6 +236,7 @@ export async function POST(req: NextRequest) {
                         signal: controller.signal,
                     });
                 } catch (error) {
+                    clearTimeout(timeoutHandle);
                     const isAbort = error instanceof Error && error.name === 'AbortError';
                     const reasonCode: FallbackReasonCode = isAbort ? 'timeout' : 'upstream_error';
                     const reasonMessage = isAbort
@@ -330,11 +262,10 @@ export async function POST(req: NextRequest) {
                         createFallbackResponse(prompt, reasonCode, reasonMessage, frontierConfig.modelId),
                         { status: 200 }
                     );
-                } finally {
-                    clearTimeout(timeoutHandle);
                 }
 
                 if (!upstreamResponse.ok) {
+                    clearTimeout(timeoutHandle);
                     let providerMessage: string | null = null;
                     try {
                         providerMessage = extractProviderErrorMessage(await upstreamResponse.json());
@@ -370,11 +301,10 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
-                let providerPayload: unknown;
-                try {
-                    providerPayload = await upstreamResponse.json();
-                } catch {
-                    const reasonMessage = 'Frontier provider returned an unreadable payload. Showing deterministic fallback output.';
+                const contentType = upstreamResponse.headers.get('content-type') ?? '';
+                if (!contentType.includes('text/event-stream')) {
+                    clearTimeout(timeoutHandle);
+                    const reasonMessage = 'Frontier provider returned non-streaming response. Showing deterministic fallback output.';
                     span.setAttribute('frontier.mode', 'fallback');
                     span.setAttribute('frontier.reason_code', 'invalid_provider_response');
                     span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
@@ -391,36 +321,33 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
-                const extractedOutput = extractProviderOutput(providerPayload);
-                if (!extractedOutput) {
-                    const reasonMessage = 'Frontier provider returned empty output. Showing deterministic fallback output.';
-                    span.setAttribute('frontier.mode', 'fallback');
-                    span.setAttribute('frontier.reason_code', 'empty_provider_output');
-                    span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
-
-                    safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
-                    return NextResponse.json<FallbackModeResponse>(
-                        createFallbackResponse(
-                            prompt,
-                            'empty_provider_output',
-                            reasonMessage,
-                            frontierConfig.modelId
-                        ),
-                        { status: 200 }
-                    );
-                }
-
-                const liveOutput = extractedOutput.slice(0, FRONTIER_OUTPUT_MAX_CHARS);
-                const response: LiveModeResponse = {
-                    mode: 'live',
-                    output: liveOutput,
-                    metadata: metadataForModel(frontierConfig.modelId),
-                };
-
                 span.setAttribute('frontier.mode', 'live');
                 span.setStatus({ code: SpanStatusCode.OK });
+                streamingActive = true;
 
-                return NextResponse.json<LiveModeResponse>(response, { status: 200 });
+                const stream = createSseRelayStream({
+                    upstreamResponse,
+                    parseChunk: parseCompletionsChunk,
+                    startEventData: {
+                        mode: 'live',
+                        metadata: metadataForModel(frontierConfig.modelId),
+                    },
+                    outputMaxChars: FRONTIER_OUTPUT_MAX_CHARS,
+                    timeoutHandle,
+                    onDone: () => { span.end(); },
+                    onMidStreamError: (code) => {
+                        safeMetric(() => getFrontierGenerateFallbacksCounter().add(1, { reason_code: code }));
+                        span.end();
+                    },
+                });
+
+                return new Response(stream, {
+                    headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                    },
+                });
             } catch (error) {
                 span.recordException(error as Error);
                 span.setStatus({ code: SpanStatusCode.ERROR, message: 'Unhandled frontier route error' });
@@ -444,7 +371,9 @@ export async function POST(req: NextRequest) {
                     { status: 200 }
                 );
             } finally {
-                span.end();
+                if (!streamingActive) {
+                    span.end();
+                }
             }
         }
     );

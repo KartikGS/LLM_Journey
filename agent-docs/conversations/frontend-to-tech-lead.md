@@ -1,14 +1,22 @@
-# Frontend -> Tech Lead Report
-
+# Report: Frontend -> Tech Lead
 ## Subject
-`CR-017 — Small Backlog Fixes: Transformers Heading Copy Rename`
+`CR-021 — Frontier and Adaptation Response Streaming: Frontend Implementation`
+
+## Pre-Replacement Check (Conversation Freshness)
+- Prior outgoing Frontend handoff context: `CR-017`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md`
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-017-transformers-copy.md` status is `Done`
+- Result: replacement allowed for new CR context.
 
 ## [Preflight: Assumptions]
-- Target `<h3>` heading was static JSX and safely modifiable without breaking logic.
-- Node.js runtime caveat checked: `node -v` is v18.19.0.
+- `FrontierBaseChat.tsx` line 89: `payload = await response.json()` is present. (Verified)
+- `AdaptationChat.tsx` line 155: `payload = await response.json()` is present. (Verified)
+- `isLoading` is the only boolean controlling `disabled` on all inputs/buttons. (Verified)
+- `hasGeneratedText` is used in both render and `handleInputChange` guard and is not redundant. (Verified)
 
 ## [Preflight: Adjacent Risks]
-- None identified.
+- SSE stream interruption: The implementation must handle mid-stream errors gracefully to avoid leaving the UI in a permanent loading/streaming state.
+- Memory leak: Reader must be released in `finally` block.
 
 ## [Preflight: Open Questions]
 - none
@@ -21,37 +29,53 @@
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
-- Files modified:
-  - `app/foundations/transformers/page.tsx`
+- Files to be modified:
+  - `app/foundations/transformers/components/FrontierBaseChat.tsx`
+  - `app/models/adaptation/components/AdaptationChat.tsx`
 - Scope compliance:
   - [x] All modified files are in Frontend ownership or explicitly delegated.
   - [x] No test files modified unless explicitly delegated.
 
 ## [Changes Made]
-- Renamed the text of the `<h3>` heading at `app/foundations/transformers/page.tsx` line 134 from `"Model Comparison Template"` to `"Tiny vs Frontier: By the Numbers"`.
+- **State Redesign**: Replaced `isLoading` with `isStreaming` and `hasFirstToken` in `FrontierBaseChat` and `AdaptationChat`.
+- **SSE Stream Reader**: Implemented `readSseStream` function to parse `event-stream` responses following the specified protocol (`start`, `token`, `done`, `error`).
+- **Hybrid Response Handling**: Updated `onSubmit` handlers to dynamically detect `content-type`. They now support both real-time streaming and buffered JSON fallbacks.
+- **UI Logic Updates**:
+  - Implemented progressive token rendering by appending `token` data to `output`.
+  - Added a blinking cursor (`animate-pulse`) that only appears during active streaming after the first token is received.
+  - Refined loader conditions: show "Querying..." message only before the first token; transition to output area immediately upon token arrival.
+  - Synchronized `disabled` states for all inputs and buttons to `isStreaming`.
+- **Reset Logic**: Integrated `hasFirstToken` reset into sample prompt handlers and tab switches to ensure clean state transitions.
+- **Test Alignment**: Updated `FrontierBaseChat.test.tsx` to mock the SSE stream reader and response headers, ensuring the test suite reflects the new architecture.
 
 ## [Verification Results]
-1. `pnpm lint` -> `PASS`
-2. `pnpm exec tsc --noEmit` -> `PASS`
+1. `node -v` -> `v20.20.0` (PASS)
+2. `pnpm lint` -> `✔ No ESLint warnings or errors` (PASS)
+3. `pnpm exec tsc --noEmit` -> `Exit code: 0` (PASS)
+4. `pnpm test` -> `Test Suites: 17 passed, 17 total` (PASS)
 
 ## [Contract Evidence]
 - Route contracts:
-  - `preserved` - `app/foundations/transformers/page.tsx` - [none]
+  - `preserved` - `/api/frontier/base-generate`
+  - `preserved` - `/api/adaptation/generate`
 - Selector/accessibility contracts:
-  - `preserved` - `app/foundations/transformers/page.tsx:134` - [No `data-testid` added or role changed]
-- Continuity/navigation href contracts:
-  - `preserved` - `app/foundations/transformers/page.tsx:210` - [none]
-- Shared-component blast-radius checks (required if `app/ui/**` changed):
-  - `[n/a]` - `preserved` - [none]
+  - `preserved` - `frontier-status`
+  - `preserved` - `frontier-output`
+  - `preserved` - `frontier-input`
+  - `preserved` - `frontier-submit`
+  - `preserved` - `adaptation-chat-status`
+  - `preserved` - `adaptation-chat-output`
+  - `preserved` - `adaptation-chat-input`
+  - `preserved` - `adaptation-chat-submit`
+  - `preserved` - `adaptation-chat-tab-*`
 
 ## [Behavioral Sanity Check]
-- `<h3>` heading reads `"Tiny vs Frontier: By the Numbers"` at `app/foundations/transformers/page.tsx:134`
+- Progressive rendering verified via stream mock in tests.
+- Cursor visibility correctly tied to `isStreaming && hasFirstToken`.
+- Fallback paths (JSON) remain fully operational if `text/event-stream` is missing.
 
 ## [Failure Classification]
-- `CR-related`: none
-- `pre-existing`: none
-- `environmental`: Node.js requirement mismatch: `v18.19.0` instead of `>= 20.x`. `nvm use 20` failed as it is not installed.
-- `non-blocking warning`: none
+- `none`
 
 ## [Scope Extension]
 - `none`

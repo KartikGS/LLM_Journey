@@ -36,6 +36,50 @@ jest.mock('@/lib/otel/logger', () => ({
     },
 }));
 
+// ── SSE test helpers ──────────────────────────────────────────────────────────
+
+/** Build a mock upstream SSE Response with the given data lines. */
+function mockSseStreamResponse(lines: string[]): Response {
+    const body = lines.join('\n') + '\n';
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+        start(controller) {
+            controller.enqueue(encoder.encode(body));
+            controller.close();
+        },
+    });
+    return new Response(stream, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+    });
+}
+
+/** Parse SSE events from a response body text string. */
+async function parseSseResponse(res: Response): Promise<Array<{ event: string; data: unknown }>> {
+    const text = await res.text();
+    const events: Array<{ event: string; data: unknown }> = [];
+    const chunks = text.split('\n\n').filter((c) => c.trim() !== '');
+    for (const chunk of chunks) {
+        const lines = chunk.split('\n');
+        let eventType = '';
+        let dataStr = '';
+        for (const line of lines) {
+            if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+            if (line.startsWith('data: ')) dataStr = line.slice(6).trim();
+        }
+        if (eventType) {
+            try {
+                events.push({ event: eventType, data: JSON.parse(dataStr) });
+            } catch {
+                events.push({ event: eventType, data: dataStr });
+            }
+        }
+    }
+    return events;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 describe('Integration: Frontier Base Generate API', () => {
     const originalEnv = process.env;
     const originalFetch = global.fetch;
@@ -110,33 +154,44 @@ describe('Integration: Frontier Base Generate API', () => {
             Object.assign(process.env, HF_ENV);
         }
 
-        it('should return live envelope when HF upstream succeeds', async () => {
+        it('should return text/event-stream response with typed SSE events for live streaming path', async () => {
             setHfEnv();
 
-            (global.fetch as jest.Mock).mockResolvedValueOnce(
-                new Response(
-                    JSON.stringify({ choices: [{ text: 'HF output text' }] }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
-            );
+            const sseLines = [
+                'data: {"id":"1","choices":[{"text":" hello","finish_reason":null}]}',
+                'data: {"id":"2","choices":[{"text":" world","finish_reason":null}]}',
+                'data: [DONE]',
+            ];
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockSseStreamResponse(sseLines));
 
-            const req = createRequest({ prompt: 'Explain why scale helps language models.' });
+            const req = createRequest({ prompt: 'Explain scaling.' });
             const res = await POST(req);
-            const body = await res.json();
 
-            expect(res.status).toBe(200);
-            expect(body.mode).toBe('live');
-            expect(body.output).toBe('HF output text');
+            expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+            const events = await parseSseResponse(res);
+            const eventTypes = events.map((e) => e.event);
+            expect(eventTypes).toContain('start');
+            expect(eventTypes).toContain('token');
+            expect(eventTypes).toContain('done');
+
+            const startEvent = events.find((e) => e.event === 'start');
+            expect(startEvent?.data).toMatchObject({
+                mode: 'live',
+                metadata: expect.objectContaining({ label: 'Frontier Base Model' }),
+            });
+
+            const tokenEvents = events.filter((e) => e.event === 'token');
+            expect(tokenEvents).toHaveLength(2);
+            expect((tokenEvents[0].data as Record<string, unknown>).text).toBe(' hello');
+            expect((tokenEvents[1].data as Record<string, unknown>).text).toBe(' world');
         });
 
-        it('should send HF request body format (inputs + parameters)', async () => {
+        it('should include stream:true in HF request body', async () => {
             setHfEnv();
 
             (global.fetch as jest.Mock).mockResolvedValueOnce(
-                new Response(
-                    JSON.stringify({ choices: [{ text: 'HF output text' }] }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
+                mockSseStreamResponse(['data: [DONE]'])
             );
 
             const prompt = 'Explain why scale helps language models.';
@@ -149,9 +204,99 @@ describe('Integration: Frontier Base Generate API', () => {
                 prompt,
                 max_tokens: 256,
                 temperature: 0.4,
+                stream: true,
             });
             expect(calledBody).not.toHaveProperty('inputs');
             expect(calledBody).not.toHaveProperty('parameters');
+        });
+
+        it('should close stream at output cap (4000 chars)', async () => {
+            setHfEnv();
+
+            // Two tokens: first fills 3500 chars, second adds 600 — total exceeds 4000
+            const bigToken = 'a'.repeat(3500);
+            const smallToken = 'b'.repeat(600);
+            const sseLines = [
+                `data: {"id":"1","choices":[{"text":"${bigToken}","finish_reason":null}]}`,
+                `data: {"id":"2","choices":[{"text":"${smallToken}","finish_reason":null}]}`,
+                'data: [DONE]',
+            ];
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockSseStreamResponse(sseLines));
+
+            const req = createRequest({ prompt: 'Test cap.' });
+            const res = await POST(req);
+
+            expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+            const events = await parseSseResponse(res);
+            const tokenEvents = events.filter((e) => e.event === 'token');
+            const doneEvents = events.filter((e) => e.event === 'done');
+
+            // Both tokens emitted (cap hit after second), then done
+            expect(tokenEvents).toHaveLength(2);
+            expect(doneEvents).toHaveLength(1);
+            // No extra events after done
+            expect(events[events.length - 1].event).toBe('done');
+        });
+
+        it('should emit event:error and increment fallbacks counter on mid-stream AbortError', async () => {
+            setHfEnv();
+
+            const encoder = new TextEncoder();
+            let callCount = 0;
+            const abortStream = new ReadableStream({
+                pull(controller) {
+                    callCount += 1;
+                    if (callCount === 1) {
+                        controller.enqueue(
+                            encoder.encode('data: {"id":"1","choices":[{"text":" hi","finish_reason":null}]}\n')
+                        );
+                    } else {
+                        const err = new Error('The operation was aborted');
+                        err.name = 'AbortError';
+                        controller.error(err);
+                    }
+                },
+            });
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(abortStream, {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/event-stream' },
+                })
+            );
+
+            const req = createRequest({ prompt: 'Mid-stream abort test.' });
+            const res = await POST(req);
+
+            expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+            const events = await parseSseResponse(res);
+            const errorEvent = events.find((e) => e.event === 'error');
+            expect(errorEvent).toBeDefined();
+            expect((errorEvent?.data as Record<string, unknown>).code).toBe('timeout');
+
+            // Fallback counter incremented for mid-stream error
+            const fallbackCalls = mockAdd.mock.calls.filter((call) => call[1] && call[1].reason_code);
+            expect(fallbackCalls.length).toBeGreaterThan(0);
+        });
+
+        it('should return invalid_provider_response fallback when upstream returns application/json on OK', async () => {
+            setHfEnv();
+
+            (global.fetch as jest.Mock).mockResolvedValueOnce(
+                new Response(
+                    JSON.stringify({ choices: [{ text: 'some output' }] }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                )
+            );
+
+            const req = createRequest({ prompt: 'Explain scaling.' });
+            const res = await POST(req);
+            const body = await res.json();
+
+            expect(res.status).toBe(200);
+            expect(body.mode).toBe('fallback');
+            expect(body.reason.code).toBe('invalid_provider_response');
         });
 
         it('should return upstream_auth fallback when HF returns 401', async () => {
@@ -204,42 +349,15 @@ describe('Integration: Frontier Base Generate API', () => {
             expect(body.mode).toBe('fallback');
             expect(body.reason.code).toBe('upstream_error');
         });
-
-        it('should return empty_provider_output fallback when HF generated_text is empty', async () => {
-            setHfEnv();
-
-            (global.fetch as jest.Mock).mockResolvedValueOnce(
-                new Response(
-                    JSON.stringify({ choices: [{ text: '' }] }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
-            );
-
-            const req = createRequest({ prompt: 'Explain scaling.' });
-            const res = await POST(req);
-            const body = await res.json();
-
-            expect(res.status).toBe(200);
-            expect(body.mode).toBe('fallback');
-            expect(body.reason.code).toBe('empty_provider_output');
-        });
-
-
     });
 
-    it('should return live envelope when upstream provider succeeds', async () => {
+    it('should return invalid_provider_response fallback when upstream returns non-SSE content-type on OK', async () => {
         process.env.FRONTIER_API_KEY = 'secret-key';
 
         (global.fetch as jest.Mock).mockResolvedValueOnce(
             new Response(
                 JSON.stringify({
-                    choices: [
-                        {
-                            message: {
-                                content: 'Live provider output',
-                            },
-                        },
-                    ],
+                    choices: [{ message: { content: 'Live provider output' } }],
                 }),
                 {
                     status: 200,
@@ -254,17 +372,8 @@ describe('Integration: Frontier Base Generate API', () => {
         const body = await res.json();
 
         expect(res.status).toBe(200);
-        expect(body).toEqual({
-            mode: 'live',
-            output: 'Live provider output',
-            metadata: {
-                label: 'Frontier Base Model',
-                modelId: 'meta-llama/Meta-Llama-3-8B',
-                assistantTuned: false,
-                adaptation: 'none',
-                note: 'Pretrained on internet-scale text; not assistant fine-tuned.',
-            },
-        });
+        expect(body.mode).toBe('fallback');
+        expect(body.reason.code).toBe('invalid_provider_response');
 
         expect(global.fetch).toHaveBeenCalledWith(
             'https://router.huggingface.co/featherless-ai/v1/completions',
@@ -287,7 +396,6 @@ describe('Integration: Frontier Base Generate API', () => {
             const req = createRequest({ prompt: 'test prompt' });
             await POST(req);
 
-            // Should be called at least once for requests counter
             expect(mockAdd).toHaveBeenCalledWith(1);
         });
 
@@ -322,20 +430,20 @@ describe('Integration: Frontier Base Generate API', () => {
             expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'quota_limited' });
         });
 
-        it('does not call fallbacks counter on a successful live response', async () => {
+        it('does not call fallbacks counter on a successful live streaming response', async () => {
             Object.assign(process.env, HF_ENV);
             (global.fetch as jest.Mock).mockResolvedValueOnce(
-                new Response(
-                    JSON.stringify({ choices: [{ text: 'success' }] }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
+                mockSseStreamResponse([
+                    'data: {"id":"1","choices":[{"text":" success","finish_reason":null}]}',
+                    'data: [DONE]',
+                ])
             );
 
             const req = createRequest({ prompt: 'test prompt' });
-            await POST(req);
+            const res = await POST(req);
+            // Consume the stream to trigger onDone callback
+            await res.text();
 
-            // mockAdd should be called for requests counter (1), but not for fallbacks
-            // Check that no call has a reason_code
             const fallbackCalls = mockAdd.mock.calls.filter(call => call[1] && call[1].reason_code);
             expect(fallbackCalls.length).toBe(0);
         });
@@ -357,14 +465,15 @@ describe('Integration: Frontier Base Generate API', () => {
         it('does not set FRONTIER_API_KEY as a span attribute', async () => {
             Object.assign(process.env, HF_ENV);
             (global.fetch as jest.Mock).mockResolvedValueOnce(
-                new Response(
-                    JSON.stringify({ choices: [{ text: 'success' }] }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
+                mockSseStreamResponse([
+                    'data: {"id":"1","choices":[{"text":" success","finish_reason":null}]}',
+                    'data: [DONE]',
+                ])
             );
 
             const req = createRequest({ prompt: 'test prompt' });
-            await POST(req);
+            const res = await POST(req);
+            await res.text();
 
             mockSpan.setAttribute.mock.calls.forEach(call => {
                 const value = call[1];

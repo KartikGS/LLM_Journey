@@ -1,7 +1,15 @@
 # Handoff: Testing Agent → Tech Lead
 
 ## Subject
-`CR-019 — Generation Config Centralization: Test Suite Alignment`
+`CR-021 — Frontier and Adaptation Response Streaming: E2E Test Coverage`
+
+## Pre-Replacement Check (Conversation Freshness)
+- Prior content: `CR-019` (`Generation Config Centralization: Test Suite Alignment`)
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-019-plan.md` ✓ (confirmed in tech-lead-to-testing.md)
+- Evidence 2 (prior CR closed): `CR-019` status `Completed` per `agent-docs/project-log.md` ✓ (confirmed in tech-lead-to-testing.md)
+- Result: replacement allowed.
+
+---
 
 ## Status
 `in_progress`
@@ -9,90 +17,121 @@
 ## Preflight
 
 ### Assumptions I'm making
-1. `lib/config/generation.ts` is the new canonical source for generation settings; env vars (except `FRONTIER_API_KEY`) are ignored by the routes.
-2. `jest.isolateModules` combined with `jest.mock('@/lib/config/generation', ...)` will effectively isolate the route's config import for targeted testing (e.g., custom output cap).
-3. The `invalid_config` response path is now deprecated in the routes (confirmed by Backend report).
+1. All `data-testid` contracts listed in Task 2 are present in `AdaptationChat.tsx` — verified by source read: `adaptation-chat` (line 330), `adaptation-chat-tab-full-finetuning` (TAB_CONFIGS line 31), `adaptation-chat-tab-lora-peft` (TAB_CONFIGS line 45), `adaptation-chat-tab-prompt-prefix` (TAB_CONFIGS line 59), `adaptation-chat-form` (line 462), `adaptation-chat-input` (line 470), `adaptation-chat-submit` (line 481), `adaptation-chat-output` (line 497), `adaptation-chat-status` (line 434). All contracts confirmed.
+2. `frontier-submit` re-enable timeout concern: streaming extends completion time beyond the previous JSON-response baseline. Will evaluate 15s vs. 30s empirically via E2E run.
+3. Node runtime may be below `>=20.x` (same as CR-019 where v18.19.0 was observed). Will classify as `environmental` if confirmed.
+4. E2E requires a running dev server on port 3001. Will classify as `environmental` if the server cannot start due to sandbox constraints.
+5. The `$` prefix in `adaptation-chat-output` appears once `hasFirstToken = true` (mid-stream, line 520 of `AdaptationChat.tsx`) — assertion should be present well before stream completes.
 
 ### Risks not covered by current scope
-- **Module Mock Leakage**: Mocking `lib/config/generation` inside `isolateModules` must be handled carefully to ensure it doesn't leak into subsequent tests or sibling suites if using global jest mocks.
-- **Node v18 Runtime**: As noted in handoff, I'm executing on Node v18.19.0. I will classify failures as environmental if they relate to runtime version mismatches.
+- **LoRA/PEFT Italian model**: The `lora-peft` strategy calls a non-English-primary model. E2E submit cycle test covers `full-finetuning` only per handoff scope; LoRA behavior is untested.
+- **`prompt-prefix` base model**: Uses a non-instruct base model with intentionally lower reliability. Fallback path may trigger more often; out of scope per handoff.
+- **Streaming timeout flakiness**: `{ timeout: 30000 }` for re-enable may still be insufficient under high server load. Not in scope to increase further without Tech Lead approval.
 
 ### Questions for Tech Lead
 - None.
 
-## CR-019 Testing Report
+## Preflight Status
+- `clear-to-implement`
 
-### [Status]
-- `completed`
+---
 
-### [Changes Made]
-- **`__tests__/api/frontier-base-generate.test.ts`**:
-  - Simplified `beforeEach` to only delete `FRONTIER_API_KEY`.
-  - Removed outdated `invalid_config` test case as the route no longer produces this fallback reason.
-  - Simplified `HF_ENV` and `Metrics and Security` constants.
-  - Updated `live` mode test to assert against config-driven `apiUrl` and `modelId`.
-  - Updated `missing_config` expectation to reflect that `modelId` is now always provided from config.
-- **`__tests__/api/adaptation-generate.test.ts`**:
-  - Simplified `beforeEach` and `setConfigEnv` helper to manage only `FRONTIER_API_KEY`.
-  - Simplified `VALID_ENV` constant.
-  - Rewrote the output-cap test to use `jest.isolateModules` with a `jest.mock('@/lib/config/generation', ...)` pattern to override `outputMaxChars` without relying on env vars.
+## Status
+`completed`
 
-### [Verification Results]
+## Changes Made
 
-- **Command**: `node -v`
-  - **Scope**: Runtime Preflight
-  - **Execution Mode**: sandboxed
-  - **Result**: `PASS` (v18.19.0 - see environmental note).
-- **Command**: `pnpm test`
-  - **Scope**: full suite (17 suites)
-  - **Execution Mode**: sandboxed
-  - **Result**: `PASS` (158 passed, 0 failed). *Note: 1 test removed (invalid_config) from CR-018 baseline of 159.*
-- **Command**: `pnpm lint`
-  - **Scope**: full suite
-  - **Execution Mode**: sandboxed
-  - **Result**: `PASS` (No ESLint warnings or errors).
-- **Command**: `pnpm exec tsc --noEmit`
-  - **Scope**: full suite
-  - **Execution Mode**: sandboxed
-  - **Result**: `PASS` (exit code 0).
+### Task 1: `__tests__/e2e/transformer.spec.ts`
+- **No changes made.** The frontier submit cycle test (`should complete frontier submit cycle and show output/status @critical`) passed with the existing `{ timeout: 15000 }` assertion (line 63). Retaining per handoff instruction: "If 15s is adequate, retain."
+- **Important caveat**: Both frontier and adaptation routes ran in fallback mode during the E2E run (`upstream_auth` 401 — no `FRONTIER_API_KEY` in environment). The live streaming path was not exercised. The 15s adequacy finding applies to the fallback JSON path only. See Out-of-Scope Flags below.
 
-### [Reproduction Matrix]
-| command | mode | result | classification note |
-|---|---|---|---|
-| `pnpm test __tests__/api/frontier-base-generate.test.ts` | sandboxed | PASS (16 passed) | |
-| `pnpm test __tests__/api/adaptation-generate.test.ts` | sandboxed | PASS (31 passed) | |
-| `pnpm test` | sandboxed | PASS (158 passed) | |
+### Task 2: `__tests__/e2e/adaptation.spec.ts`
+- **Created** `__tests__/e2e/adaptation.spec.ts` with two tests:
+  - `should expose static adaptation contracts @critical` — navigates to `/models/adaptation` and asserts all 9 contracted `data-testid` elements are visible.
+  - `should complete adaptation submit cycle (full-finetuning) @critical` — clicks the full-finetuning tab, fills input, submits, asserts disabled → re-enabled (`timeout: 30000`), asserts `Mode: (live|fallback)/i` in status, asserts `$` in output.
 
-### [Failure Classification]
+---
+
+## Verification Results
+
+- Command: `node -v`
+  - Scope: Runtime Preflight
+  - Execution Mode: local-equivalent/unsandboxed (nvm activated)
+  - Result: Default shell = v16.20.1 (below 20.x); activated `nvm use 20` → v20.20.0 used for all verification gates.
+
+- Command: `pnpm test`
+  - Scope: full suite (17 suites)
+  - Execution Mode: local-equivalent/unsandboxed (Node 20)
+  - Result: PASS — 162 passed, 0 failed.
+
+- Command: `pnpm lint`
+  - Scope: full suite
+  - Execution Mode: local-equivalent/unsandboxed
+  - Result: PASS — No ESLint warnings or errors.
+
+- Command: `pnpm exec tsc --noEmit`
+  - Scope: full suite
+  - Execution Mode: local-equivalent/unsandboxed
+  - Result: PASS — exit code 0.
+
+- Command: `pnpm test:e2e`
+  - Scope: full suite — adaptation.spec.ts, landing-page.spec.ts, navigation.spec.ts, transformer.spec.ts
+  - Execution Mode: local-equivalent/unsandboxed
+  - Browser Scope: chromium, firefox, webkit (10 tests × 3 browsers = 30 total)
+  - Result: PASS — 30 passed in 1m 24s.
+
+### Reproduction Matrix (E2E)
+| command | mode | browsers | result | classification note |
+|---|---|---|---|---|
+| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | 30/30 PASS (1m 24s) | All tests pass. Fallback path exercised (no API key). |
+
+---
+
+## Dependency Consumption
+- none
+
+---
+
+## Failure Classification
 - `CR-related`: none.
 - `pre-existing`: none.
-- `environmental`: Node runtime `v18.19.0` (< `>=20.x`) and `nvm` unavailable.
-- `non-blocking warning`: `pnpm` engine warning and existing Jest open-handle note post-run.
+- `environmental`:
+  - Node v16.20.1 on default shell (below `>=20.x`). Recovered via `nvm use 20` to v20.20.0. Pre-existing (same as CR-019).
+  - No `FRONTIER_API_KEY` in env — both routes ran in fallback mode during E2E. Live streaming path not exercised.
+  - OTEL proxy upstream collector not running on port 4318 (ECONNREFUSED). Pre-existing; tests passed per observability safety invariant (tracing failures must not crash UI).
+- `non-blocking warning`:
+  - `pnpm` engine warning (pre-existing).
+  - Jest open-handle note post-run (pre-existing).
+  - `next lint` deprecation notice (pre-existing).
 
-### [Out-of-Scope Flags]
-- none.
+---
 
-### [Meta Observations (CR-019)]
+## Out-of-Scope Flags
 
-1. **Historical artifact vs procedure misalignment**
-   - **Observation**: The instruction to "treat closed CRs as historical artifacts" is clear, but when a requirement changes (like env vars moving to config), the old CRs in `agent-docs/requirements/` still point to the old contract.
-   - **Recommendation**: Ensure that agents always start technical discovery from `testing-contract-registry.md` rather than old CRs to avoid "contract drift" in tests.
+1. **Live streaming timeout risk** (`non-blocking`): The 15s timeout on `frontierSubmit.toBeEnabled({ timeout: 15000 })` (transformer.spec.ts:63) was retained because the test passed. However, the live streaming path (valid API key → SSE stream) was not exercised. In a live environment where the frontier route streams tokens over multiple seconds, 15s may be insufficient. **Recommendation**: Tech Lead may wish to extend to 30s proactively to align with adaptation spec and guard against live-path latency.
 
-2. **Freshness-rule efficiency after CR closure**
-   - **Observation**: The pre-replacement check is a valuable safety gate. Confirming `CR-018` was closed before replacing `testing-to-tech-lead.md` prevents accidental overwrites of unfinished work.
-   - **Recommendation**: Maintain this rule strictly; it is low overhead for high safety.
+2. **pnpm test count delta**: `pnpm test` shows 162 passed (vs CR-019 baseline 158). Difference of +4 is attributable to new unit/component tests added by Frontend/Backend agents in this CR's scope. Not a regression.
 
-3. **Long-term retention/deletion policy for old CR artifacts**
-   - **Observation**: As a sub-agent, I had to scan through many files in `agent-docs/meta/` and `agent-docs/plans/` to find the relevant context.
-   - **Recommendation**: Sub-agents should be given exact paths to the current CR's plan and the *immediately preceding* report in the handoff to minimize discovery turn cost.
+---
 
-4. **Parallel CR execution across branches**
-   - **Observation**: The current single-file report model (`testing-to-tech-lead.md`) is inherently serial.
-   - **Recommendation**: If the user wants parallel testing of different features, we must move to CR-unique report filenames (e.g., `testing-to-tech-lead-CR-019.md`).
+## Definition of Done Check
 
-5. **Agent workload limits and load-management strategy**
-   - **Observation**: Handing off specific diff instructions (like the Tech Lead did for `frontier-base-generate.test.ts`) significantly reduces the "cognitive load" of re-reading code to find target lines.
-   - **Recommendation**: Encourage Tech Leads to provide "code-intent snippets" in handoffs to keep sub-agent sessions focused on verification rather than discovery.
+- [x] `transformer.spec.ts` timeout evaluated — 15s adequate in fallback mode; retained. Risk documented.
+- [x] `adaptation.spec.ts` created: static contracts test + submit cycle test for `full-finetuning`
+- [x] All `data-testid` contracts verified visible on adaptation page (source-verified + E2E PASS)
+- [x] `pnpm test:e2e` passes — 30/30, no new failures
+- [x] `pnpm test` (unit + integration) passes — 162 passed
+- [x] `pnpm lint` passes
+- [x] `pnpm exec tsc --noEmit` passes
 
-### [Ready for Next Agent]
+---
+
+## Ready for Next Agent
 - `yes`
+
+## New Artifacts
+- `__tests__/e2e/adaptation.spec.ts` (created)
+
+## Follow-up Recommendations
+- Tech Lead: consider extending `frontierSubmit.toBeEnabled({ timeout: 15000 })` to `{ timeout: 30000 }` in transformer.spec.ts:63 to guard against live streaming latency in environments with a valid API key. Minor, safe change — actionable at Tech Lead discretion.
+- Tech Lead: OTel collector ECONNREFUSED (port 4318) is pre-existing environmental — no action required for this CR.

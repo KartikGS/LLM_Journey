@@ -15,12 +15,14 @@ export const FRONTIER_GENERATION_CONFIG = {
     provider: 'huggingface' as FrontierProvider,
     apiUrl: 'https://router.huggingface.co/featherless-ai/v1/completions',
     modelId: 'meta-llama/Meta-Llama-3-8B',
-    timeoutMs: 8000,
+    // CR-021: increased from 8000 (buffered) — now covers connection + total stream duration.
+    timeoutMs: 30000,
 } as const;
 
 export const ADAPTATION_GENERATION_CONFIG = {
     apiUrl: 'https://router.huggingface.co/featherless-ai/v1/chat/completions',
-    timeoutMs: 8000,
+    // CR-021: increased from 8000 (buffered) — now covers connection + total stream duration.
+    timeoutMs: 30000,
     outputMaxChars: 4000,
     models: {
         'full-finetuning': 'meta-llama/Meta-Llama-3-8B-Instruct',

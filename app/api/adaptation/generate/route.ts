@@ -14,6 +14,7 @@ import {
     extractProviderErrorMessage,
     mapProviderFailure,
 } from '@/lib/server/generation/shared';
+import { parseChatChunk, createSseRelayStream } from '@/lib/server/generation/streaming';
 
 const ROUTE_PATH = '/api/adaptation/generate';
 const PROMPT_MAX_CHARS = 2000;
@@ -55,12 +56,6 @@ type FallbackModeResponse = {
         code: FallbackReasonCode;
         message: string;
     };
-    metadata: AdaptationModelMetadata;
-};
-
-type LiveModeResponse = {
-    mode: 'live';
-    output: string;
     metadata: AdaptationModelMetadata;
 };
 
@@ -120,41 +115,6 @@ function buildMessages(
     return [{ role: 'user', content: prompt }];
 }
 
-function extractChatOutput(payload: unknown): string | null {
-    if (typeof payload !== 'object' || payload === null) {
-        return null;
-    }
-
-    const root = payload as Record<string, unknown>;
-    const choices = root.choices;
-
-    if (!Array.isArray(choices) || choices.length === 0) {
-        return null;
-    }
-
-    const firstChoice = choices[0];
-    if (typeof firstChoice !== 'object' || firstChoice === null) {
-        return null;
-    }
-
-    const message = (firstChoice as Record<string, unknown>).message;
-    if (typeof message !== 'object' || message === null) {
-        return null;
-    }
-
-    const content = (message as Record<string, unknown>).content;
-    if (typeof content !== 'string') {
-        return null;
-    }
-
-    const trimmed = content.trim();
-    return trimmed.length > 0 ? trimmed : null;
-}
-
-
-
-
-
 function createFallbackResponse(
     strategy: StrategyId,
     reasonCode: FallbackReasonCode,
@@ -185,6 +145,8 @@ export async function POST(req: NextRequest) {
             span.setAttribute('http.method', 'POST');
             span.setAttribute('http.route', ROUTE_PATH);
             safeMetric(() => getAdaptationGenerateRequestsCounter().add(1));
+
+            let streamingActive = false;
 
             try {
                 let rawBody: unknown;
@@ -256,6 +218,7 @@ export async function POST(req: NextRequest) {
                     model: config.modelId,
                     messages: buildMessages(strategy, prompt),
                     temperature: 0.4,
+                    stream: true,
                 };
 
                 let upstreamResponse: Response;
@@ -270,6 +233,7 @@ export async function POST(req: NextRequest) {
                         signal: controller.signal,
                     });
                 } catch (error) {
+                    clearTimeout(timeoutHandle);
                     const isAbort = error instanceof Error && error.name === 'AbortError';
                     const reasonCode: FallbackReasonCode = isAbort ? 'timeout' : 'upstream_error';
                     const reasonMessage = isAbort
@@ -295,11 +259,10 @@ export async function POST(req: NextRequest) {
                         createFallbackResponse(strategy, reasonCode, reasonMessage, config.modelId),
                         { status: 200 }
                     );
-                } finally {
-                    clearTimeout(timeoutHandle);
                 }
 
                 if (!upstreamResponse.ok) {
+                    clearTimeout(timeoutHandle);
                     let providerMessage: string | null = null;
                     try {
                         providerMessage = extractProviderErrorMessage(await upstreamResponse.json());
@@ -335,12 +298,11 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
-                let providerPayload: unknown;
-                try {
-                    providerPayload = await upstreamResponse.json();
-                } catch {
+                const contentType = upstreamResponse.headers.get('content-type') ?? '';
+                if (!contentType.includes('text/event-stream')) {
+                    clearTimeout(timeoutHandle);
                     const reasonMessage =
-                        'Adaptation provider returned an unreadable payload. Showing deterministic fallback output.';
+                        'Adaptation provider returned non-streaming response. Showing deterministic fallback output.';
                     span.setAttribute('adaptation.mode', 'fallback');
                     span.setAttribute('adaptation.reason_code', 'invalid_provider_response');
                     span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
@@ -357,40 +319,36 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
-                const extractedOutput = extractChatOutput(providerPayload);
-                if (!extractedOutput) {
-                    const reasonMessage =
-                        'Adaptation provider returned empty output. Showing deterministic fallback output.';
-                    span.setAttribute('adaptation.mode', 'fallback');
-                    span.setAttribute('adaptation.reason_code', 'empty_provider_output');
-                    span.setStatus({ code: SpanStatusCode.OK, message: reasonMessage });
-
-                    safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: 'empty_provider_output' }));
-                    return NextResponse.json<FallbackModeResponse>(
-                        createFallbackResponse(
-                            strategy,
-                            'empty_provider_output',
-                            reasonMessage,
-                            config.modelId
-                        ),
-                        { status: 200 }
-                    );
-                }
-
                 span.setAttribute('adaptation.mode', 'live');
                 span.setStatus({ code: SpanStatusCode.OK });
+                streamingActive = true;
 
-                return NextResponse.json<LiveModeResponse>(
-                    {
+                const stream = createSseRelayStream({
+                    upstreamResponse,
+                    parseChunk: parseChatChunk,
+                    startEventData: {
                         mode: 'live',
-                        output: extractedOutput.slice(0, ADAPTATION_OUTPUT_MAX_CHARS),
                         metadata: {
                             strategy,
                             modelId: config.modelId,
                         },
                     },
-                    { status: 200 }
-                );
+                    outputMaxChars: ADAPTATION_OUTPUT_MAX_CHARS,
+                    timeoutHandle,
+                    onDone: () => { span.end(); },
+                    onMidStreamError: (code) => {
+                        safeMetric(() => getAdaptationGenerateFallbacksCounter().add(1, { reason_code: code }));
+                        span.end();
+                    },
+                });
+
+                return new Response(stream, {
+                    headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                    },
+                });
             } catch (error) {
                 span.recordException(error as Error);
                 span.setStatus({ code: SpanStatusCode.ERROR, message: 'Unhandled adaptation route error' });
@@ -414,7 +372,9 @@ export async function POST(req: NextRequest) {
                     { status: 200 }
                 );
             } finally {
-                span.end();
+                if (!streamingActive) {
+                    span.end();
+                }
             }
         }
     );

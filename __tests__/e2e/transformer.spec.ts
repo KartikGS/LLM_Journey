@@ -60,7 +60,7 @@ test.describe('Transformer Page', () => {
         await frontierSubmit.click();
 
         await expect(frontierSubmit).toBeDisabled();
-        await expect(frontierSubmit).toBeEnabled({ timeout: 15000 });
+        await expect(frontierSubmit).toBeEnabled({ timeout: 30000 });
         await expect(frontierStatus).toContainText(/Mode: (live|fallback)/i);
         await expect(frontierOutput).toContainText('$');
     });

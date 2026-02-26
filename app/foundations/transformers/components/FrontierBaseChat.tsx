@@ -35,7 +35,8 @@ export default function FrontierBaseChat() {
   const [status, setStatus] = useState<FrontierStatus>('idle');
   const [statusText, setStatusText] = useState(DEFAULT_STATUS);
   const [modelId, setModelId] = useState('model-unknown');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [hasFirstToken, setHasFirstToken] = useState(false);
   const [hasGeneratedText, setHasGeneratedText] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -46,14 +47,16 @@ export default function FrontierBaseChat() {
     setStatus('idle');
     setStatusText(DEFAULT_STATUS);
     setHasGeneratedText(false);
+    setHasFirstToken(false);
     textareaRef.current?.focus();
   }
 
   function handleInputChange(value: string) {
     setPrompt(value);
-    if (hasGeneratedText && !isLoading) {
+    if ((hasGeneratedText || hasFirstToken) && !isStreaming) {
       setOutput('');
       setHasGeneratedText(false);
+      setHasFirstToken(false);
       setStatus('idle');
       setStatusText(DEFAULT_STATUS);
     }
@@ -71,7 +74,77 @@ export default function FrontierBaseChat() {
       return;
     }
 
-    setIsLoading(true);
+    async function readSseStream(response: Response): Promise<void> {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      // For statusText finalization on done — capture modelId locally
+      let streamModelId = 'model-unknown';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          let currentEvent = '';
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              currentEvent = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              const dataStr = line.slice(6).trim();
+              let data: Record<string, unknown> = {};
+              try {
+                data = JSON.parse(dataStr);
+              } catch {
+                continue;
+              }
+
+              if (currentEvent === 'start') {
+                const metadata = toRecord(data.metadata);
+                const mid = typeof metadata?.modelId === 'string' ? metadata.modelId : 'model-unknown';
+                streamModelId = mid;
+                setModelId(mid);
+                // mode is always 'live' for SSE — no status text change yet
+              } else if (currentEvent === 'token') {
+                const text = typeof data.text === 'string' ? data.text : '';
+                if (text) {
+                  setHasFirstToken(true);
+                  setOutput((prev) => prev + text);
+                }
+              } else if (currentEvent === 'done') {
+                setStatus('live');
+                setStatusText(
+                  `Mode: live. Response came from configured frontier base model (${streamModelId}).`
+                );
+                return;
+              } else if (currentEvent === 'error') {
+                const message =
+                  typeof data.message === 'string' ? data.message : 'Streaming was interrupted.';
+                setStatus('error');
+                setStatusText(message);
+                setOutput('');
+                setHasFirstToken(false);
+                return;
+              }
+              currentEvent = '';
+            }
+          }
+        }
+      } finally {
+        try {
+          reader.releaseLock();
+        } catch {
+          /* already released */
+        }
+      }
+    }
+
+    setIsStreaming(true);
+    setHasFirstToken(false);
     setStatus('idle');
     setStatusText('Loading: querying frontier base model...');
     setOutput('');
@@ -84,22 +157,22 @@ export default function FrontierBaseChat() {
         body: JSON.stringify({ prompt: trimmedPrompt }),
       });
 
-      let payload: unknown;
-      try {
-        payload = await response.json();
-      } catch {
-        setStatus('error');
-        setStatusText('Frontier endpoint returned unreadable JSON.');
-        setOutput('');
-        setHasGeneratedText(false);
-        return;
-      }
-
-      const payloadRecord = toRecord(payload);
-
       if (!response.ok) {
+        let payload: unknown;
+        try {
+          payload = await response.json();
+        } catch {
+          setStatus('error');
+          setStatusText('Frontier endpoint returned unreadable JSON.');
+          setOutput('');
+          setHasGeneratedText(false);
+          return;
+        }
+
+        const payloadRecord = toRecord(payload);
         const errorRecord = toRecord(payloadRecord?.error);
-        const errorCode = (errorRecord?.code as FrontierRequestErrorCode | undefined) ?? 'invalid_prompt';
+        const errorCode =
+          (errorRecord?.code as FrontierRequestErrorCode | undefined) ?? 'invalid_prompt';
         const errorMessage =
           typeof errorRecord?.message === 'string' && errorRecord.message.trim().length > 0
             ? errorRecord.message
@@ -112,59 +185,83 @@ export default function FrontierBaseChat() {
         return;
       }
 
-      const outputText = typeof payloadRecord?.output === 'string' ? payloadRecord.output.trim() : '';
-      if (outputText.length === 0) {
+      const contentType = response.headers.get('content-type') ?? '';
+
+      if (!contentType.includes('text/event-stream')) {
+        let payload: unknown;
+        try {
+          payload = await response.json();
+        } catch {
+          setStatus('error');
+          setStatusText('Frontier endpoint returned unreadable JSON.');
+          setOutput('');
+          setHasGeneratedText(false);
+          return;
+        }
+
+        const payloadRecord = toRecord(payload);
+        const outputText =
+          typeof payloadRecord?.output === 'string' ? payloadRecord.output.trim() : '';
+        if (outputText.length === 0) {
+          setStatus('error');
+          setStatusText('Frontier endpoint returned empty output.');
+          setOutput('');
+          setHasGeneratedText(false);
+          return;
+        }
+
+        const metadataRecord = toRecord(payloadRecord?.metadata);
+        const responseModelId =
+          typeof metadataRecord?.modelId === 'string' && metadataRecord.modelId.trim().length > 0
+            ? metadataRecord.modelId
+            : 'model-unknown';
+        setModelId(responseModelId);
+
+        if (payloadRecord?.mode === 'live') {
+          setStatus('live');
+          setStatusText(
+            `Mode: live. Response came from configured frontier base model (${responseModelId}).`
+          );
+          setOutput(outputText);
+          setHasGeneratedText(true);
+          return;
+        }
+
+        if (payloadRecord?.mode === 'fallback') {
+          const reasonRecord = toRecord(payloadRecord.reason);
+          const reasonCode =
+            typeof reasonRecord?.code === 'string' && reasonRecord.code.trim().length > 0
+              ? reasonRecord.code
+              : 'unknown_fallback';
+          const reasonMessage =
+            typeof reasonRecord?.message === 'string' && reasonRecord.message.trim().length > 0
+              ? reasonRecord.message
+              : 'Fallback output returned without provider details.';
+
+          setStatus('fallback');
+          setStatusText(`Mode: fallback (${reasonCode}). ${reasonMessage}`);
+          setOutput(outputText);
+          setHasGeneratedText(true);
+          return;
+        }
+
         setStatus('error');
-        setStatusText('Frontier endpoint returned empty output.');
+        setStatusText('Unexpected response mode from frontier endpoint.');
         setOutput('');
         setHasGeneratedText(false);
         return;
       }
 
-      const metadataRecord = toRecord(payloadRecord?.metadata);
-      const responseModelId =
-        typeof metadataRecord?.modelId === 'string' && metadataRecord.modelId.trim().length > 0
-          ? metadataRecord.modelId
-          : 'model-unknown';
-      setModelId(responseModelId);
-
-      if (payloadRecord?.mode === 'live') {
-        setStatus('live');
-        setStatusText(`Mode: live. Response came from configured frontier base model (${responseModelId}).`);
-        setOutput(outputText);
-        setHasGeneratedText(true);
-        return;
-      }
-
-      if (payloadRecord?.mode === 'fallback') {
-        const reasonRecord = toRecord(payloadRecord.reason);
-        const reasonCode =
-          typeof reasonRecord?.code === 'string' && reasonRecord.code.trim().length > 0
-            ? reasonRecord.code
-            : 'unknown_fallback';
-        const reasonMessage =
-          typeof reasonRecord?.message === 'string' && reasonRecord.message.trim().length > 0
-            ? reasonRecord.message
-            : 'Fallback output returned without provider details.';
-
-        setStatus('fallback');
-        setStatusText(`Mode: fallback (${reasonCode}). ${reasonMessage}`);
-        setOutput(outputText);
-        setHasGeneratedText(true);
-        return;
-      }
-
-      setStatus('error');
-      setStatusText('Unexpected response mode from frontier endpoint.');
-      setOutput('');
-      setHasGeneratedText(false);
+      // SSE streaming path
+      await readSseStream(response);
     } catch (error) {
       setStatus('error');
       setStatusText(`Request failed: ${getErrorMessage(error)}`);
       setOutput('');
       setHasGeneratedText(false);
+      setHasFirstToken(false);
     } finally {
-      setIsLoading(false);
+      setIsStreaming(false);
     }
   }
 
@@ -192,7 +289,7 @@ export default function FrontierBaseChat() {
                 key={sample}
                 type="button"
                 onClick={() => sampleInput(sample)}
-                disabled={isLoading}
+                disabled={isStreaming}
                 className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left max-w-full truncate"
               >
                 {sample}
@@ -242,17 +339,17 @@ export default function FrontierBaseChat() {
               maxLength={2000}
               className="w-full p-4 pr-12 text-base rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 outline-none transition-all resize-none shadow-inner"
               placeholder="Ask a broad knowledge or synthesis question..."
-              disabled={isLoading}
+              disabled={isStreaming}
             />
 
             <div className="absolute top-1/2 -translate-y-1/2 right-2">
               <button
                 data-testid="frontier-submit"
                 type="submit"
-                disabled={isLoading}
+                disabled={isStreaming}
                 className="p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md shadow-indigo-600/20"
               >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -276,16 +373,21 @@ export default function FrontierBaseChat() {
           </div>
 
           <div className="p-4 font-mono text-sm leading-relaxed overflow-y-auto flex-1">
-            {isLoading ? (
+            {isStreaming && !hasFirstToken ? (
               <span className="animate-pulse text-indigo-300 inline-flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Querying frontier endpoint...
               </span>
-            ) : hasGeneratedText ? (
-              <div className={`${status === 'fallback' ? 'text-amber-300' : 'text-emerald-300'} whitespace-pre-wrap`}>
+            ) : hasGeneratedText || hasFirstToken ? (
+              <div
+                className={`${status === 'fallback' ? 'text-amber-300' : 'text-emerald-300'
+                  } whitespace-pre-wrap`}
+              >
                 <span className="text-gray-500 select-none mr-2">$</span>
                 {output}
-                <span className="animate-pulse inline-block w-2 h-4 bg-emerald-300 ml-1 align-middle" />
+                {isStreaming && hasFirstToken && (
+                  <span className="animate-pulse inline-block w-2 h-4 bg-emerald-300 ml-1 align-middle" />
+                )}
               </div>
             ) : (
               <div className="text-gray-500 space-y-2">

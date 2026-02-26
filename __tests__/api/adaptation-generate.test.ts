@@ -50,6 +50,58 @@ const FALLBACK_TEXT = {
 const ADAPTATION_SYSTEM_PROMPT =
     'You are a helpful assistant. Answer the following question clearly and concisely.\n\n';
 
+// ── SSE test helpers ──────────────────────────────────────────────────────────
+
+/** Build a mock upstream SSE Response with the given data lines. */
+function mockSseStreamResponse(lines: string[]): Response {
+    const body = lines.join('\n') + '\n';
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+        start(controller) {
+            controller.enqueue(encoder.encode(body));
+            controller.close();
+        },
+    });
+    return new Response(stream, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+    });
+}
+
+/** Build a single-token chat SSE response for the live path. */
+function mockChatSseResponse(content: string): Response {
+    return mockSseStreamResponse([
+        `data: {"id":"1","choices":[{"delta":{"content":"${content}"},"finish_reason":null}]}`,
+        'data: [DONE]',
+    ]);
+}
+
+/** Parse SSE events from a response body text string. */
+async function parseSseResponse(res: Response): Promise<Array<{ event: string; data: unknown }>> {
+    const text = await res.text();
+    const events: Array<{ event: string; data: unknown }> = [];
+    const chunks = text.split('\n\n').filter((c) => c.trim() !== '');
+    for (const chunk of chunks) {
+        const lines = chunk.split('\n');
+        let eventType = '';
+        let dataStr = '';
+        for (const line of lines) {
+            if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+            if (line.startsWith('data: ')) dataStr = line.slice(6).trim();
+        }
+        if (eventType) {
+            try {
+                events.push({ event: eventType, data: JSON.parse(dataStr) });
+            } catch {
+                events.push({ event: eventType, data: dataStr });
+            }
+        }
+    }
+    return events;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 describe('Integration: Adaptation Generate API', () => {
     const originalEnv = process.env;
     const originalFetch = global.fetch;
@@ -74,15 +126,6 @@ describe('Integration: Adaptation Generate API', () => {
         process.env.FRONTIER_API_KEY = FRONTIER_API_KEY;
         // Satisfy TypeScript — strategy parameter used for documentation clarity only here
         void strategy;
-    }
-
-    function mockLiveResponse(content: string) {
-        (global.fetch as jest.Mock).mockResolvedValueOnce(
-            new Response(
-                JSON.stringify({ choices: [{ message: { content } }] }),
-                { status: 200, headers: { 'Content-Type': 'application/json' } }
-            )
-        );
     }
 
     beforeEach(() => {
@@ -171,90 +214,153 @@ describe('Integration: Adaptation Generate API', () => {
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    // ── Live Response — per strategy ─────────────────────────────────────────
+    // ── Live Streaming Response — per strategy ────────────────────────────────
 
-    it('should return live mode response for full-finetuning when configured', async () => {
+    it('should return text/event-stream with typed SSE events for full-finetuning', async () => {
         setConfigEnv('full-finetuning');
-        mockLiveResponse('Fine-tuning output');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Fine-tuning output'));
+
+        const req = createRequest({ prompt: 'Explain fine-tuning.', strategy: 'full-finetuning' });
+        const res = await POST(req);
+
+        expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+        const events = await parseSseResponse(res);
+        const startEvent = events.find((e) => e.event === 'start');
+        const tokenEvents = events.filter((e) => e.event === 'token');
+        const doneEvents = events.filter((e) => e.event === 'done');
+
+        expect(startEvent?.data).toMatchObject({
+            mode: 'live',
+            metadata: expect.objectContaining({ strategy: 'full-finetuning', modelId: MODEL_IDS['full-finetuning'] }),
+        });
+        expect(tokenEvents).toHaveLength(1);
+        expect((tokenEvents[0].data as Record<string, unknown>).text).toBe('Fine-tuning output');
+        expect(doneEvents).toHaveLength(1);
+    });
+
+    it('should return text/event-stream with typed SSE events for lora-peft', async () => {
+        setConfigEnv('lora-peft');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('LoRA output'));
+
+        const req = createRequest({ prompt: 'Explain LoRA.', strategy: 'lora-peft' });
+        const res = await POST(req);
+
+        expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+        const events = await parseSseResponse(res);
+        const startEvent = events.find((e) => e.event === 'start');
+        expect(startEvent?.data).toMatchObject({
+            mode: 'live',
+            metadata: expect.objectContaining({ strategy: 'lora-peft', modelId: MODEL_IDS['lora-peft'] }),
+        });
+        expect(events.filter((e) => e.event === 'token')).toHaveLength(1);
+    });
+
+    it('should return text/event-stream with typed SSE events for prompt-prefix', async () => {
+        setConfigEnv('prompt-prefix');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Prompt prefix output'));
+
+        const req = createRequest({ prompt: 'Explain prompt steering.', strategy: 'prompt-prefix' });
+        const res = await POST(req);
+
+        expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+        const events = await parseSseResponse(res);
+        const startEvent = events.find((e) => e.event === 'start');
+        expect(startEvent?.data).toMatchObject({
+            mode: 'live',
+            metadata: expect.objectContaining({ strategy: 'prompt-prefix', modelId: MODEL_IDS['prompt-prefix'] }),
+        });
+        expect(events.filter((e) => e.event === 'token')).toHaveLength(1);
+    });
+
+    it('should close stream at output cap (4000 chars) for full-finetuning', async () => {
+        setConfigEnv('full-finetuning');
+
+        // Two tokens: first fills 3500 chars, second adds 600 — total exceeds 4000
+        const bigToken = 'a'.repeat(3500);
+        const smallToken = 'b'.repeat(600);
+        const sseLines = [
+            `data: {"id":"1","choices":[{"delta":{"content":"${bigToken}"},"finish_reason":null}]}`,
+            `data: {"id":"2","choices":[{"delta":{"content":"${smallToken}"},"finish_reason":null}]}`,
+            'data: [DONE]',
+        ];
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockSseStreamResponse(sseLines));
+
+        const req = createRequest({ prompt: 'Test cap.', strategy: 'full-finetuning' });
+        const res = await POST(req);
+
+        const events = await parseSseResponse(res);
+        const tokenEvents = events.filter((e) => e.event === 'token');
+        const doneEvents = events.filter((e) => e.event === 'done');
+
+        expect(tokenEvents).toHaveLength(2);
+        expect(doneEvents).toHaveLength(1);
+        expect(events[events.length - 1].event).toBe('done');
+    });
+
+    it('should emit event:error on mid-stream AbortError for full-finetuning', async () => {
+        setConfigEnv('full-finetuning');
+
+        const encoder = new TextEncoder();
+        let callCount = 0;
+        const abortStream = new ReadableStream({
+            pull(controller) {
+                callCount += 1;
+                if (callCount === 1) {
+                    controller.enqueue(
+                        encoder.encode('data: {"id":"1","choices":[{"delta":{"content":" hi"},"finish_reason":null}]}\n')
+                    );
+                } else {
+                    const err = new Error('The operation was aborted');
+                    err.name = 'AbortError';
+                    controller.error(err);
+                }
+            },
+        });
+        (global.fetch as jest.Mock).mockResolvedValueOnce(
+            new Response(abortStream, {
+                status: 200,
+                headers: { 'Content-Type': 'text/event-stream' },
+            })
+        );
+
+        const req = createRequest({ prompt: 'Mid-stream abort.', strategy: 'full-finetuning' });
+        const res = await POST(req);
+
+        const events = await parseSseResponse(res);
+        const errorEvent = events.find((e) => e.event === 'error');
+        expect(errorEvent).toBeDefined();
+        expect((errorEvent?.data as Record<string, unknown>).code).toBe('timeout');
+
+        const fallbackCalls = mockAdd.mock.calls.filter((call) => call[1] && call[1].reason_code);
+        expect(fallbackCalls.length).toBeGreaterThan(0);
+    });
+
+    it('should return invalid_provider_response fallback when upstream returns application/json on OK', async () => {
+        setConfigEnv('full-finetuning');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(
+            new Response(
+                JSON.stringify({ choices: [{ message: { content: 'some output' } }] }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+        );
 
         const req = createRequest({ prompt: 'Explain fine-tuning.', strategy: 'full-finetuning' });
         const res = await POST(req);
         const body = await res.json();
 
         expect(res.status).toBe(200);
-        expect(body.mode).toBe('live');
-        expect(body.output).toBe('Fine-tuning output');
-        expect(body.metadata.strategy).toBe('full-finetuning');
-        expect(body.metadata.modelId).toBe(MODEL_IDS['full-finetuning']);
-    });
-
-    it('should return live mode response for lora-peft when configured', async () => {
-        setConfigEnv('lora-peft');
-        mockLiveResponse('LoRA output');
-
-        const req = createRequest({ prompt: 'Explain LoRA.', strategy: 'lora-peft' });
-        const res = await POST(req);
-        const body = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(body.mode).toBe('live');
-        expect(body.output).toBe('LoRA output');
-        expect(body.metadata.strategy).toBe('lora-peft');
-        expect(body.metadata.modelId).toBe(MODEL_IDS['lora-peft']);
-    });
-
-    it('should return live mode response for prompt-prefix when configured', async () => {
-        setConfigEnv('prompt-prefix');
-        mockLiveResponse('Prompt prefix output');
-
-        const req = createRequest({ prompt: 'Explain prompt steering.', strategy: 'prompt-prefix' });
-        const res = await POST(req);
-        const body = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(body.mode).toBe('live');
-        expect(body.output).toBe('Prompt prefix output');
-        expect(body.metadata.strategy).toBe('prompt-prefix');
-        expect(body.metadata.modelId).toBe(MODEL_IDS['prompt-prefix']);
-    });
-
-    it('should cap live output at ADAPTATION_OUTPUT_MAX_CHARS characters', async () => {
-        setConfigEnv('full-finetuning');
-        mockLiveResponse('This response is longer than ten characters');
-
-        let isolatedPOST: typeof POST;
-        jest.isolateModules(() => {
-            jest.mock('@/lib/config/generation', () => ({
-                ADAPTATION_GENERATION_CONFIG: {
-                    apiUrl: 'https://router.huggingface.co/featherless-ai/v1/chat/completions',
-                    timeoutMs: 8000,
-                    outputMaxChars: 10,
-                    models: {
-                        'full-finetuning': 'meta-llama/Meta-Llama-3-8B-Instruct',
-                        'lora-peft': 'swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA',
-                        'prompt-prefix': 'meta-llama/Meta-Llama-3-8B',
-                    },
-                },
-            }));
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            isolatedPOST = require('@/app/api/adaptation/generate/route').POST;
-        });
-
-        const req = createRequest({ prompt: 'Test cap.', strategy: 'full-finetuning' });
-        const res = await isolatedPOST!(req);
-        const body = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(body.mode).toBe('live');
-        expect(body.output).toBe('This respo');
-        expect(body.output.length).toBe(10);
+        expect(body.mode).toBe('fallback');
+        expect(body.reason.code).toBe('invalid_provider_response');
     });
 
     // ── System Prompt Injection ───────────────────────────────────────────────
 
     it('should include system message as first message for prompt-prefix strategy', async () => {
         setConfigEnv('prompt-prefix');
-        mockLiveResponse('Output with system prompt');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Output with system prompt'));
 
         const prompt = 'What is a language model?';
         const req = createRequest({ prompt, strategy: 'prompt-prefix' });
@@ -271,7 +377,7 @@ describe('Integration: Adaptation Generate API', () => {
 
     it('should NOT include system message for full-finetuning strategy', async () => {
         setConfigEnv('full-finetuning');
-        mockLiveResponse('Output without system prompt');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Output without system prompt'));
 
         const prompt = 'What is fine-tuning?';
         const req = createRequest({ prompt, strategy: 'full-finetuning' });
@@ -286,11 +392,22 @@ describe('Integration: Adaptation Generate API', () => {
         expect(hasSystemMessage).toBe(false);
     });
 
+    it('should include stream:true in adaptation request body', async () => {
+        setConfigEnv('full-finetuning');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('output'));
+
+        const req = createRequest({ prompt: 'Test.', strategy: 'full-finetuning' });
+        await POST(req);
+
+        const calledBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body as string);
+        expect(calledBody.stream).toBe(true);
+    });
+
     // ── Correct Model Routing — per strategy ─────────────────────────────────
 
     it('should route to full-finetuning model ID', async () => {
         setConfigEnv('full-finetuning');
-        mockLiveResponse('output');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('output'));
 
         const req = createRequest({ prompt: 'Test prompt', strategy: 'full-finetuning' });
         await POST(req);
@@ -301,7 +418,7 @@ describe('Integration: Adaptation Generate API', () => {
 
     it('should route to lora-peft model ID', async () => {
         setConfigEnv('lora-peft');
-        mockLiveResponse('output');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('output'));
 
         const req = createRequest({ prompt: 'Test prompt', strategy: 'lora-peft' });
         await POST(req);
@@ -312,7 +429,7 @@ describe('Integration: Adaptation Generate API', () => {
 
     it('should route to prompt-prefix model ID', async () => {
         setConfigEnv('prompt-prefix');
-        mockLiveResponse('output');
+        (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('output'));
 
         const req = createRequest({ prompt: 'Test prompt', strategy: 'prompt-prefix' });
         await POST(req);
@@ -383,24 +500,6 @@ describe('Integration: Adaptation Generate API', () => {
         expect(body.reason.code).toBe('timeout');
     });
 
-    it('should return fallback with empty_provider_output when provider returns empty content', async () => {
-        setConfigEnv('full-finetuning');
-        (global.fetch as jest.Mock).mockResolvedValueOnce(
-            new Response(
-                JSON.stringify({ choices: [{ message: { content: '' } }] }),
-                { status: 200, headers: { 'Content-Type': 'application/json' } }
-            )
-        );
-
-        const req = createRequest({ prompt: 'Explain fine-tuning.', strategy: 'full-finetuning' });
-        const res = await POST(req);
-        const body = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(body.mode).toBe('fallback');
-        expect(body.reason.code).toBe('empty_provider_output');
-    });
-
     // ── Strategy-Specific Fallback Text ──────────────────────────────────────
 
     it('should return exact fallback text for full-finetuning strategy', async () => {
@@ -466,12 +565,14 @@ describe('Integration: Adaptation Generate API', () => {
             expect(mockAdd).toHaveBeenCalledWith(1, { reason_code: 'upstream_auth' });
         });
 
-        it('does not call fallbacks counter on a successful live response', async () => {
+        it('does not call fallbacks counter on a successful live streaming response', async () => {
             Object.assign(process.env, VALID_ENV);
-            mockLiveResponse('Success');
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Success'));
 
             const req = createRequest({ prompt: 'test', strategy: 'full-finetuning' });
-            await POST(req);
+            const res = await POST(req);
+            // Consume the stream to trigger onDone callback
+            await res.text();
 
             const fallbackCalls = mockAdd.mock.calls.filter(call => call[1] && call[1].reason_code);
             expect(fallbackCalls.length).toBe(0);
@@ -491,21 +592,22 @@ describe('Integration: Adaptation Generate API', () => {
 
         it('does not expose ADAPTATION_SYSTEM_PROMPT content in the response body', async () => {
             Object.assign(process.env, VALID_ENV);
-            mockLiveResponse('Success');
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Success'));
 
             const req = createRequest({ prompt: 'test', strategy: 'prompt-prefix' });
             const res = await POST(req);
-            const body = await res.json();
+            const text = await res.text();
             // ADAPTATION_SYSTEM_PROMPT content: 'You are a helpful assistant'
-            expect(JSON.stringify(body)).not.toContain('You are a helpful assistant');
+            expect(text).not.toContain('You are a helpful assistant');
         });
 
         it('does not set ADAPTATION_SYSTEM_PROMPT content as a span attribute', async () => {
             Object.assign(process.env, VALID_ENV);
-            mockLiveResponse('Success');
+            (global.fetch as jest.Mock).mockResolvedValueOnce(mockChatSseResponse('Success'));
 
             const req = createRequest({ prompt: 'test', strategy: 'prompt-prefix' });
-            await POST(req);
+            const res = await POST(req);
+            await res.text();
 
             mockSpan.setAttribute.mock.calls.forEach(call => {
                 const value = call[1];
