@@ -230,7 +230,7 @@ Before marking work complete:
 | Skipping loading states | Bad UX | Loading states are required |
 | Using `any` types | TypeScript strictness enforced | Define proper types |
 | Using `module` as variable name | Reserved in some Next.js contexts | Use `mod`, `item`, etc. |
-| Unescaped special characters in JSX | Lint errors | Use `&quot;` or `{'"'}` |
+| Unescaped special characters in JSX (apostrophes `'`, quotes `"`, ampersands `&`) | `react/no-unescaped-entities` lint error — common in educational prose and section headings | Apostrophes: use `{'\''}`  or `&apos;`; quotes: use `&quot;` or `{'"'}`; ampersands: use `&amp;`. Run `pnpm lint --file <path>` on your files before submitting to catch these before the full gate. |
 | Using wrong icon library | Standard Kit violation | Only `lucide-react` |
 | Missing dark mode styles | Dual-theme is mandatory | Add `dark:` variants |
 | `whileHover={{ scale }}` on grid items | Layout jitter ("shaky screen") | Use shadow + border transitions instead |

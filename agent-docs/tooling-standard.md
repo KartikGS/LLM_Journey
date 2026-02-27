@@ -44,3 +44,20 @@ This document defines the mandatory tools and environment configurations for thi
 - **Linter**: ESLint
 - **Formatter**: Prettier (standard config)
 - **TypeScript**: Strict mode enabled.
+
+### Targeted File Linting (Per-Domain Verification)
+
+`pnpm lint` runs ESLint project-wide. Running the full suite during per-domain verification (e.g., Backend verifying only its route files) will fail if any unrelated domain file has a lint error, blocking unrelated verification gates.
+
+Use targeted linting for per-domain self-verification:
+```
+pnpm lint --file path/to/file.ts
+# Examples:
+pnpm lint --file app/api/models/adaptation/generate/route.ts
+pnpm lint --file app/api/foundations/frontier-base-generate/route.ts
+```
+
+**Scope rule:**
+- Sub-agents (Backend, Frontend): use targeted linting for their own domain files during self-verification.
+- Testing Agent or CR Coordinator: run full-suite `pnpm lint` as the final integration gate — this is the authoritative pass.
+- A targeted lint pass does not substitute for the full-suite gate. Both may be needed in the same CR cycle.

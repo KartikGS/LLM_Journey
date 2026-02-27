@@ -184,6 +184,7 @@ Before declaring a CR closed, complete all items:
 - [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant. **Graduation path**: if `tech-lead-to-ba.md` includes **specific cited TL adversarial evidence** (file path + line number + assertion type) demonstrating the negative assertion was independently verified during adversarial review, the BA may accept that citation in place of a separate code-path audit. Log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`. A general `"reviewed and confirmed"` note does not qualify.
 - [ ] If `tech-lead-to-ba.md` reports that Tech Lead ran quality gates on behalf of a sub-agent (environment constraint), accept only when: mismatch is pre-existing in project-log, all required gates passed, and Tech Lead adversarial review confirms no runtime-specific gaps. Log this as an environmental note, not a CR deviation.
 - [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
+- [ ] If this CR removes server error codes, error enum values, or any server-emitted contract members: verify that client-side error handlers do not retain handling for the removed items (client-server contract parity). If a ghost handler is found and is out-of-scope for this CR, create a follow-up tracking item in `project-log.md` Next Priorities. Do not silently leave stale client handlers.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 
 ---
@@ -193,7 +194,10 @@ Before declaring a CR closed, complete all items:
 Before handing off to Tech Lead:
 - [ ] **Did I challenge the prompt?** (Did I ask "Why" or suggest a better way?)
 - [ ] **Is this Synthesis or just Migration?** (Did I interpret the intent or copy text?)
-- [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?) For educational content CRs, translate this into at least one measurable AC (e.g., "table enables learner to compare X, Y, Z dimensions across models"). A checklist item with no measurable AC is an incomplete check.
+- [ ] **Is the "Learner Transformation" clear?** (Who does the user become after this?) For educational content CRs, translate this into at least one measurable AC. A checklist item with no measurable AC is an incomplete check.
+  - **Content-checklist AC (insufficient alone):** "Section covers the four points: X, Y, Z, W." — This is verifiable but tests what the section *contains*, not what the learner *gains*.
+  - **Transformation-test AC (preferred):** "After reading this section, a learner can distinguish why [concept A] is needed from how [concept B] implements it — without referencing the doc." — This tests the learner's resulting capability.
+  - Aim for at least one transformation-test AC per educational section. Content-checklist ACs are acceptable as companions but not as sole evidence of learner transformation.
 - [ ] If the CR spec uses ARIA-semantic terminology (tab, radio, listbox, combobox, slider), does the term align with the intended accessibility pattern in `frontend.md` (`Accessibility & Testability Contracts`) before finalizing the spec?
 - [ ] **Are validation criteria Quantifiable?** (Replaced "fast" with "<200ms"?)
 - [ ] **Subjective AC Guard**: If the user selects "Subjective Approval" as an AC, did I define at least 2-3 *objective* companion criteria alongside it (e.g., "uses gradient effects", "has hover animations") to prevent scope ambiguity during acceptance?

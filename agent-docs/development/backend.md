@@ -57,6 +57,16 @@ const text = decoder.decode(value, { stream: true });
 
 Omitting `{ stream: true }` causes characters split across chunks (e.g., multi-byte Unicode) to be decoded independently, producing replacement characters (`\uFFFD`).
 
+## Client-Server Contract Parity
+
+When a CR removes a server-emitted error code, error enum value, or any named contract member from a route handler:
+
+1. **Flag in preflight**: Note the removal in the preflight report and name any client-side components known to handle that code (e.g., `AdaptationChat.tsx`).
+2. **Scope decision**: Removing the client-side handler for the removed server code is the correct long-term action, but may be out of scope for the current Backend CR if the client file is Frontend-owned. The Tech Lead decides scope.
+3. **Out-of-scope ghost handlers must be tracked**: If client cleanup is out of scope, create a follow-up tracking item in the completion report so it is not silently left. Do not leave client-side code that handles codes the server no longer emits without a tracking record.
+
+> **Why this matters:** A client handler for a removed server code (ghost handler) is dead code that creates a false mental model of the contract. It does not cause a runtime error today but produces confusion during future contract changes and makes the codebase harder to reason about for developer-users.
+
 ## Verification Scope
 
 Check the handoff DoD before applying any default here. If the DoD specifies a verification scope (e.g., full-suite `pnpm test`), that takes precedence. The role-doc default applies only when the DoD is silent on verification scope.

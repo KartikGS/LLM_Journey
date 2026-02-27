@@ -26,7 +26,7 @@
 3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
 4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `/agent-docs/plans/TEMPLATE.md`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
-   - **Exception (narrow):** Skip explicit Go/No-Go only for strictly `[S][DOC]` work or pure discovery sessions with no execution/delegation handoff.
+   - **Exception:** Skip explicit Go/No-Go for: (a) strictly `[S][DOC]` work or pure discovery sessions with no execution/delegation handoff; or (b) `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment — i.e., every technical choice is fully determined by the BA spec and no tradeoff is left open.
 6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
    - **Template Rule**: Use role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
@@ -34,7 +34,7 @@
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
-8. **Session Scope Management (for `[M]`/`[L]` CRs):** Apply the CR Coordinator model (canonical spec in `agent-docs/roles/tech-lead.md` / CR Execution Model). Summary:
+8. **Session Scope Management (for `[M]`/`[L]` CRs):** Apply the CR Coordinator model. Canonical specs: CR Execution Model in `agent-docs/roles/tech-lead.md`; CR Coordinator operational spec in `agent-docs/roles/coordinator.md`. Summary:
    - **Tech Lead Session A**: full context load → plan → direct changes → `TL-session-state.md` → Wait State.
    - **CR Coordinator sessions**: one session per sub-agent. Load only `TL-session-state.md` + sub-agent report + modified files → adversarial review → quality gates → conclusion summary → Wait State.
    - **Tech Lead Session B**: load Coordinator conclusion summaries → BA handoff authoring.
@@ -97,6 +97,7 @@ The gate is not weakened — Evidence 2 requires reading the prior CR requiremen
   2. Enter Wait State.
   3. After report review, issue the next handoff(s) based on validated outputs.
 - **Decision Test**: If Step B requires any artifact, decision, or evidence from Step A, execution MUST be Sequential.
+- **Pre-authored `pending-issue` handoffs**: When a later-stage handoff (e.g., Testing) is fully determinable at plan time and does not depend on upstream sub-agent output decisions, the Tech Lead may write the handoff at Session A time and mark it `status: pending-issue` in the file header. The CR Coordinator validates applicability against upstream outputs and changes status to `status: issued` before forwarding — no re-transcription. This removes a full session boundary for handoffs that were already known at plan time.
 
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
 - **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.

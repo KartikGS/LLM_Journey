@@ -241,7 +241,7 @@ Present the **complete plan** to the USER, including:
 > If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Tech Lead Agent MUST halt, inform the BA, and potentially return to **Validate & Internalize Phase** (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
 
 
-**Skip condition:** See `workflow.md` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here).
+**Skip condition:** See `workflow.md` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here). Summary: skip only for `[S][DOC]` work, pure discovery sessions, or `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment.
 
 ---
 
@@ -327,63 +327,14 @@ ADRs live in:
 
 ### CR Coordinator: Adversarial Review & Quality Gates
 
-> **This section is the CR Coordinator's operational spec.** The Tech Lead does not execute these steps — the CR Coordinator does, one session per sub-agent round-trip. The Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
->
-> **CR Coordinator context boundary:** At each session start, load only: (1) `agent-docs/coordination/TL-session-state.md`, (2) the sub-agent's completion report, (3) the files the sub-agent modified. Do not reload Layer 1/2 project standards — TL-session-state.md carries all relevant plan decisions. If context saturation is experienced, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing the session.
+> **The CR Coordinator's full operational spec lives in `agent-docs/roles/coordinator.md`.** The Tech Lead does not execute adversarial review or quality gate steps — the CR Coordinator does, one session per sub-agent round-trip. Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
 
-Complete the **Adversarial Review Checklist** before returning a conclusion summary to the Tech Lead:
+The Coordinator's session entry, execution mode guidance, Bash-denied fallback protocol, pre-authored handoff issuance, adversarial review checklist, portable adversarial dimensions, deviation severity classification, and quality gate steps are all defined in `coordinator.md`. CR-specific adversarial check items (which testids to verify, which grep patterns to run) are authored by the Tech Lead in `TL-session-state.md` per CR and extend the portable dimensions.
 
-#### Verification Checklist
-
-> **Verification scope**: Sub-agent verification is scoped to affected files (proves new work passes locally). Tech Lead verification runs the full suite (proves integration with the rest of the system is intact). Running both is intentional — they serve different purposes.
-
-- [ ] Read sub-agent report (`conversations/<role>-to-tech-lead.md`)
-- [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
-    - **Rule**: Never trust the sub-agent's verification blindly.
-    - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-    - **Check**: Look for debug artifacts (console.log, console.error, commented-out code blocks, TODO markers) in production code paths.
-    - **Check**: Compare sub-agent's `[Changes Made]` and `[Deviations]` sections against actual file changes line-by-line. Any undisclosed change (present in files, absent in report) must be classified as an unreported deviation and handled per the Finding classification rule below.
-    - **Check**: For tests where assertions were updated due to a format or contract change, verify the test name still accurately describes the behavior being tested. A test name referencing the pre-migration format is a test-hygiene defect.
-    - **Check**: If the diff includes `data-testid` additions, removals, or renames, or route path changes, verify an instruction to update `testing-contract-registry.md` is included in the Testing or BA handoff before issuing the Wait State.
-    - **Check**: For each security constraint of the form "X must/must not appear in Y," verify the test table includes both the positive assertion (X appears in the allowed location) and the negative assertion (X does not appear in the disallowed location). A positive-only test does not satisfy a containment invariant.
-    - **Finding classification rule**: If a finding fails an explicit AC → block closure and re-delegate to the responsible sub-agent. If a finding is a quality concern not covered by any AC → document as "Tech Lead Recommendation" in the BA handoff and create a follow-up CR candidate. Do NOT fold non-AC improvements into the current CR scope without explicit scope extension approval.
-    - **Deviation severity classification (portable — applies to every sub-agent report):**
-
-      | Class | Signal | Required action |
-      |---|---|---|
-      | **AC-blocking** | Finding violates an explicit Acceptance Criterion — behavior, contract, or security invariant is wrong | Block closure; re-delegate to responsible sub-agent before proceeding |
-      | **Tech Lead Recommendation** | Quality concern not covered by any AC; content is correct but sub-optimal | Document in BA handoff `## Tech Lead Recommendations`; do not fold into current CR scope without scope extension approval |
-      | **Process-only** | Sub-agent violated a process rule (e.g., modified an undelegated file) but the content of the change is correct and non-regressive | Non-blocking; record in adversarial review outcome note; no AC impact |
-
-    - **Portable adversarial review dimensions (apply to every sub-agent; extend per-CR in TL-session-state.md — do not regenerate from scratch):**
-      - Changes are scoped to delegated files — no undeclared file modifications.
-      - No debug artifacts (`console.log`, commented-out blocks, TODO markers) in production code paths.
-      - `[Changes Made]` and `[Deviations]` in the report match actual file changes line-by-line. Any undisclosed change must be classified per the table above.
-      - Security constraints from the CR Non-Functional Requirements are independently verified — do not accept sub-agent attestation alone for negative assertions (X must NOT appear in Y).
-      - Test names accurately describe current behavior after any format/contract change.
-      - No pre-existing test failures introduced or unmasked (classify as CR-related vs. pre-existing).
-    - **Risk-differentiated review scope** (exception to the default full-read rule):
-      - **Source file changes:** Full re-read required. Review question: did any existing behavior change?
-      - **Test-only additions** (new `describe`/`it` blocks added, zero modifications to existing test content): Targeted review of the new blocks only is sufficient. Review question: are the new tests present, correctly structured, and non-regressive? Re-reading unchanged existing test content is not required.
-      - Default rule remains full re-read for all other cases. This is an explicit exception for additive-only test changes, not a general relaxation.
-- [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there; not duplicated here.)
-- [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
-- [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.
-- [ ] For global/browser-sensitive changes that include E2E scope, ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
-- [ ] If UI was changed: verify Light/Dark mode rendering
-- [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
-- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
-- [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision. Do not rely solely on the handoff file to persist this constraint.
-- [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries whose root causes are resolved by this CR.
-- [ ] Verify documentation updates
-- [ ] **[CR Coordinator: return verified conclusion summary to Tech Lead]** — Coordinator closes its session here. Remaining steps below belong to the Tech Lead (Session B).
-- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: After receiving all Coordinator conclusion summaries, write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
-
-#### Quality Gate Fallback (Sub-Agent Environment Failure)
-If a sub-agent cannot run required verification commands because of environment constraints (for example, `pnpm` or browser runtime incompatibility), Tech Lead must run all quality gates before issuing the BA handoff. In `tech-lead-to-ba.md`, document:
-- the exact commands run by Tech Lead,
-- the runtime/environment used, and
-- whether the mismatch is pre-existing (tracked in `project-log.md`) or introduced by this CR.
+**Tech Lead Session B steps (after receiving all Coordinator conclusion summaries):**
+- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants.
+- [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision.
+- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 
 #### Pre-Existing Test Failures
 If tests fail for reasons **unrelated** to the current CR:

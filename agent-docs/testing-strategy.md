@@ -16,6 +16,16 @@ This project follows a layered testing approach. **Critically, tests are not jus
 - **Integration tests** validate interaction between subsystems.
 - **E2E tests** validate user-critical flows using Playwright.
 
+### Negative Space Rule (Mandatory Verification Primitive)
+
+For every removal, restriction, or containment constraint of the form "X must NOT appear in Y," verification must include **both**:
+1. **Absence assertion** — grep or equivalent for zero matches of X in Y (confirms the removal is complete).
+2. **Retained-path assertion** — a positive test confirming the allowed alternative path still works (confirms the removal did not break the intended behavior).
+
+A positive-only test does not satisfy a containment invariant. An absence check alone does not confirm the retained path is functional. Both are required.
+
+This rule applies at every verification layer: unit/integration tests, coordinator adversarial review, and BA acceptance. When the Tech Lead handoff includes a DoD item with "X must NOT appear in Y" form, the sub-agent MUST include both assertions in their verification evidence.
+
 ### Testability as a Requirement
 A feature is not "Done" unless it is testable. If a component lacks unique selectors (`data-testid`, `id`) or accessibility attributes required for robust testing, it is considered a **bug** in the implementation, not a missing feature in the test suite.
 
