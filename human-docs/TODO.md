@@ -19,3 +19,5 @@ Common chat interface
 Add streaming
 
 Add warnings, chat limiting.
+
+Update Project README

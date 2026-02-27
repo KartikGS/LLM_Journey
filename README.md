@@ -207,6 +207,8 @@ The documentation is organized by role and stability:
 
 ## License
 
+MIT
+
 ## Resources
 
 - [Next.js Documentation](https://nextjs.org/docs)
