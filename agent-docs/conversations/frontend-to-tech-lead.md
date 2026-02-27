@@ -1,22 +1,23 @@
 # Report: Frontend -> Tech Lead
 ## Subject
-`CR-021 — Frontier and Adaptation Response Streaming: Frontend Implementation`
+`CR-022 — Adaptation Page Upgrade and Cleanup: Frontend Implementation`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing Frontend handoff context: `CR-017`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md`
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-017-transformers-copy.md` status is `Done`
+- Prior outgoing Frontend handoff context: `CR-021`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-021-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-021-frontier-response-streaming.md` status `Done` per `agent-docs/project-log.md` ✓
 - Result: replacement allowed for new CR context.
 
 ## [Preflight: Assumptions]
-- `FrontierBaseChat.tsx` line 89: `payload = await response.json()` is present. (Verified)
-- `AdaptationChat.tsx` line 155: `payload = await response.json()` is present. (Verified)
-- `isLoading` is the only boolean controlling `disabled` on all inputs/buttons. (Verified)
-- `hasGeneratedText` is used in both render and `handleInputChange` guard and is not redundant. (Verified)
+- `node -v` -> `v20.20.0` (Verified)
+- `page.tsx` is a Server Component (no `'use client'`). (Verified)
+- `AdaptationChat.tsx` already tracks `isStreaming` state. (Verified)
+- `GlassCard` is available at `@/app/ui/components/GlassCard`. (Verified)
+- Tab buttons in `AdaptationChat.tsx` at lines 340-357 currently have no `disabled` attribute. (Verified)
 
 ## [Preflight: Adjacent Risks]
-- SSE stream interruption: The implementation must handle mid-stream errors gracefully to avoid leaving the UI in a permanent loading/streaming state.
-- Memory leak: Reader must be released in `finally` block.
+- `JourneyContinuityLinks` redundancy: The Limitations section adds a link to `/context/engineering`. This is visually separate but functionally redundant with the existing footer link. Suggesting differentiated copy/style in the Limitations bridge.
+- Accessibility: Using native `disabled` on buttons as requested.
 
 ## [Preflight: Open Questions]
 - none
@@ -30,49 +31,55 @@
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
 - Files to be modified:
-  - `app/foundations/transformers/components/FrontierBaseChat.tsx`
+  - `app/models/adaptation/page.tsx`
   - `app/models/adaptation/components/AdaptationChat.tsx`
 - Scope compliance:
-  - [x] All modified files are in Frontend ownership or explicitly delegated.
-  - [x] No test files modified unless explicitly delegated.
+  - [x] All modified files are in Frontend ownership.
+  - [x] No test files modified.
 
 ## [Changes Made]
-- **State Redesign**: Replaced `isLoading` with `isStreaming` and `hasFirstToken` in `FrontierBaseChat` and `AdaptationChat`.
-- **SSE Stream Reader**: Implemented `readSseStream` function to parse `event-stream` responses following the specified protocol (`start`, `token`, `done`, `error`).
-- **Hybrid Response Handling**: Updated `onSubmit` handlers to dynamically detect `content-type`. They now support both real-time streaming and buffered JSON fallbacks.
-- **UI Logic Updates**:
-  - Implemented progressive token rendering by appending `token` data to `output`.
-  - Added a blinking cursor (`animate-pulse`) that only appears during active streaming after the first token is received.
-  - Refined loader conditions: show "Querying..." message only before the first token; transition to output area immediately upon token arrival.
-  - Synchronized `disabled` states for all inputs and buttons to `isStreaming`.
-- **Reset Logic**: Integrated `hasFirstToken` reset into sample prompt handlers and tab switches to ensure clean state transitions.
-- **Test Alignment**: Updated `FrontierBaseChat.test.tsx` to mock the SSE stream reader and response headers, ensuring the test suite reflects the new architecture.
+- **Adaptation Page Upgrade (`page.tsx`)**:
+  - Added **"Why We Adapt LLMs"** section (`data-testid="adaptation-why-adapt"`) before the strategy cards. Covers instruction-following, domain expertise, knowledge cutoff, and output format control.
+  - Added **"Limitations & What's Next"** section (`data-testid="adaptation-limitations"`) after the chat and before the footer. Covers trade-offs for all three strategies.
+  - Integrated a bridging link to **Context Engineering** (`/context/engineering`) using Next.js `Link` component.
+  - Used `GlassCard` and design tokens for consistent glassmorphism and spacing.
+- **AdaptationChat UX Hardening (`AdaptationChat.tsx`)**:
+  - Added `disabled={isStreaming}` to the three strategy tab buttons.
+  - Applied `disabled:opacity-50 disabled:cursor-not-allowed` styles to provide clear visual feedback during streaming.
+  - Added a subtle **AI accuracy disclaimer** ("AI can make mistakes, check important info.") below the input form as per AC-6.
+- **Code Quality**:
+  - Fixed lint errors in `page.tsx` by escaping unescaped apostrophes and ampersands in JSX.
 
 ## [Verification Results]
 1. `node -v` -> `v20.20.0` (PASS)
 2. `pnpm lint` -> `✔ No ESLint warnings or errors` (PASS)
 3. `pnpm exec tsc --noEmit` -> `Exit code: 0` (PASS)
-4. `pnpm test` -> `Test Suites: 17 passed, 17 total` (PASS)
 
 ## [Contract Evidence]
 - Route contracts:
-  - `preserved` - `/api/frontier/base-generate`
-  - `preserved` - `/api/adaptation/generate`
+  - `preserved` - `/models/adaptation`
 - Selector/accessibility contracts:
-  - `preserved` - `frontier-status`
-  - `preserved` - `frontier-output`
-  - `preserved` - `frontier-input`
-  - `preserved` - `frontier-submit`
-  - `preserved` - `adaptation-chat-status`
-  - `preserved` - `adaptation-chat-output`
+  - `preserved` - `adaptation-page`
+  - `preserved` - `adaptation-hero`
+  - `preserved` - `adaptation-strategy-comparison`
+  - `preserved` - `adaptation-chat`
+  - `preserved` - `adaptation-chat-tab-full-finetuning`
+  - `preserved` - `adaptation-chat-tab-lora-peft`
+  - `preserved` - `adaptation-chat-tab-prompt-prefix`
+  - `preserved` - `adaptation-chat-form`
   - `preserved` - `adaptation-chat-input`
   - `preserved` - `adaptation-chat-submit`
-  - `preserved` - `adaptation-chat-tab-*`
+  - `preserved` - `adaptation-chat-output`
+  - `preserved` - `adaptation-chat-status`
+- New Contracts Added:
+  - `added` - `adaptation-why-adapt`
+  - `added` - `adaptation-limitations`
 
 ## [Behavioral Sanity Check]
-- Progressive rendering verified via stream mock in tests.
-- Cursor visibility correctly tied to `isStreaming && hasFirstToken`.
-- Fallback paths (JSON) remain fully operational if `text/event-stream` is missing.
+- Narrative sections are static Server Components as requested.
+- Tab locking verified: buttons are native `disabled` when `isStreaming` is `true`, preventing `onClick` events.
+- AI disclaimer placement: below the form, centered, with `text-xs` utility styles.
+- Dual-theme support: Used `dark:` variants for all new content to ensure legibility.
 
 ## [Failure Classification]
 - `none`

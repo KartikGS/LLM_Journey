@@ -13,6 +13,8 @@ test.describe('Adaptation Page', () => {
         await expect(page.getByTestId('adaptation-chat-submit')).toBeVisible();
         await expect(page.getByTestId('adaptation-chat-output')).toBeVisible();
         await expect(page.getByTestId('adaptation-chat-status')).toBeVisible();
+        await expect(page.getByTestId('adaptation-why-adapt')).toBeVisible();
+        await expect(page.getByTestId('adaptation-limitations')).toBeVisible();
     });
 
     test('should complete adaptation submit cycle (full-finetuning) @critical', async ({ page }) => {

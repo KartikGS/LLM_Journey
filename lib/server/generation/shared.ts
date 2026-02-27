@@ -5,7 +5,6 @@
 
 export type FallbackReasonCode =
     | 'missing_config'
-    | 'invalid_config'
     | 'quota_limited'
     | 'timeout'
     | 'upstream_auth'

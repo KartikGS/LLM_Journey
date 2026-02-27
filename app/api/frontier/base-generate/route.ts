@@ -64,7 +64,7 @@ type FrontierConfig = {
     apiKey: string;
     timeoutMs: number;
     configured: boolean;
-    issueCode?: 'missing_config' | 'invalid_config';
+    issueCode?: 'missing_config';
     provider: FrontierProvider;
 };
 
@@ -206,9 +206,7 @@ export async function POST(req: NextRequest) {
 
                 if (!frontierConfig.configured) {
                     const issueCode = frontierConfig.issueCode ?? 'missing_config';
-                    const issueMessage = issueCode === 'invalid_config'
-                        ? 'Frontier provider configuration is invalid. Showing deterministic fallback output.'
-                        : 'Frontier provider is not configured. Showing deterministic fallback output.';
+                    const issueMessage = 'Frontier provider is not configured. Showing deterministic fallback output.';
 
                     span.setAttribute('frontier.mode', 'fallback');
                     span.setAttribute('frontier.reason_code', issueCode);

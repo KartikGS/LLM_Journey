@@ -1,18 +1,23 @@
 # Handoff: Tech Lead → Frontend Agent
 
 ## Subject
-`CR-021 — Frontier and Adaptation Response Streaming: Frontend Implementation`
+`CR-022 — Adaptation Page Upgrade and Cleanup: Frontend Implementation`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior content: `CR-017` (`Small Backlog Fixes: Transformers Heading Copy Rename`)
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-017-plan.md` ✓
-- Evidence 2 (prior CR closed): `CR-017` status `Completed` per `agent-docs/project-log.md` ✓
-- Result: replacement allowed.
+- Prior outgoing Frontend handoff context: `CR-021`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-021-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-021-frontier-response-streaming.md` status `Done` per `agent-docs/project-log.md` ✓
+- Result: replacement allowed for new CR context.
 
 ---
+
+## Exact Artifact Paths (Mandatory)
+- Requirement: `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md`
+- Plan: `agent-docs/plans/CR-022-plan.md`
+- Report back to: `agent-docs/conversations/frontend-to-tech-lead.md`
 
 ## Execution Mode
 `feature-ui`
@@ -21,389 +26,216 @@
 
 ## Objective
 
-Replace the buffered `await response.json()` call in both `FrontierBaseChat.tsx` and `AdaptationChat.tsx` with an SSE stream reader that renders tokens progressively as they arrive from the server. The server now returns `Content-Type: text/event-stream` for successful live-path responses.
+Add two narrative sections to `/models/adaptation` and harden `AdaptationChat` UX. Specifically:
 
-The existing JSON fallback/error paths (non-200 responses and pre-stream fallback JSON) remain completely unchanged.
+1. Add "Why We Adapt LLMs" section to `page.tsx` before the strategy comparison cards.
+2. Add "Limitations & What's Next" section to `page.tsx` after `AdaptationChat` and before `JourneyContinuityLinks`.
+3. Disable strategy tab buttons in `AdaptationChat.tsx` while streaming is active.
+4. Add AI accuracy disclaimer to `AdaptationChat.tsx`.
+
+## Rationale (Why)
+
+Product End Users currently reach strategy demos with no context for *why* adaptation exists, and leave without understanding what it cannot solve — missing the motivational bridge to Stage 3 (Context Engineering). The tab lockout prevents mismatched output when users click tabs mid-stream. The AI disclaimer establishes appropriate trust calibration and reduces legal exposure.
 
 ---
 
 ## Known Environmental Caveats
 
 - **Node.js runtime**: System runtime may be below `>=20.x`. Run `node -v` first. If below 20.x, activate via `nvm use 20`. If nvm unavailable, classify as `environmental` in your report.
-- **pnpm**: Use `pnpm` exclusively.
+- **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
+- **Port**: Dev server runs on `3001`.
 
 ---
 
-## Confirmed SSE Protocol (from Backend Agent — verified by Tech Lead)
+## Constraints
 
-The routes now emit typed SSE events to the client. Frontend must handle exactly these four event types:
+### UI/UX Constraints
+- **Glassmorphism aesthetic**: New narrative sections must use `GlassCard` (already used for strategy cards) and match existing page typography/spacing. Do not introduce new visual primitives.
+- **Dual-theme**: All new content must be legible in both light and dark mode. Use existing color token classes (`text-gray-900 dark:text-white`, `text-gray-600 dark:text-gray-400`, etc.).
+- **Semantic HTML**: Narrative sections must use proper heading hierarchy (`<h2>` for section title, `<h3>` or `<p>` for subsections), `<ul>`/`<li>` for lists.
+- **Bridging link**: The `/context/engineering` link in the Limitations section must use Next.js `<Link>` component (not a plain `<a>`) for client-side navigation.
 
-```
-event: start
-data: {"mode":"live","metadata":{...}}
+### Semantic/Testability Constraints
+- **`data-testid="adaptation-why-adapt"`** must be on the "Why We Adapt LLMs" outer `<section>` or `<div>`.
+- **`data-testid="adaptation-limitations"`** must be on the "Limitations & What's Next" outer `<section>` or `<div>`.
+- Tab buttons (`adaptation-chat-tab-full-finetuning`, `adaptation-chat-tab-lora-peft`, `adaptation-chat-tab-prompt-prefix`) **must keep their existing `data-testid` values unchanged**.
 
-event: token
-data: {"text":" hello"}
+### Accessibility Constraints
+- Tab disabled state: use **native `disabled` attribute** on `<button>` elements (not `aria-disabled` only). This is the accessibility-correct approach — it prevents keyboard focus and click events without additional guards.
+- AI disclaimer must be readable text (not color-only hint, not tooltip).
 
-event: done
-data: {}
-
-event: error
-data: {"code":"timeout"|"upstream_error","message":"..."}
-```
-
-**Contract rules (Backend-confirmed):**
-- `start` is always emitted before the first `token`.
-- `token` events preserve whitespace exactly (`text` field may begin with a space).
-- Exactly one `done` event per stream — emitted on upstream `[DONE]`, on output cap (4000 chars), or on natural stream end. Never follows an `error`.
-- `error` is emitted on mid-stream read failure. No `done` follows.
-- Client detection: `response.headers.get('content-type')` containing `'text/event-stream'` → SSE. `'application/json'` → existing JSON fallback (unchanged).
-
-**`start` metadata shapes:**
-- Frontier: `{ label: string, modelId: string, assistantTuned: false, adaptation: 'none', note: string }`
-- Adaptation: `{ strategy: string, modelId: string }`
-
-**Pre-stream error paths (non-200 or non-streaming OK):** unchanged — still return `NextResponse.json()` with the existing fallback/error shape. No SSE events emitted for these paths.
+### Ownership Constraints
+- Frontend-owned files: `app/models/adaptation/page.tsx`, `app/models/adaptation/components/AdaptationChat.tsx`.
+- You may create co-located component files under `app/models/adaptation/components/` (e.g., `WhyAdaptSection.tsx`, `LimitationsSection.tsx`) if needed for readability, but you are NOT required to.
+- **Test scope**: Do NOT write or modify test files. Testing Agent handles tests in a subsequent step.
+- **Shared component extraction**: NOT in scope. `GlassCard`, `GlowBackground` etc. are imported from `app/ui/` — use as-is.
 
 ---
 
-## Files to Modify
+## Contracts Inventory (Mandatory)
 
-1. `app/foundations/transformers/components/FrontierBaseChat.tsx`
-2. `app/models/adaptation/components/AdaptationChat.tsx`
+### Route Contracts
+- `/models/adaptation` — unchanged (no route changes).
 
----
+### Selector/Accessibility Contracts — Existing (MUST PRESERVE)
+- `adaptation-page` — outer page container
+- `adaptation-hero` — `JourneyStageHeader`
+- `adaptation-strategy-comparison` — strategy cards section
+- `adaptation-chat` — `AdaptationChat` section root
+- `adaptation-chat-tab-full-finetuning` — Full Fine-Tuning tab button
+- `adaptation-chat-tab-lora-peft` — LoRA/PEFT tab button
+- `adaptation-chat-tab-prompt-prefix` — Prompt/Prefix Tuning tab button
+- `adaptation-chat-form` — the `<form>` element
+- `adaptation-chat-input` — the `<textarea>`
+- `adaptation-chat-submit` — the submit button
+- `adaptation-chat-output` — the terminal output area
+- `adaptation-chat-status` — the status indicator
 
-## State Model Change
+### Selector/Accessibility Contracts — New Additions (CR-022)
+- `adaptation-why-adapt` — new "Why We Adapt LLMs" section
+- `adaptation-limitations` — new "Limitations & What's Next" section
 
-**Remove** `isLoading: boolean` (lines 38 / 92).
-
-**Add** two new state variables in its place:
-```ts
-const [isStreaming, setIsStreaming] = useState(false);
-const [hasFirstToken, setHasFirstToken] = useState(false);
-```
-
-`hasGeneratedText` **stays** — it continues to track output visibility for the JSON fallback/live paths.
-
-State machine:
-| Event | `isStreaming` | `hasFirstToken` | `hasGeneratedText` | Effect |
-|---|---|---|---|---|
-| Submit | `true` | reset `false` | reset `false` | Loader shown |
-| SSE `start` | (unchanged) | (unchanged) | (unchanged) | Update `modelId` from metadata |
-| SSE first `token` | (unchanged) | `true` | (unchanged) | Loader → output area; cursor appears |
-| SSE subsequent `token` | (unchanged) | (unchanged) | (unchanged) | Append `text` to output |
-| SSE `done` | `false` | (unchanged) | (unchanged) | Cursor removed; finalize `statusText` |
-| SSE `error` | `false` | (unchanged) | (unchanged) | Cursor removed; set error status/statusText |
-| JSON fallback/live (non-SSE) | `false` (set in `finally`) | (unchanged) | `true` (existing path) | Output shown; no cursor |
-
-**Input/button `disabled` condition:** `disabled={isLoading}` → `disabled={isStreaming}` (all occurrences).
-
-**`handleInputChange` guard** (FrontierBaseChat line 54 / AdaptationChat line 120):
-```ts
-if (hasGeneratedText && !isLoading) {  →  if ((hasGeneratedText || hasFirstToken) && !isStreaming) {
-```
-
-**`sampleInput` / `handleSamplePrompt` / `handleTabChange`:** also reset `hasFirstToken`:
-```ts
-setHasFirstToken(false);
-```
-(Add alongside existing `setHasGeneratedText(false)` calls in each reset function.)
+### Continuity/Navigation Contracts
+- `adaptation-link-transformers` — previous stage link (must remain unchanged)
+- `adaptation-link-context` — next stage link (must remain unchanged)
+- `/context/engineering` — bridging link in Limitations section (new, must be navigable)
 
 ---
 
-## Implementation: `onSubmit` Changes
+## Design Intent (Mandatory for UI)
 
-### Step 1 — Replace submit state initialization
+### Target Aesthetic
+- Match the existing adaptation page glassmorphism style: translucent glass cards, subtle borders, dark-mode glow effects.
+- Both narrative sections should feel like part of the established educational flow, not bolted-on additions.
 
-**FrontierBaseChat** (around line 74):
-```ts
-// Remove:
-setIsLoading(true);
-// Add:
-setIsStreaming(true);
-setHasFirstToken(false);
-```
+### Content Specification
 
-**AdaptationChat** (around line 140): same change.
+**"Why We Adapt LLMs" section** (`data-testid="adaptation-why-adapt"`):
+Must visibly cover all four points (AC-1 requirement):
+1. Base models lack instruction-following — they complete text, not answer questions or follow format constraints.
+2. Domain expertise gap — general training data doesn't guarantee specialist accuracy.
+3. Knowledge cutoff — base models cannot learn from recent events without adaptation.
+4. Output format control — production applications need predictable, structured output that base models don't guarantee.
 
-### Step 2 — Replace the response handling block
+Use your judgment on the exact wording within these constraints. Educational clarity (project-principles.md) takes priority over brevity.
 
-**Current structure (both components):**
-```ts
-try {
-  const response = await fetch(...);
-  let payload: unknown;
-  try {
-    payload = await response.json();  // ← REPLACE THIS BLOCK
-  } catch { ... }
-  if (!response.ok) { ... }
-  // live/fallback payload handling
-} catch (error) { ... }
-finally {
-  setIsLoading(false);  // ← REPLACE
-}
-```
+**"Limitations & What's Next" section** (`data-testid="adaptation-limitations"`):
+Must visibly cover (AC-2 and AC-3 requirements):
+- Full Fine-Tuning trade-offs: compute/data cost, catastrophic forgetting risk, inaccessible to most teams.
+- LoRA/PEFT trade-offs: reduces cost but still requires quality training data; doesn't fix knowledge currency.
+- Prompt/Prefix Tuning trade-offs: most accessible, but cannot inject new factual knowledge — weights are frozen.
+- Bridging callout: all three strategies share one unsolved limitation — the knowledge cutoff problem cannot be patched dynamically. Next Stage: Context Engineering addresses this.
+- The bridging callout must include a navigable `<Link href="/context/engineering">` to `/context/engineering` (AC-3).
 
-**New structure:**
-```ts
-try {
-  const response = await fetch(...);
+**AI Disclaimer** (AC-6):
+- Verbatim text: `"AI can make mistakes, check important info."`
+- Placement: below the `<form>` element and above the terminal output `<div>` in the right panel.
+- Style: small, subtle secondary text — not an alert/banner. Something like `text-xs text-gray-400 dark:text-gray-500 text-center mt-1`.
 
-  // Non-200: same JSON error path — UNCHANGED
-  if (!response.ok) {
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      setStatus('error');
-      setStatusText('...(existing unreadable JSON message)...');
-      setOutput('');
-      setHasGeneratedText(false);
-      return;
-    }
-    const payloadRecord = toRecord(payload);
-    // ...existing !response.ok error handling unchanged...
-    return;
-  }
+### Animation Budget
+- No new animations. New sections are static content only.
+- Do not add `framer-motion` to the narrative sections.
 
-  const contentType = response.headers.get('content-type') ?? '';
-
-  if (!contentType.includes('text/event-stream')) {
-    // Non-streaming OK: same JSON live/fallback path — UNCHANGED
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      setStatus('error');
-      setStatusText('...(existing unreadable JSON message)...');
-      setOutput('');
-      setHasGeneratedText(false);
-      return;
-    }
-    const payloadRecord = toRecord(payload);
-    // ...existing outputText/metadata/mode handling unchanged...
-    return;
-  }
-
-  // SSE streaming path
-  await readSseStream(response);
-
-} catch (error) {
-  setStatus('error');
-  setStatusText(`Request failed: ${getErrorMessage(error)}`);
-  setOutput('');
-  setHasGeneratedText(false);
-  setHasFirstToken(false);
-} finally {
-  setIsStreaming(false);  // ← replaces setIsLoading(false)
-}
-```
-
-### Step 3 — Implement `readSseStream`
-
-Define as a local `async function` inside `onSubmit` (or as a helper inside the component — your choice, as long as it closes over the state setters). This function must handle the four SSE event types:
-
-```ts
-async function readSseStream(response: Response): Promise<void> {
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  // For statusText finalization on done — capture modelId locally
-  let streamModelId = 'model-unknown';
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      let currentEvent = '';
-      for (const line of lines) {
-        if (line.startsWith('event: ')) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith('data: ')) {
-          const dataStr = line.slice(6).trim();
-          let data: Record<string, unknown> = {};
-          try { data = JSON.parse(dataStr); } catch { continue; }
-
-          if (currentEvent === 'start') {
-            const metadata = toRecord(data.metadata);
-            const mid = typeof metadata?.modelId === 'string' ? metadata.modelId : 'model-unknown';
-            streamModelId = mid;
-            setModelId(mid);
-            // mode is always 'live' for SSE — no status text change yet
-          } else if (currentEvent === 'token') {
-            const text = typeof data.text === 'string' ? data.text : '';
-            if (text) {
-              setHasFirstToken(true);
-              setOutput((prev) => prev + text);
-            }
-          } else if (currentEvent === 'done') {
-            setStatus('live');
-            // FrontierBaseChat:
-            setStatusText(`Mode: live. Response came from configured frontier base model (${streamModelId}).`);
-            // AdaptationChat:
-            // setStatusText(`Mode: live. Response from ${streamModelId}.`);
-            return;
-          } else if (currentEvent === 'error') {
-            const message = typeof data.message === 'string' ? data.message : 'Streaming was interrupted.';
-            setStatus('error');
-            setStatusText(message);
-            setOutput('');
-            setHasFirstToken(false);
-            return;
-          }
-          currentEvent = '';
-        }
-      }
-    }
-  } finally {
-    try { reader.releaseLock(); } catch { /* already released */ }
-  }
-}
-```
-
-**Note on statusText strings — use exact existing formats:**
-- Frontier `done`: `Mode: live. Response came from configured frontier base model (${streamModelId}).`
-- Adaptation `done`: `Mode: live. Response from ${streamModelId}.`
-
-These match the existing JSON live-path statusText strings in each component exactly.
+### Explicit Anti-Patterns
+- Do NOT put the AI disclaimer inside the terminal output area.
+- Do NOT add a duplicate "Stage 3 bridge" — the `JourneyContinuityLinks` at the page bottom already shows the next stage link. The Limitations callout complements it with a motivational explanation; it is not redundant.
+- Do NOT convert `page.tsx` to a Client Component (`'use client'`). New sections must stay Server Components.
+- Do NOT add `console.log`, TODO markers, or debug artifacts in production code.
 
 ---
 
-## Render Changes
+## Scope
 
-### Loader condition
+### Files to Modify
 
-**Current** (FrontierBaseChat line 279, AdaptationChat line 417):
-```tsx
-{isLoading ? (
-  <span ...>Querying frontier endpoint...</span>
-```
+- `app/models/adaptation/page.tsx`:
+  - Add `adaptation-why-adapt` section before `adaptation-strategy-comparison` section.
+  - Add `adaptation-limitations` section after `<AdaptationChat />` and before `<JourneyContinuityLinks />`.
+  - If you create sub-components, import them here.
+  - You may need to import `Link` from `'next/link'` for the `/context/engineering` bridging link (if the link is in `page.tsx` rather than a sub-component).
 
-**New:**
-```tsx
-{isStreaming && !hasFirstToken ? (
-  <span ...>Querying frontier endpoint...</span>
-```
-
-### Output area + cursor
-
-**Current** (FrontierBaseChat lines 284–289, AdaptationChat lines 422–427):
-```tsx
-) : hasGeneratedText ? (
-  <p ...>{output}</p>
-  <span className="animate-pulse inline-block w-2 h-4 bg-emerald-300 ml-1 align-middle" />
-```
-
-**New:**
-```tsx
-) : (hasGeneratedText || hasFirstToken) ? (
-  <p ...>{output}</p>
-  {isStreaming && hasFirstToken && (
-    <span className="animate-pulse inline-block w-2 h-4 bg-emerald-300 ml-1 align-middle" />
-  )}
-```
-
-Cursor is shown only during active streaming after the first token; removed on `done`/`error` (both set `isStreaming = false` via `finally`).
-
-### Submit button icon
-
-**Current** (FrontierBaseChat line 255, AdaptationChat line 393):
-```tsx
-{isLoading ? <Loader2 .../> : <Send .../>}
-```
-
-**New:**
-```tsx
-{isStreaming ? <Loader2 .../> : <Send .../>}
-```
+- `app/models/adaptation/components/AdaptationChat.tsx`:
+  - Add `disabled={isStreaming}` to all three tab `<button>` elements.
+  - Add disabled visual styling to tab buttons when `isStreaming` (e.g., `disabled:opacity-50 disabled:cursor-not-allowed` — these are already used on example prompt buttons and submit button in the component).
+  - Add AI disclaimer text block between the closing `</form>` tag and the terminal output `<div>`.
 
 ---
 
-## `data-testid` Contracts — All Preserved (AC-12)
+## Read Before Implementing (Mandatory)
 
-No `data-testid` values may be renamed, removed, or added. Required contracts:
-
-**Frontier:** `frontier-form`, `frontier-input`, `frontier-submit`, `frontier-output`, `frontier-status`
-
-**Adaptation:** `adaptation-chat`, `adaptation-chat-tab-{full-finetuning,lora-peft,prompt-prefix}`, `adaptation-chat-input`, `adaptation-chat-submit`, `adaptation-chat-form`, `adaptation-chat-output`, `adaptation-chat-status`
-
-Confirm each still present in your report.
+Read `app/models/adaptation/components/AdaptationChat.tsx` in full before implementing the tab disable change. The tab buttons are at approximately lines 337–357. Confirm:
+1. All three tab buttons have their `data-testid` values matching the contract inventory above.
+2. The `disabled` attribute pattern is consistent with how example prompt buttons are disabled (`disabled={isStreaming}`).
+3. The `isStreaming` state is already available in scope.
 
 ---
 
-## Input Disabled During Full Streaming Duration (AC-9, AC-10)
+## Assumptions To Validate (Mandatory)
 
-After replacing `disabled={isLoading}` → `disabled={isStreaming}`, both input and submit button must remain disabled for the entire duration of streaming (from submit until `done` or `error`). The `finally` block setting `setIsStreaming(false)` ensures re-enable on completion.
-
----
-
-## Out-of-Scope
-
-- Do NOT change any styling, layout, copy, or accessibility attributes beyond what is specified.
-- Do NOT add, remove, or rename any `data-testid`.
-- Do NOT modify route files, test files, config files, or any file outside the two component files.
-- Do NOT add `console.log` statements, TODO markers, or debug artifacts.
-- Do NOT change the JSON fallback path behavior — it must be bit-for-bit identical to the current path for non-SSE responses.
+1. `page.tsx` has no `'use client'` directive — confirm before adding new sections.
+2. `GlassCard` is importable from `'@/app/ui/components/GlassCard'` — confirm the import path.
+3. `isStreaming` is already tracked as a `useState` variable in `AdaptationChat.tsx` — confirm at approximately line 93.
+4. The tab buttons currently have no `disabled` attribute — confirm.
+5. `Link` from `next/link` is appropriate for the `/context/engineering` bridging link in a Server Component context.
 
 ---
 
-## Assumptions to Validate (Mandatory)
+## Out-of-Scope But Must Be Flagged (Mandatory)
 
-1. `FrontierBaseChat.tsx` line 89: `payload = await response.json()` — confirm before editing.
-2. `AdaptationChat.tsx` line 155: `payload = await response.json()` — confirm before editing.
-3. `isLoading` is the only boolean controlling `disabled` on all inputs/buttons — confirm no other loading flag.
-4. `hasGeneratedText` is used in both render and `handleInputChange` guard — confirm it is not redundant with any other existing state.
+- If the `JourneyContinuityLinks` component already links to `/context/engineering` and the Limitations bridging callout creates a visually redundant second link, flag this in your preflight note with a suggestion (e.g., differentiate with different copy or style). Do NOT remove the footer link — it is a required continuity contract.
+- If any styling token you use for new sections appears in the dark mode as unreadable (contrast issue), flag it.
+- The `toRecord()` helper is present as a local utility in `AdaptationChat.tsx` (pre-existing duplication noted as CR-017 backlog item). Do NOT extract it — the third-consumer threshold for shared extraction has not been met.
 
 ---
 
 ## Definition of Done
 
-- [ ] AC-2: `FrontierBaseChat` renders tokens progressively into `data-testid="frontier-output"`
-- [ ] AC-4: `AdaptationChat` renders tokens progressively into `data-testid="adaptation-chat-output"`
-- [ ] AC-5: Blinking cursor visible in frontier output during streaming; removed on completion
-- [ ] AC-6: Blinking cursor visible in adaptation output during streaming; removed on completion
-- [ ] AC-7: Frontier "Querying frontier endpoint..." loader shown until first token; transitions on first token
-- [ ] AC-8: Adaptation "Querying adaptation endpoint..." loader shown until first token; transitions on first token
-- [ ] AC-9: `frontier-submit` and `frontier-input` disabled for full streaming duration; re-enabled on done/error
-- [ ] AC-10: `adaptation-chat-submit` and `adaptation-chat-input` disabled for full streaming duration; re-enabled on done/error
-- [ ] AC-11: Mid-stream error surfaces error status and message in status area; no cursor shown
-- [ ] AC-12: All existing `data-testid` contracts preserved without rename
-- [ ] AC-13: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build` all pass
+- [ ] AC-1: `adaptation-why-adapt` section visible before strategy cards; all 4 "Why Adapt" points covered; readable in light and dark mode.
+- [ ] AC-2: `adaptation-limitations` section visible after `AdaptationChat` and before nav footer; covers all 3 strategy trade-offs.
+- [ ] AC-3: Limitations section includes `<Link href="/context/engineering">` bridging callout.
+- [ ] AC-4: All three strategy tab buttons have `disabled={isStreaming}`; buttons become non-interactive when `isStreaming` is `true`.
+- [ ] AC-5: Clicking a tab during streaming does not fire `handleTabChange` (native `disabled` prevents the click event). Verify: `onClick` is only bound, no separate `isStreaming` guard needed since `disabled` blocks the event.
+- [ ] AC-6: AI disclaimer "AI can make mistakes, check important info." visible in `AdaptationChat` UI; legible in both themes.
+- [ ] AC-9: All existing `data-testid` contracts preserved — no renames, no removals.
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
 
 ---
 
-## Clarification Loop
+## Negative Space Rule (AC-4 Verification)
 
-Post preflight concerns to `agent-docs/conversations/frontend-to-tech-lead.md`. Tech Lead responds in the same file.
+The Definition of Done for AC-4 must verify BOTH directions:
+- [ ] **Positive**: Tabs are disabled/non-interactive when `isStreaming === true`.
+- [ ] **Negative**: Tabs are enabled/interactive when `isStreaming === false` (idle and post-stream states).
+
+Do not only verify the restriction — verify the base case still works.
+
+---
+
+## Clarification Loop (Mandatory)
+
+Frontend posts preflight concerns/questions in `agent-docs/conversations/frontend-to-tech-lead.md`. Tech Lead responds in the same file. Repeat until concerns are resolved or status becomes `blocked`.
 
 ---
 
 ## Verification
 
-Run in sequence under Node 20:
+Run in sequence under the documented runtime:
 ```
 node -v
 pnpm lint
 pnpm exec tsc --noEmit
-pnpm test
-pnpm build
 ```
 
-All must pass. Cite exact file:line in your report for:
-- The replaced `await response.json()` in each component
-- The new `isStreaming` + `hasFirstToken` state declarations
+Report using Command Evidence Standard: Command, Scope, Execution Mode, Result.
+
+**Note**: `pnpm test` and `pnpm build` are owned by the Testing Agent in the subsequent step. You are only responsible for `lint` and `tsc` passing after your changes.
 
 ---
 
 ## Scope Extension Control
 
-If any feedback expands implementation beyond this handoff scope, mark it `scope extension requested` in your report. Wait for explicit `scope extension approved` from Tech Lead before implementing expanded work.
+If any feedback expands implementation beyond this handoff scope, mark it `scope extension requested` in your report. Wait for explicit `scope extension approved` from Tech Lead (or User override) before implementing expanded work.
 
 ---
 
@@ -412,3 +244,10 @@ If any feedback expands implementation beyond this handoff scope, mark it `scope
 Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`.
 
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
+
+Report must include:
+- Preflight note (assumptions confirmed/invalidated).
+- Summary of each file changed with key line numbers.
+- Confirmation that all `data-testid` contracts from the Contracts Inventory are preserved.
+- Verification evidence (lint + tsc in Command Evidence Standard format).
+- Deviations from this spec (if any), classified per the Deviation Protocol.

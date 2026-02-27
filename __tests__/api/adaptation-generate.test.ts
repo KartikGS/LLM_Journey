@@ -106,7 +106,6 @@ describe('Integration: Adaptation Generate API', () => {
     const originalEnv = process.env;
     const originalFetch = global.fetch;
 
-    const ADAPTATION_API_URL = 'https://router.huggingface.co/featherless-ai/v1/chat/completions';
     const FRONTIER_API_KEY = 'test-api-key';
     const MODEL_IDS = {
         'full-finetuning': 'meta-llama/Meta-Llama-3-8B-Instruct',

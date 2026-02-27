@@ -344,11 +344,13 @@ export function AdaptationChat() {
               aria-selected={isActive}
               data-testid={tab.testId}
               onClick={() => handleTabChange(tab.id)}
+              disabled={isStreaming}
               className={[
                 'rounded-lg border px-4 py-2 text-sm font-medium transition-colors duration-150',
                 isActive
                   ? 'border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300'
                   : 'border-black/[0.08] dark:border-white/[0.08] bg-white/70 dark:bg-white/[0.02] text-gray-700 dark:text-gray-300 hover:bg-black/[0.02] dark:hover:bg-white/[0.04]',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
               ].join(' ')}
             >
               {tab.label}
@@ -491,6 +493,11 @@ export function AdaptationChat() {
               <span className="text-xs text-gray-400 font-mono">{activeConfig.modelId}</span>
             </div>
           </form>
+
+          {/* AI Disclaimer */}
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1">
+            AI can make mistakes, check important info.
+          </p>
 
           {/* Terminal output */}
           <div

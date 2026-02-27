@@ -72,7 +72,7 @@ type AdaptationConfig = {
     apiKey: string;
     timeoutMs: number;
     configured: boolean;
-    issueCode?: 'missing_config' | 'invalid_config';
+    issueCode?: 'missing_config';
 };
 
 
@@ -195,10 +195,7 @@ export async function POST(req: NextRequest) {
 
                 if (!config.configured) {
                     const issueCode = config.issueCode ?? 'missing_config';
-                    const issueMessage =
-                        issueCode === 'invalid_config'
-                            ? 'Adaptation provider configuration is invalid. Showing deterministic fallback output.'
-                            : 'Adaptation provider is not configured. Showing deterministic fallback output.';
+                    const issueMessage = 'Adaptation provider is not configured. Showing deterministic fallback output.';
 
                     span.setAttribute('adaptation.mode', 'fallback');
                     span.setAttribute('adaptation.reason_code', issueCode);

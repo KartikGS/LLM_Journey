@@ -1,224 +1,244 @@
 # Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-021 — Frontier and Adaptation Response Streaming: Backend Implementation`
+`CR-022 — Adaptation Page Upgrade and Cleanup: Dead-Code Cleanup`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior content: `CR-019`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-019-plan.md` ✓
-- Evidence 2 (prior CR closed): CR-019 status `Completed` per `agent-docs/project-log.md` ✓
-- Result: replacement allowed.
+- Prior outgoing Backend handoff context: `CR-021`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-021-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-021-frontier-response-streaming.md` status `Done` per `agent-docs/project-log.md` ✓
+- Result: replacement allowed for new CR context.
+
+---
 
 ## Exact Artifact Paths (Mandatory)
-- Requirement: `agent-docs/requirements/CR-021-frontier-response-streaming.md`
-- Plan: `agent-docs/plans/CR-021-plan.md`
-- Upstream report (if sequential): N/A — this is Step 1
+- Requirement: `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md`
+- Plan: `agent-docs/plans/CR-022-plan.md`
+- Upstream report (if sequential): N/A — this is a parallel step.
 - Report back to: `agent-docs/conversations/backend-to-tech-lead.md`
 
 ---
 
 ## Objective
 
-Migrate both generation routes from buffered JSON responses to SSE (Server-Sent Events) streaming. After this change, the frontier and adaptation routes return `Content-Type: text/event-stream` and relay upstream tokens progressively to the client as they arrive. Pre-stream error paths remain unchanged (still return JSON fallback).
+Remove two confirmed dead-code items from the generation layer:
+1. The unreachable `invalid_config` branch and its associated type members from both generation routes and the shared type utility.
+2. The unused `ADAPTATION_API_URL` constant from the adaptation API test file.
 
----
+These are pure housekeeping changes — no behavioral changes to any API contract, no observable output change to callers.
 
 ## Rationale (Why)
 
-Both routes currently buffer the full upstream response (`await upstreamResponse.json()`) before sending anything to the client — causing up to ~8s of blank spinner for Product End Users. Streaming eliminates perceived wait time and makes the "watch the model think" educational experience tangible. This is the highest-impact UX change available without altering educational content.
+The `invalid_config` branch was never reachable: `loadAdaptationConfig()` and `loadFrontierConfig()` only ever set `issueCode: 'missing_config'` when unconfigured. The branch was kept as forward-compatible scaffolding but no feature has ever used it. Removing it reduces false complexity for future maintainers and eliminates TypeScript type noise in the `FallbackReasonCode` union.
 
-The Tech Lead has already updated `lib/config/generation.ts` (`timeoutMs: 8000` → `30000`) to cover streaming duration.
+`ADAPTATION_API_URL` was a leftover constant from an earlier test design that no longer uses it — `setConfigEnv()` sets only `FRONTIER_API_KEY`. The linter emits a `no-unused-vars` or equivalent warning for it.
 
 ---
 
-## Known Environmental Caveats (Mandatory)
+## Known Environmental Caveats
 
-- **Node.js runtime**: System may be below `>=20.x` documented minimum. Run `node -v` first. If below v20, activate via `nvm use 20`. If nvm unavailable, classify as `environmental` and document — do not skip verification.
+- **Node.js runtime**: System runtime may be below `>=20.x`. Run `node -v` first. If below 20.x, activate via `nvm use 20`. If nvm unavailable, classify as `environmental` in your report.
 - **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
-- **Port**: Dev server on `3001`. Not required for lint/type/unit verification.
-- **E2E**: Not in scope for this step. Testing Agent handles E2E in Step 3.
-
----
-
-## SSE Protocol (Tech Lead Defined — Must Implement Exactly)
-
-The routes must emit the following typed SSE events. Do not invent additional event types.
-
-**Normal streaming flow:**
-```
-event: start
-data: {"mode":"live","metadata":{...}}
-
-event: token
-data: {"text":" hello"}
-
-event: token
-data: {"text":" world"}
-
-event: done
-data: {}
-```
-
-**Mid-stream error:**
-```
-event: error
-data: {"code":"timeout","message":"Streaming was interrupted: provider timed out."}
-```
-
-**`start` event data shape:**
-- Frontier: `{"mode":"live","metadata":{"label":"Frontier Base Model","modelId":"...","assistantTuned":false,"adaptation":"none","note":"Pretrained on internet-scale text; not assistant fine-tuned."}}`
-- Adaptation: `{"mode":"live","metadata":{"strategy":"<strategyId>","modelId":"..."}}`
-
-**`token` event data shape:** `{"text":"<raw token string>"}` — preserve whitespace as received from upstream.
-
-**`done` event data shape:** `{}` — no payload needed.
-
-**`error` event data shape:** `{"code":"<FallbackReasonCode>","message":"<human-readable message>"}`.
-
-**Client detection:** The client determines streaming vs non-streaming by `response.headers.get('content-type')`. If it contains `text/event-stream`, read as SSE. If `application/json`, parse as existing fallback/error JSON. Do not change the HTTP status code of the pre-stream fallback path (still 200 for fallback, 400 for validation errors).
-
----
-
-## Upstream SSE Chunk Format (Both Pipelines)
-
-The featherless-ai router returns standard OpenAI SSE format:
-
-```
-data: {"id":"...","choices":[{"text":" hello","finish_reason":null}]}
-
-data: [DONE]
-```
-
-For `/v1/completions` (Frontier): token text is at `choices[0].text`
-For `/v1/chat/completions` (Adaptation): token text is at `choices[0].delta.content`
-
-**Parsing rules:**
-- Lines starting with `data: ` — strip prefix, parse JSON
-- Skip if line is `data: [DONE]` — this terminates the stream (emit `event: done`)
-- Skip if line is empty or does not start with `data: `
-- Skip if `choices[0].text` (or `.delta.content`) is empty string, null, or undefined
-- On JSON parse failure for a chunk — skip the chunk, do not abort the stream
+- **Live-path availability**: `no` — API key is not required for this task. All changes are to dead-code paths and test constants. No live provider calls are exercised.
 
 ---
 
 ## Constraints
 
-### Technical
-- **Pre-stream error paths are unchanged.** If config is missing, upstream returns non-OK, or request is invalid: still return `NextResponse.json()` with the existing fallback/error shape. Do not change these paths.
-- **Output cap**: Track accumulated character count across `token` events. Once accumulated text reaches 4000 chars, emit `event: done` and close the stream. Do not emit further tokens beyond the cap.
-- **AbortController**: Keep the existing `AbortController` + `clearTimeout` pattern. `timeoutMs` is now 30000 (already updated in config). The AbortController fires if no upstream response starts within the timeout.
-- **Mid-stream abort**: If the AbortController fires after streaming has started, emit `event: error` with `code: 'timeout'` before closing the stream.
-- **OTel span**: `span.end()` must be called in `finally` after the entire stream completes (not before). For the live streaming path, increment the fallback counter only on mid-stream error — not on successful stream completion.
-- **`FRONTIER_API_KEY`** must never appear in response payloads, log fields, or span attributes.
-- **No new npm packages.** `ReadableStream`, `TextDecoder`, and SSE parsing are built-in.
-- **TypeScript strict mode.** All types must be explicit; no implicit `any`.
+### Technical Constraints
+- **No behavioral changes**: The removal of `invalid_config` must not alter the behavior of any path that is actually reached. The `!config.configured` block in both routes must still correctly return a `missing_config` fallback — only the dead `issueCode === 'invalid_config'` conditional is removed.
+- **No API contract changes**: No route response shapes change. The `FallbackReasonCode` union change is an internal type only; no API doc update is required.
+- **TypeScript strict mode**: All type changes must satisfy `tsc --noEmit`. Verify the narrowed type is sufficient.
+- **No new packages**.
 
-### Ownership
-- You own: `lib/server/generation/streaming.ts` (new), `app/api/frontier/base-generate/route.ts`, `app/api/adaptation/generate/route.ts`, `__tests__/api/frontier-base-generate.test.ts`, `__tests__/api/adaptation-generate.test.ts`
-- **API route unit tests are explicitly delegated to Backend Agent** for this CR (exception to default Testing Agent ownership — the mock shape changes structurally alongside the route).
-- Do NOT modify: `lib/config/generation.ts` (Tech Lead-owned, already updated), `lib/server/generation/shared.ts` (no changes needed), any frontend component.
+### Ownership Constraints
+- **Files in scope** (explicit delegation):
+  - `lib/server/generation/shared.ts`
+  - `app/api/adaptation/generate/route.ts`
+  - `app/api/frontier/base-generate/route.ts`
+  - `__tests__/api/adaptation-generate.test.ts`
+- **API route unit tests** (`__tests__/api/`) are explicitly delegated to Backend for this CR (consistent with CR-021 delegation model — Backend owns the test files for the routes it maintains).
+- **Do NOT modify**: Any frontend component, `page.tsx`, any other test file, any config file, or `testing-contract-registry.md`.
 
 ---
 
 ## Assumptions To Validate (Mandatory)
 
-1. **Featherless-ai streaming**: `stream: true` is supported by the featherless-ai router via HuggingFace Router for the OpenAI-compatible SSE format at both endpoints. If the upstream does not return `Content-Type: text/event-stream`, treat as `invalid_provider_response` fallback. Document finding in preflight note.
-2. **Next.js streaming**: Returning `new Response(readableStream, { headers: { 'Content-Type': 'text/event-stream', ... } })` from a Next.js 15 App Router Route Handler works without additional config. Confirm `next.config.js` has no response-buffering settings that would break this.
-3. **`ReadableStream` in Node 20+**: Available without polyfill in the test/runtime environment.
+- **Live-path availability**: `no` — API key not required.
+- Assumption 1: `invalid_config` is not referenced anywhere else in the codebase. Run `grep -rn "invalid_config" app/ lib/ __tests__/` before starting. Expected: only in the 4 locations identified below (shared.ts type union + 2 routes + nowhere in test files except if any test specifically exercises this code path — which would be dead).
+- Assumption 2: `ADAPTATION_API_URL` is declared exactly once at line 109 of `__tests__/api/adaptation-generate.test.ts` and is not referenced anywhere else in the file. Verify by reading the full file before editing.
+- Assumption 3: After removing `'invalid_config'` from `FallbackReasonCode`, no other file references `FallbackReasonCode` with the assumption that `'invalid_config'` is a valid value. Run `grep -rn "FallbackReasonCode"` to verify all usages.
 
 ---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
 
-- If featherless-ai does not support streaming for a specific model, flag with the model name and propose a per-model fallback before implementing.
-- If Next.js 15 requires a different streaming API, flag immediately — this is a plan-level assumption.
-- Do not add authentication changes, new rate-limiting logic, or new route paths.
-- Do not modify `FrontierBaseChat.tsx` or `AdaptationChat.tsx` — Frontend Agent scope.
+- If `grep` reveals `invalid_config` is referenced in any file outside the four scoped files above, **STOP** and report before proceeding. Do not expand scope without explicit Tech Lead approval.
+- If any existing test currently asserts `reason.code === 'invalid_config'`, that would be a pre-existing test that covers an unreachable path. Flag it as a pre-existing quality concern (Tech Lead Recommendation class per the deviation rubric) — do not silently delete the test assertion without documenting it.
+- Do NOT touch the `invalid_config` handling in `AdaptationChat.tsx` (client-side) — the client only reads error codes from HTTP error responses (`invalid_json`, `invalid_prompt`, `invalid_strategy`). The `invalid_config` being removed is server-side only.
 
 ---
 
 ## Scope
 
-### New File
+### Changes — `lib/server/generation/shared.ts`
 
-**`lib/server/generation/streaming.ts`**
-
-Create with at minimum these exports:
-
-```typescript
-/**
- * SSE chunk parsers for generation routes.
- * CR-021: shared parsing logic for frontier (/v1/completions) and adaptation (/v1/chat/completions).
- */
-
-/** Extracts token text from a /v1/completions SSE data line. Returns null to skip. */
-export function parseCompletionsChunk(line: string): string | null { ... }
-
-/** Extracts token text from a /v1/chat/completions SSE data line. Returns null to skip. */
-export function parseChatChunk(line: string): string | null { ... }
+**Current (line 6–14):**
+```ts
+export type FallbackReasonCode =
+    | 'missing_config'
+    | 'invalid_config'
+    | 'quota_limited'
+    | 'timeout'
+    | 'upstream_auth'
+    | 'upstream_error'
+    | 'invalid_provider_response'
+    | 'empty_provider_output';
 ```
 
-Stream relay logic (`ReadableStream` factory) may also be extracted here to avoid duplicating logic across both routes. Follow the structure and error-handling patterns of the existing route files — deviations are listed in your preflight note and take precedence over implied patterns.
+**After removal:**
+```ts
+export type FallbackReasonCode =
+    | 'missing_config'
+    | 'quota_limited'
+    | 'timeout'
+    | 'upstream_auth'
+    | 'upstream_error'
+    | 'invalid_provider_response'
+    | 'empty_provider_output';
+```
 
-### Files to Modify
+Remove the `| 'invalid_config'` line only.
 
-**`app/api/frontier/base-generate/route.ts`**
-- Add `stream: true` to the HuggingFace provider branch in `buildProviderRequestBody()`. Leave the `openai` branch unchanged.
-- After upstream fetch succeeds and `upstreamResponse.ok` is true:
-  - Verify `upstreamResponse.headers.get('content-type')` contains `text/event-stream`. If not, return `invalid_provider_response` fallback JSON.
-  - Return a streaming response piping upstream SSE → typed client events per the protocol above.
-  - Use `parseCompletionsChunk` for token extraction.
-  - Emit `event: start` with frontier metadata before first token.
-  - Emit `event: token` for each non-empty token string.
-  - Track accumulated character count; emit `event: done` and close once 4000 chars reached.
-  - On upstream `[DONE]`: emit `event: done`.
-  - On mid-stream error/abort: emit `event: error` and close.
-- All pre-stream error paths unchanged.
-- `extractProviderOutput()` is no longer on the live path — remove it only after confirming no other callers (grep first).
+### Changes — `app/api/adaptation/generate/route.ts`
 
-**`app/api/adaptation/generate/route.ts`**
-- Same streaming migration. Use `parseChatChunk` for token extraction.
-- Emit `event: start` with `{"mode":"live","metadata":{"strategy":"<strategyId>","modelId":"<modelId>"}}`.
-- Enforce 4000-char cap.
-- All pre-stream error paths unchanged.
+**1. Narrow the `AdaptationConfig.issueCode` type (line 75):**
 
-**`__tests__/api/frontier-base-generate.test.ts`**
-- Update `global.fetch` mock for the live path to return a mock SSE stream response (a `Response` with `body` as a `ReadableStream` emitting SSE lines, `content-type: text/event-stream`).
-- Required new test cases:
-  - Live streaming path: mock emits `start` + 2–3 `token` events + `done`; verify route returns a `text/event-stream` response with correct typed events.
-  - Output cap: mock emits enough tokens to exceed 4000 chars; verify stream closes at cap.
-  - Mid-stream error (AbortError after `upstreamResponse.ok`): verify `event: error` is emitted.
-  - Non-streaming upstream response (missing `text/event-stream` content-type on OK response): verify `invalid_provider_response` fallback JSON returned.
-- Existing pre-stream tests (missing config, timeout before connect, non-OK upstream, validation errors): keep and update as needed.
+Current:
+```ts
+issueCode?: 'missing_config' | 'invalid_config';
+```
+After:
+```ts
+issueCode?: 'missing_config';
+```
 
-**`__tests__/api/adaptation-generate.test.ts`**
-- Same pattern. Cover all three strategies for the streaming live path.
+**2. Remove the dead `invalid_config` branch (lines ~196–206 in the `!config.configured` block):**
+
+Current logic:
+```ts
+if (!config.configured) {
+    const issueCode = config.issueCode ?? 'missing_config';
+    const issueMessage =
+        issueCode === 'invalid_config'
+            ? 'Adaptation provider configuration is invalid. Showing deterministic fallback output.'
+            : 'Adaptation provider is not configured. Showing deterministic fallback output.';
+    // ...
+}
+```
+
+After removal (replace the conditional with the `'missing_config'` message directly):
+```ts
+if (!config.configured) {
+    const issueCode = config.issueCode ?? 'missing_config';
+    const issueMessage = 'Adaptation provider is not configured. Showing deterministic fallback output.';
+    // ...
+}
+```
+
+The `issueCode` variable can be retained (it's still used for `span.setAttribute` and the metrics counter). Only the `issueMessage` ternary is removed.
+
+### Changes — `app/api/frontier/base-generate/route.ts`
+
+**1. Narrow the `FrontierConfig.issueCode` type (line 67):**
+
+Current:
+```ts
+issueCode?: 'missing_config' | 'invalid_config';
+```
+After:
+```ts
+issueCode?: 'missing_config';
+```
+
+**2. Remove the dead `invalid_config` branch (lines ~207–211 in the `!frontierConfig.configured` block):**
+
+Current logic:
+```ts
+if (!frontierConfig.configured) {
+    const issueCode = frontierConfig.issueCode ?? 'missing_config';
+    const issueMessage = issueCode === 'invalid_config'
+        ? 'Frontier provider configuration is invalid. Showing deterministic fallback output.'
+        : 'Frontier provider is not configured. Showing deterministic fallback output.';
+    // ...
+}
+```
+
+After removal:
+```ts
+if (!frontierConfig.configured) {
+    const issueCode = frontierConfig.issueCode ?? 'missing_config';
+    const issueMessage = 'Frontier provider is not configured. Showing deterministic fallback output.';
+    // ...
+}
+```
+
+### Changes — `__tests__/api/adaptation-generate.test.ts`
+
+**Remove the unused constant declaration (line 109):**
+
+Current (inside the `describe` block):
+```ts
+const ADAPTATION_API_URL = 'https://router.huggingface.co/featherless-ai/v1/chat/completions';
+```
+
+Delete this line entirely. Do NOT replace it with anything. Verify no other line in the file references `ADAPTATION_API_URL` before deleting.
 
 ---
 
 ## Definition of Done
 
-- [ ] `lib/server/generation/streaming.ts` created with `parseCompletionsChunk` and `parseChatChunk` exports.
-- [ ] Frontier route: `stream: true` in HuggingFace request body; live path returns `text/event-stream`; typed SSE events match the protocol above; pre-stream fallback paths unchanged.
-- [ ] Adaptation route: same. Applies for all three strategies.
-- [ ] Output cap (4000 chars) enforced server-side in both streaming routes.
-- [ ] OTel span ends after stream completes; `FRONTIER_API_KEY` absent from all response payloads, logs, span attributes.
-- [ ] Route unit tests updated: streaming live path covered; pre-stream paths retained; output cap + mid-stream error + non-SSE-upstream cases added.
+- [ ] AC-7: No `invalid_config` branch or `'invalid_config'` type member remains in `shared.ts`, `adaptation/generate/route.ts`, or `frontier/base-generate/route.ts`. `pnpm exec tsc --noEmit` passes.
+- [ ] AC-8: No `ADAPTATION_API_URL` constant in `__tests__/api/adaptation-generate.test.ts`. `pnpm lint` passes.
+- [ ] AC-9: No `data-testid` renames or removals introduced (Backend does not touch frontend files).
+- [ ] Existing `missing_config` fallback behavior is unchanged — the `issueCode` variable is still emitted to span attributes and metrics counter.
 - [ ] `pnpm lint` passes with zero errors.
 - [ ] `pnpm exec tsc --noEmit` passes with zero errors.
-- [ ] `pnpm test` passes. All tests outside the two modified test files remain green.
+- [ ] No debug artifacts (`console.log`, commented-out blocks, TODO markers) in any modified file.
+
+---
+
+## Negative Space Rule (AC-7 Verification)
+
+The Definition of Done for AC-7 must verify BOTH directions:
+- [ ] **Positive**: `grep -n "invalid_config" lib/server/generation/shared.ts app/api/adaptation/generate/route.ts app/api/frontier/base-generate/route.ts` returns zero matches.
+- [ ] **Negative**: `missing_config` fallback path still works — the `!config.configured` block still returns a fallback response with `reason.code: 'missing_config'`. Existing unit tests cover this (all three `missing_config` test cases in `adaptation-generate.test.ts` must still pass).
+
+---
+
+## Execution Checklist (Mandatory)
+
+Before starting:
+- [ ] Read this handoff completely.
+- [ ] Read the plan at `agent-docs/plans/CR-022-plan.md`.
+- [ ] Run `grep -rn "invalid_config" app/ lib/ __tests__/` to confirm scope matches the 3 scoped source files (not test references — verify).
+- [ ] Read `__tests__/api/adaptation-generate.test.ts` fully before editing it.
+- [ ] Write preflight note to `backend-to-tech-lead.md` (assumptions confirmed + any open questions).
+
+Before reporting:
+- [ ] All Definition of Done items checked.
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm exec tsc --noEmit` passes.
+- [ ] Completion report written to `backend-to-tech-lead.md` using the template.
 
 ---
 
 ## Clarification Loop (Mandatory)
 
-Before implementation, post a preflight note to `agent-docs/conversations/backend-to-tech-lead.md` covering:
-- Assumptions confirmed or invalidated.
-- Adjacent risks not in current scope.
-- Open questions (flag before implementing if they affect contracts or scope).
+Before implementation, Backend posts preflight concerns/questions in `agent-docs/conversations/backend-to-tech-lead.md`. Tech Lead responds in the same file. Repeat until concerns are resolved or status becomes `blocked`.
 
 ---
 
@@ -230,14 +250,22 @@ Run in sequence. Report each using the Command Evidence Standard:
 node -v
 pnpm lint
 pnpm exec tsc --noEmit
-pnpm test
+pnpm test -- --testPathPattern="adaptation-generate|frontier-base-generate|generation/shared"
 ```
 
-For each:
+Format:
 - **Command**: `[exact command]`
-- **Scope**: `[full suite | targeted]`
+- **Scope**: `[full suite | targeted spec]`
 - **Execution Mode**: `[sandboxed | local-equivalent/unsandboxed]`
 - **Result**: `[PASS/FAIL + key counts or failure summary]`
+
+**Note**: Running only targeted tests is sufficient for this step. The Testing Agent runs the full `pnpm test` suite in the subsequent step.
+
+---
+
+## Scope Extension Control
+
+If any feedback expands implementation beyond this handoff scope, mark it `scope extension requested` in your report. Wait for explicit `scope extension approved` from Tech Lead (or User override) before implementing expanded work.
 
 ---
 
@@ -248,8 +276,7 @@ Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` us
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 Report must include:
-- Preflight note (assumptions confirmed/invalidated).
-- Summary of each file changed.
+- Preflight note (grep results confirming scope, `ADAPTATION_API_URL` usage confirmed absent).
+- Summary of each file changed with key line numbers.
 - Verification evidence (Command Evidence Standard format).
 - Deviations from this spec (if any), classified per the Deviation Protocol.
-- Any SSE protocol observations for the Frontend Agent (e.g., if chunk timing or format differs from plan assumptions).

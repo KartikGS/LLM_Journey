@@ -1,98 +1,63 @@
 # BA to Tech Lead Handoff
 
 ## Subject
-`CR-021 — Frontier and Adaptation Response Streaming`
+`CR-022 — Adaptation Page Upgrade and Cleanup`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing BA handoff context: `CR-020`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-020-plan.md`
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-020-cr-process-hardening-and-artifact-organization.md` status is `Done`
+- Prior outgoing BA handoff context: `CR-021`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-021-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-021-frontier-response-streaming.md` status is `Done` ✓
 - Result: replacement allowed for new CR context.
 
 ## Objective
-Implement token-by-token streaming for both the frontier base generation pipeline and the adaptation generation pipeline. Both currently buffer the full response before returning it, creating a poor UX — Product End Users stare at a spinner for up to ~8 seconds. Streaming eliminates perceived wait time, delivers a live "watch the model think" experience, and reinforces the educational concept that LLMs generate token-by-token. The ONNX/tiny transformer browser inference path is explicitly out of scope.
+CR-022 bundles four related improvements to the adaptation page and its supporting code into a single deliverable:
+
+1. **Narrative sections**: Add "Why We Adapt LLMs" (before strategy cards) and "Limitations & What's Next" (after chat, before navigation) to `/models/adaptation`. Fills the educational gap where Product End Users currently dive into strategy demos with no context for *why* adaptation exists, and leave without a motivational bridge to Stage 3.
+2. **UX hardening**: Disable the three strategy tab buttons (`adaptation-chat-tab-*`) while streaming is active. Currently, tab clicks mid-stream change tab state while the prior strategy's stream continues — creating mismatched output.
+3. **AI disclaimer**: Add "AI can make mistakes, check important info." to the `AdaptationChat` UI to reduce legal exposure.
+4. **Dead-code cleanup**: Remove unreachable `invalid_config` branch from generation fallback code paths/types, and remove unused `ADAPTATION_API_URL` constant from adaptation API tests.
 
 ## Linked Artifacts
-- CR: `agent-docs/requirements/CR-021-frontier-response-streaming.md`
+- CR: `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md`
 
 ## Audience & Outcome Check
-- Human User intent: add token-by-token streaming to both the frontier chat (Stage 1) and the adaptation chat (Stage 2). ONNX/browser inference excluded.
-- Product End User audience: software engineers learning LLM architecture via Stage 1 (Transformers page) and Stage 2 (Model Adaptation page).
-- Expected learner outcome: progressive token rendering makes both demos feel live and interactive, reinforcing token-by-token generation mechanics. Across all three adaptation strategies, learners see the model responding in real time.
+- **Human User intent**: Fix the tab mid-stream UX bug, add AI disclaimer, enrich the adaptation page with narrative framing, and clear two known dead-code items.
+- **Product End User audience**: Software engineers learning LLM system design via Stage 2 (Model Adaptation page).
+- **Expected learner outcome**: Learners arrive at strategy demos understanding *why* adaptation exists; they leave understanding what adaptation cannot solve — priming them for Context Engineering (Stage 3). The tab lockout and disclaimer improve interaction quality and trust calibration.
 
-## Clarified Requirement Summary
-**Frontier** (`/api/frontier/base-generate` + `FrontierBaseChat.tsx`):
-- Modify API route to return a streaming response (SSE or `ReadableStream`) rather than buffered JSON.
-- Modify component to render tokens progressively into `data-testid="frontier-output"`.
-- Add blinking cursor during streaming; remove on completion.
-- Retain "Querying frontier endpoint..." loader until first token arrives.
+## Suggested Execution Mode
+**Parallel delegation** — Frontend and Backend work on distinct files with no shared dependency:
+- **Frontend sub-agent**: narrative sections in `app/models/adaptation/page.tsx` (+ any new section components) and `AdaptationChat.tsx` UX hardening (tabs + disclaimer). Items 1–4.
+- **Backend sub-agent**: dead-code removal in generation route files and adaptation API test files. Items 5–6.
 
-**Adaptation** (`/api/adaptation/generate` + `AdaptationChat.tsx`):
-- Same streaming migration. Applies across all three strategies (`full-finetuning`, `lora-peft`, `prompt-prefix`).
-- Modify component to render tokens progressively into `data-testid="adaptation-chat-output"`.
-- Add blinking cursor during streaming; remove on completion.
-- Retain "Querying adaptation endpoint..." loader until first token arrives.
+## Key Design Decisions for Tech Lead Resolution
+1. **New narrative section rendering boundary**: Server Components are preferred for the new narrative sections (no interactivity required). Only convert to Client Component if a specific pattern forces it — note the rationale in the plan.
+2. **Tab disabled implementation**: Confirm the disabled mechanism satisfies accessibility — `disabled` HTML attribute on `<button>` is preferred over a CSS-only approach for keyboard/screen-reader correctness.
+3. **AI disclaimer placement**: Exact position within `AdaptationChat` (below input form vs. below output window) is a Frontend decision; must be visible in both themes.
+4. **Dead-code scope confirmation**: Before Backend removes `invalid_config`, confirm it is genuinely unreachable (not referenced in any active code path or exported type). `ADAPTATION_API_URL` removal is straightforward.
 
-**Both**:
-- Submit and input disabled for full streaming duration in each component.
-- Handle upstream failure: preserve pre-stream fallback/error behavior; define mid-stream error surface (Tech Lead decision).
-
-## Critical Design Decisions Requiring Tech Lead Resolution (Before Sub-Agent Handoff)
-
-### 1. Mid-Stream Error Handling (Highest Priority — applies to both routes)
-The current `{mode: 'fallback', output: staticText}` JSON response pattern cannot be sent retroactively once streaming starts. The Tech Lead must define the mid-stream error surface for both routes before Frontend/Backend sub-agents begin implementation. The design should be consistent across both pipelines.
-
-### 2. Upstream Format Difference
-Frontier uses `/v1/completions` (plain text); adaptation uses `/v1/chat/completions` (chat messages format). Both are OpenAI-compatible and support `stream: true`, but the streamed chunk shape differs (`choices[0].text` vs `choices[0].delta.content`). The streaming reader must handle both formats.
-
-### 3. Timeout Semantics (both routes)
-`timeoutMs: 8000` in both `FRONTIER_GENERATION_CONFIG` and `ADAPTATION_GENERATION_CONFIG` was designed for buffered responses. Both must be explicitly re-evaluated for streaming semantics.
-
-### 4. Upstream Streaming Confirmation (all four models)
-Confirm `stream: true` is supported by the featherless-ai router for all four configured models:
-- `meta-llama/Meta-Llama-3-8B` (frontier + adaptation prompt-prefix)
-- `meta-llama/Meta-Llama-3-8B-Instruct` (adaptation full-finetuning)
-- `swap-uniba/LLaMAntino-3-ANITA-8B-Inst-DPO-ITA` (adaptation lora-peft)
-
-If any model is unsupported, a graceful degradation path is required for that specific strategy.
-
-## Acceptance Criteria Mapping
-- [ ] AC-1: Frontier API route delivers tokens progressively; first token arrives before full response completes.
-- [ ] AC-2: `FrontierBaseChat` renders tokens progressively into `data-testid="frontier-output"`.
-- [ ] AC-3: Adaptation API route delivers tokens progressively for all three strategies.
-- [ ] AC-4: `AdaptationChat` renders tokens progressively into `data-testid="adaptation-chat-output"`.
-- [ ] AC-5: Blinking cursor visible in frontier output during streaming; removed on completion.
-- [ ] AC-6: Blinking cursor visible in adaptation output during streaming; removed on completion.
-- [ ] AC-7: Frontier "Querying..." loader shown until first token; does not persist after streaming begins.
-- [ ] AC-8: Adaptation "Querying..." loader shown until first token; does not persist after streaming begins.
-- [ ] AC-9: `frontier-submit` and `frontier-input` disabled for full streaming duration; re-enabled on completion/error.
-- [ ] AC-10: `adaptation-chat-submit` and `adaptation-chat-input` disabled for full streaming duration; re-enabled on completion/error.
-- [ ] AC-11: Upstream failure (pre- and mid-stream) surfaces a meaningful error/fallback indication on both components.
-- [ ] AC-12: All existing `data-testid` contracts preserved without rename (frontier + adaptation — full list in CR).
-- [ ] AC-13: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build` all pass.
+## Acceptance Criteria Summary (full detail in CR-022)
+- AC-1: "Why We Adapt LLMs" section present and covers 4 key points (before strategy cards)
+- AC-2: "Limitations & What's Next" section present covering all 3 strategy trade-offs (after chat)
+- AC-3: Limitations section includes bridging callout with navigable link to `/context/engineering`
+- AC-4: Strategy tabs disabled during streaming; re-enabled on completion/error
+- AC-5: Tab click mid-stream does not change strategy or restart generation
+- AC-6: AI disclaimer visible in `AdaptationChat` UI (both themes)
+- AC-7: No `invalid_config` branch or type member in generation code; `tsc --noEmit` passes
+- AC-8: No unused `ADAPTATION_API_URL` in adaptation test files; `pnpm lint` passes
+- AC-9: All existing `data-testid` contracts preserved
+- AC-10: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build` all pass
 
 ## Constraints
-- Scope: Frontier pipeline + adaptation pipeline (server-side API routes only). ONNX/browser inference explicitly out of scope.
 - No new packages without Tech Lead review and Standard Kit governance.
-- Rate limiting (20 req/min on each generation route) must not be weakened.
-- `FRONTIER_API_KEY` must remain server-side only (used by both routes).
 - TypeScript strict mode must remain satisfied.
-- All existing `data-testid` contracts must be preserved.
+- `data-testid` contracts on `adaptation-chat-tab-*`, `adaptation-chat-submit`, `adaptation-chat-input`, `adaptation-chat-output` must be preserved.
+- New narrative sections must match the established glassmorphism aesthetic (consistent with existing page style).
+- Dead-code items 5–6: no behavioral changes to any API contract.
 
-## Risk Analysis
-- One of the four adaptation models may not support streaming — must be verified per-model before sub-agent implementation.
-- Mid-stream error handling is architecturally novel for this codebase; must not be left to sub-agents to guess.
-- E2E tests asserting on `frontier-output` or `adaptation-chat-output` content may be timing-sensitive with streaming. Tech Lead should evaluate Testing handoff trigger per the Testing Handoff Trigger Matrix in `workflow.md`.
-- The two different upstream formats (`/v1/completions` vs `/v1/chat/completions`) produce different SSE chunk shapes — the streaming reader(s) must account for both.
-
-## Rationale (Why)
-Streaming is the highest-impact UX improvement available to both demos with no change to educational content or scope. It transforms passive "wait and see" interactions into active "watch the model think" experiences across two stages of the journey. The implementation is tightly scoped to two API routes and two components. A shared streaming utility is a natural extraction opportunity — left as a Tech Lead decision.
-
-## Evidence Expectations for Tech Lead Handoff
-- Confirmation that featherless-ai supports `stream: true` for all four configured models (or documented per-model fallback plan).
-- Explicit design decision for mid-stream error handling — consistent across both pipelines — recorded in the plan.
-- One-line evidence per AC with file/line or command references.
-- Classification of any testing handoff triggers per the Testing Handoff Trigger Matrix in `workflow.md`.
+## Risk Notes
+- Frontend sub-agent touches both `page.tsx` and `AdaptationChat.tsx` — confirm no conflict between narrative additions and the existing `AdaptationChat` component boundary.
+- The "Limitations" bridging callout should reference `/context/engineering` but not duplicate the `JourneyContinuityLinks` footer — complementary, not redundant.

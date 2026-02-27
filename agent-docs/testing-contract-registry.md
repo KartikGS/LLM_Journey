@@ -35,10 +35,18 @@ This file tracks durable test contracts that should remain stable unless a CR ex
 ## Adaptation Stage Contracts (Current)
 - `adaptation-page`
 - `adaptation-hero`
+- `adaptation-why-adapt` (added CR-022)
 - `adaptation-strategy-comparison`
-- `adaptation-interaction`
-- `adaptation-strategy-selector`
-- `adaptation-interaction-output`
+- `adaptation-chat`
+- `adaptation-chat-tab-full-finetuning`
+- `adaptation-chat-tab-lora-peft`
+- `adaptation-chat-tab-prompt-prefix`
+- `adaptation-chat-form`
+- `adaptation-chat-input`
+- `adaptation-chat-submit`
+- `adaptation-chat-output`
+- `adaptation-chat-status`
+- `adaptation-limitations` (added CR-022)
 - `adaptation-continuity-links`
 - `adaptation-link-transformers`
 - `adaptation-link-context`
