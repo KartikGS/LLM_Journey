@@ -44,6 +44,12 @@ let frontierGenerateFallbacks: Counter | null = null;
 let adaptationGenerateRequests: Counter | null = null;
 let adaptationGenerateFallbacks: Counter | null = null;
 
+// Pre-defined metrics for frontier generation latency
+let frontierGenerateUpstreamLatency: Histogram | null = null;
+
+// Pre-defined metrics for adaptation generation latency
+let adaptationGenerateUpstreamLatency: Histogram | null = null;
+
 /**
  * Counter for total telemetry token requests
  */
@@ -172,4 +178,30 @@ export function getAdaptationGenerateFallbacksCounter(): Counter {
         });
     }
     return adaptationGenerateFallbacks;
+}
+
+/**
+ * Histogram for frontier base-generate upstream AI provider latency
+ */
+export function getFrontierGenerateUpstreamLatencyHistogram(): Histogram {
+    if (!frontierGenerateUpstreamLatency) {
+        frontierGenerateUpstreamLatency = getMeter().createHistogram('frontier_generate.upstream_latency', {
+            description: 'Upstream AI provider latency for frontier base-generate requests in milliseconds',
+            unit: 'ms',
+        });
+    }
+    return frontierGenerateUpstreamLatency;
+}
+
+/**
+ * Histogram for adaptation generate upstream AI provider latency
+ */
+export function getAdaptationGenerateUpstreamLatencyHistogram(): Histogram {
+    if (!adaptationGenerateUpstreamLatency) {
+        adaptationGenerateUpstreamLatency = getMeter().createHistogram('adaptation_generate.upstream_latency', {
+            description: 'Upstream AI provider latency for adaptation generate requests in milliseconds',
+            unit: 'ms',
+        });
+    }
+    return adaptationGenerateUpstreamLatency;
 }

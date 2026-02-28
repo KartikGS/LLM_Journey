@@ -25,6 +25,7 @@ jest.mock('@/lib/otel/metrics', () => ({
     safeMetric: (fn: () => void) => fn(),
     getFrontierGenerateRequestsCounter: () => ({ add: mockAdd }),
     getFrontierGenerateFallbacksCounter: () => ({ add: mockAdd }),
+    getFrontierGenerateUpstreamLatencyHistogram: () => ({ record: jest.fn() }),
 }));
 
 jest.mock('@/lib/otel/logger', () => ({

@@ -2,7 +2,6 @@ import { GlowBackground } from '@/app/ui/components/GlowBackground';
 import { GlassCard } from '@/app/ui/components/GlassCard';
 import { JourneyStageHeader } from '@/app/ui/components/JourneyStageHeader';
 import { JourneyContinuityLinks } from '@/app/ui/components/JourneyContinuityLinks';
-import Link from 'next/link';
 import { AdaptationChat } from './components/AdaptationChat';
 import { strategies } from './components/strategy-data';
 

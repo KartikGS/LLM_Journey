@@ -7,6 +7,7 @@ import {
     safeMetric,
     getAdaptationGenerateRequestsCounter,
     getAdaptationGenerateFallbacksCounter,
+    getAdaptationGenerateUpstreamLatencyHistogram,
 } from '@/lib/otel/metrics';
 import { getTracer } from '@/lib/otel/tracing';
 import {
@@ -219,6 +220,7 @@ export async function POST(req: NextRequest) {
                 };
 
                 let upstreamResponse: Response;
+                const upstreamFetchStart = performance.now();
                 try {
                     upstreamResponse = await fetch(config.apiUrl, {
                         method: 'POST',
@@ -316,6 +318,10 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
+                safeMetric(() => getAdaptationGenerateUpstreamLatencyHistogram().record(
+                    performance.now() - upstreamFetchStart,
+                    { strategy }
+                ));
                 span.setAttribute('adaptation.mode', 'live');
                 span.setStatus({ code: SpanStatusCode.OK });
                 streamingActive = true;

@@ -7,6 +7,7 @@ import {
     safeMetric,
     getFrontierGenerateRequestsCounter,
     getFrontierGenerateFallbacksCounter,
+    getFrontierGenerateUpstreamLatencyHistogram,
 } from '@/lib/otel/metrics';
 import { getTracer } from '@/lib/otel/tracing';
 import {
@@ -223,6 +224,7 @@ export async function POST(req: NextRequest) {
                 const timeoutHandle = setTimeout(() => controller.abort(), frontierConfig.timeoutMs);
 
                 let upstreamResponse: Response;
+                const upstreamFetchStart = performance.now();
                 try {
                     upstreamResponse = await fetch(frontierConfig.apiUrl, {
                         method: 'POST',
@@ -319,6 +321,10 @@ export async function POST(req: NextRequest) {
                     );
                 }
 
+                safeMetric(() => getFrontierGenerateUpstreamLatencyHistogram().record(
+                    performance.now() - upstreamFetchStart,
+                    { route: ROUTE_PATH }
+                ));
                 span.setAttribute('frontier.mode', 'live');
                 span.setStatus({ code: SpanStatusCode.OK });
                 streamingActive = true;
