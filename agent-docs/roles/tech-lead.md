@@ -197,6 +197,24 @@ Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead H
 
 If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
+#### Metric Mock Cascade Check (Mandatory when Backend CR adds or renames exported functions in a shared metric module)
+
+Before writing any Backend handoff that adds or renames exported functions in a shared infrastructure module (e.g., `lib/otel/metrics.ts`), run:
+
+```
+grep -rn 'jest.mock.*otel/metrics' __tests__/
+```
+
+(Adjust the module path for the specific module being extended.)
+
+If any **closed-factory mock** is found — a `jest.mock(...)` call that returns a literal object `{ ... }` without the new function — this is a **metric mock cascade** condition. The test will silently receive `undefined` for the new getter, causing a TypeError that propagates through the route's error boundary and surfaces as a wrong-content-type response assertion failure.
+
+Resolve **before issuing the Backend handoff**:
+- Option A: Explicitly name the affected test files in Backend's delegation scope (allow Backend to update the mocks).
+- Option B: Add a Testing Agent handoff to update the mocks separately.
+
+Do not issue the Backend handoff without resolving this — the DoD will require `pnpm test` to pass, and the cascade will block completion with a hard-to-diagnose failure.
+
 ---
 
 ### Technical Planning & Delegation

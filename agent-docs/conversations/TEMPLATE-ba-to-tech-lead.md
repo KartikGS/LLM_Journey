@@ -32,6 +32,14 @@
 ## Risk Analysis
 - [Key delivery risks, assumption risks, and scope risks.]
 
+## Reversal Risk
+<!--
+AC-level pre-implementation checks. Use when an AC contains an assumption the BA has not fully verified.
+Format: "Reversal Risk — AC-X: Before implementing, run [exact command]. If [condition], stop and contact BA before proceeding."
+Example: "Reversal Risk — AC-4: Before removing, run `grep -rn 'getFunctionName' .`. If any call site is found, stop and contact BA — the function may be live."
+-->
+- `none`
+
 ## Rationale (Why)
 - [Business/learning reason this CR exists now.]
 

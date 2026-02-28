@@ -18,6 +18,31 @@
 
 ## Observability
 
+> For observability design principles and the decision rule for when to use spans vs. metrics+logs, see [`agent-docs/llm-journey/project-principles/observability.md`](/agent-docs/llm-journey/project-principles/observability.md) — specifically the **Purposeful Observability Principle**. The short rule: instrument product operations with spans; instrument infrastructure-only operations (no parent trace context) with metrics and logs only.
+
+### Metric Mock Cascade (Pre-Implementation Check)
+
+When adding a new exported getter or function to `lib/otel/metrics.ts`, run this grep before writing any implementation:
+
+```
+grep -rn 'jest.mock.*otel/metrics' __tests__/
+```
+
+If any closed-factory mock exists (a `jest.mock(...)` call returning a literal object `{ ... }` without your new function), this is a **metric mock cascade** condition. The new getter will silently receive `undefined` in tests, causing a TypeError inside `safeMetric` that propagates into the route's error boundary and produces a wrong-content-type response assertion failure — not a metric-related error message.
+
+**Flag this in your preflight report** with the list of affected test files. Do not implement until the handoff explicitly authorizes you to update those test files, or until a Testing Agent handoff is issued for the mock update.
+
+### safeMetric: Test vs. Production Behavior
+
+`safeMetric` behaves differently in production and in tests — intentionally:
+
+- **Production:** `try { fn() } catch (e) { console.error(...) }` — metric errors are swallowed and logged. Observability failures never reach users.
+- **Tests (closed-factory mocks):** `safeMetric` is consistently implemented as `(fn: () => void) => fn()` — metric errors propagate as unhandled exceptions.
+
+This divergence is load-bearing: test-side propagation ensures metric failures surface immediately as visible failures (good for test fidelity), while production-side swallowing ensures observability never breaks user flows (good for operational safety).
+
+**When updating test mocks for a new metric getter**, add the new getter to the closed-factory mock object. A missing getter means `safeMetric(() => newGetter().record(...))` calls `undefined()` inside the mock's `safeMetric` implementation — the TypeError propagates to the route's outer catch block and produces a fallback JSON response in tests, which then fails a content-type or response-shape assertion that appears completely unrelated to the metric change.
+
 ### OTel Span Lifecycle During Streaming
 
 Streaming routes require a non-obvious span lifecycle pattern. Do not call `span.end()` immediately after the route handler returns — the span must remain open for the duration of the stream.

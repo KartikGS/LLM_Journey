@@ -24,8 +24,10 @@ Default rule:
 > **Two-Layer Reading Structure:**
 > 1. **First:** Read ALL "Universal Standards" below (applies to EVERY agent)
 > 2. **Then:** Read your role file, which contains **additional role-specific readings**
-> 
+>
 > Your role file is NOT just a job description—it has its own "Required Readings" section with context you MUST load before starting work.
+>
+> **Reference following (mandatory):** When a document you load contains a cross-reference (markdown link) to another file within `agent-docs/`, treat that referenced file as required reading for any task that touches the referenced topic. Do not treat cross-references as optional context — follow the link to the source file before proceeding. Cross-references point to the authoritative source for a specific topic; the inline description in the referencing doc is a summary only.
 
 ### Layer 1: Universal Standards (ALL agents)
 - **General Engineering Principles (cross-project):** [General Principles](/agent-docs/coordination/general-principles.md)

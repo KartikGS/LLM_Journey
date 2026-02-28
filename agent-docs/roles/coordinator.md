@@ -114,6 +114,40 @@ Apply to every sub-agent. Extend per-CR in `TL-session-state.md` — do not rege
 - Test names accurately describe current behavior after any format or contract change.
 - No pre-existing test failures introduced or unmasked (classify as CR-related vs. pre-existing).
 
+### Adversarial Dimension Library (by CR Domain)
+
+Use this library to select the relevant domain checks for a given CR type. Record selected checks (plus any CR-specific extensions) in `TL-session-state.md` at Session A time — do not re-derive from the CR spec at review time.
+
+#### Observability CRs (span/metric additions, removals, or restructuring)
+- **Span removal completeness:** For each removed span call, grep for zero matches of the removed SDK calls (`startActiveSpan`, `SpanKind`, `getTracer`) in the affected file.
+- **Metric wrapper coverage:** Confirm all metric record/add/observe calls are wrapped in `safeMetric`. Grep for bare metric calls (e.g., `histogram.record(` not preceded by `safeMetric`) in the modified files.
+- **Timer position:** If a latency histogram is recorded, confirm `const startTime = Date.now()` is declared before the first `try` block — not inside the try.
+- **Fallback path metric check:** Confirm metric recording calls are absent from error/catch fallback paths where they should not fire (e.g., do not record latency in the catch block if the happy-path timer logic didn't initialize).
+- **Metric mock cascade:** Confirm any new exported getter is added to closed-factory mocks in `__tests__/` — grep for `jest.mock.*otel/metrics` and check each match.
+
+#### API Route Hardening CRs (input validation, error codes, payload limits)
+- **Error code completeness:** For each new or renamed error code in the route, confirm a corresponding test case exists asserting that exact status + body.
+- **Negative Space Rule on removals:** For each removed error code, grep for zero matches of the removed string in `app/` (no client-side ghost handler left referencing the removed code).
+- **Content-length / payload-size limit:** If a new size limit is introduced, confirm both the reject case (over-limit → 413 or 400) and the accept case (at-limit → 200) are tested.
+- **Auth token path:** If token validation is part of the route, confirm the invalid-token path returns the correct status (not 200) and does not leak error details.
+
+#### Frontend / UI CRs (component additions, layout changes, copy updates)
+- **data-testid contract stability:** Confirm added/removed/renamed `data-testid` attributes are recorded in `testing-contract-registry.md` or a follow-up tracking item exists.
+- **Dark mode / light mode:** For any new styled element, confirm both color modes render correctly (visual or DOM-level check per CR scope).
+- **Accessibility semantics:** If ARIA roles, labels, or keyboard behavior changed, confirm the change matches the intended pattern in `frontend.md` Accessibility Contracts.
+- **JSX character escaping:** Confirm apostrophes, ampersands, and angle brackets in JSX text content are escaped (`&apos;`, `&amp;`, `&lt;`/`&gt;`) to prevent `react/no-unescaped-entities` lint failures.
+
+#### Streaming / SSE CRs (ReadableStream, SSE protocol, text encoding)
+- **Span lifecycle:** Confirm `span.end()` is not called in the `finally` block — only via `onDone`/`onMidStreamError` callbacks inside the stream controller.
+- **`streamingActive` flag:** Confirm the flag is set before the stream is returned and checked in the catch block to prevent double-end.
+- **TextDecoder `{ stream: true }`:** Confirm client-side SSE parsing uses `{ stream: true }` to prevent multi-byte character corruption.
+- **Error propagation boundary:** Confirm mid-stream errors are surfaced as SSE error events, not as HTTP error responses after streaming has begun.
+
+#### Documentation / Process CRs (agent-docs, workflow, role docs)
+- **Cross-reference validity:** Confirm any new markdown link in the changed file resolves to an existing file path. Grep or file-check each new link target.
+- **Vocabulary consistency:** Confirm any new named term (a principle name, a protocol name, a field label) matches the pre-decided vocabulary in the synthesis document for this CR.
+- **No duplicate content:** Confirm the new content is not already covered by an existing section in the same or a referenced file (adds a principle that already exists creates drift).
+
 ### Deviation Severity Classification
 
 | Class | Signal | Required action |
