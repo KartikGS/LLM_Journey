@@ -1,58 +1,94 @@
-## Subject: CR-011 - Server-First Rendering Boundary Refactor
+# Report: Frontend -> Tech Lead
+## Subject
+`CR-022 — Adaptation Page Upgrade and Cleanup: Frontend Implementation`
+
+## Pre-Replacement Check (Conversation Freshness)
+- Prior outgoing Frontend handoff context: `CR-021`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-021-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-021-frontier-response-streaming.md` status `Done` per `agent-docs/project-log.md` ✓
+- Result: replacement allowed for new CR context.
 
 ## [Preflight: Assumptions]
-- `BaseLLMChat` can remain a client component and be rendered inside a server page (`app/foundations/transformers/page.tsx`).
-- Shared UI components can be split into server-safe and client-motion patterns without changing route or selector contracts.
-- Adaptation selector interaction can be isolated into a dedicated client island while `app/models/adaptation/page.tsx` becomes server-first.
-- Existing continuity link hrefs and `data-testid` contracts can remain unchanged.
+- `node -v` -> `v20.20.0` (Verified)
+- `page.tsx` is a Server Component (no `'use client'`). (Verified)
+- `AdaptationChat.tsx` already tracks `isStreaming` state. (Verified)
+- `GlassCard` is available at `@/app/ui/components/GlassCard`. (Verified)
+- Tab buttons in `AdaptationChat.tsx` at lines 340-357 currently have no `disabled` attribute. (Verified)
 
 ## [Preflight: Adjacent Risks]
-- Refactoring `GlassCard` away from global client behavior could alter interactive hover feel if motion semantics are not preserved.
-- Moving decorative motion out of page-level files could reduce non-functional entrance animation.
+- `JourneyContinuityLinks` redundancy: The Limitations section adds a link to `/context/engineering`. This is visually separate but functionally redundant with the existing footer link. Suggesting differentiated copy/style in the Limitations bridge.
+- Accessibility: Using native `disabled` on buttons as requested.
 
 ## [Preflight: Open Questions]
-- None blocking implementation.
+- none
 
 ## [Preflight Status]
 - `clear-to-implement`
 
 ## [Status]
-- `complete`
+- `completed`
+
+## [Scope Check]
+- Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Files to be modified:
+  - `app/models/adaptation/page.tsx`
+  - `app/models/adaptation/components/AdaptationChat.tsx`
+- Scope compliance:
+  - [x] All modified files are in Frontend ownership.
+  - [x] No test files modified.
 
 ## [Changes Made]
-- Refactored `app/page.tsx` to server-first composition (removed page-level `'use client'`, removed page-level framer-motion usage).
-- Refactored `app/foundations/transformers/page.tsx` to server-first composition (removed page-level `'use client'`; preserved interactive chat via existing client `BaseLLMChat`).
-- Refactored `app/models/adaptation/page.tsx` to server-first composition (removed page-level `'use client'`; moved stateful selector UI into client island).
-- Added `app/models/adaptation/components/AdaptationStrategySelector.tsx` as the dedicated client island for adaptation strategy interaction.
-- Added `app/models/adaptation/components/strategy-data.ts` for shared adaptation strategy data/types between server and client layers.
-- Refactored `app/ui/components/GlassCard.tsx` to be server-compatible presentational UI (CSS hover transitions for `interactive` variant; no framer-motion dependency).
-- Refactored `app/ui/components/JourneyStageHeader.tsx` to server-compatible presentational component.
-- Refactored `app/ui/components/JourneyContinuityLinks.tsx` to server-compatible presentational component.
+- **Adaptation Page Upgrade (`page.tsx`)**:
+  - Added **"Why We Adapt LLMs"** section (`data-testid="adaptation-why-adapt"`) before the strategy cards. Covers instruction-following, domain expertise, knowledge cutoff, and output format control.
+  - Added **"Limitations & What's Next"** section (`data-testid="adaptation-limitations"`) after the chat and before the footer. Covers trade-offs for all three strategies.
+  - Integrated a bridging link to **Context Engineering** (`/context/engineering`) using Next.js `Link` component.
+  - Used `GlassCard` and design tokens for consistent glassmorphism and spacing.
+- **AdaptationChat UX Hardening (`AdaptationChat.tsx`)**:
+  - Added `disabled={isStreaming}` to the three strategy tab buttons.
+  - Applied `disabled:opacity-50 disabled:cursor-not-allowed` styles to provide clear visual feedback during streaming.
+  - Added a subtle **AI accuracy disclaimer** ("AI can make mistakes, check important info.") below the input form as per AC-6.
+- **Code Quality**:
+  - Fixed lint errors in `page.tsx` by escaping unescaped apostrophes and ampersands in JSX.
 
 ## [Verification Results]
-1. `pnpm exec tsc --noEmit` -> `PASS`
-2. `pnpm lint` -> `PASS`
+1. `node -v` -> `v20.20.0` (PASS)
+2. `pnpm lint` -> `✔ No ESLint warnings or errors` (PASS)
+3. `pnpm exec tsc --noEmit` -> `Exit code: 0` (PASS)
+
+## [Contract Evidence]
+- Route contracts:
+  - `preserved` - `/models/adaptation`
+- Selector/accessibility contracts:
+  - `preserved` - `adaptation-page`
+  - `preserved` - `adaptation-hero`
+  - `preserved` - `adaptation-strategy-comparison`
+  - `preserved` - `adaptation-chat`
+  - `preserved` - `adaptation-chat-tab-full-finetuning`
+  - `preserved` - `adaptation-chat-tab-lora-peft`
+  - `preserved` - `adaptation-chat-tab-prompt-prefix`
+  - `preserved` - `adaptation-chat-form`
+  - `preserved` - `adaptation-chat-input`
+  - `preserved` - `adaptation-chat-submit`
+  - `preserved` - `adaptation-chat-output`
+  - `preserved` - `adaptation-chat-status`
+- New Contracts Added:
+  - `added` - `adaptation-why-adapt`
+  - `added` - `adaptation-limitations`
 
 ## [Behavioral Sanity Check]
-- Route contracts preserved: `/`, `/foundations/transformers`, `/models/adaptation` remain unchanged.
-- Adaptation selector interaction preserved in client island:
-  - `data-testid="adaptation-strategy-selector"`
-  - `data-testid="adaptation-interaction-output"`
-  - deterministic option selectors `data-testid="strategy-button-${strategy.id}"`
-- Continuity link contracts preserved:
-  - `transformers-link-home`, `transformers-link-adaptation`
-  - `adaptation-link-transformers`, `adaptation-link-context`
-- Transformers page chat interactivity preserved via unchanged client component `BaseLLMChat`.
-- Shared presentational components no longer force client rendering.
+- Narrative sections are static Server Components as requested.
+- Tab locking verified: buttons are native `disabled` when `isStreaming` is `true`, preventing `onClick` events.
+- AI disclaimer placement: below the form, centered, with `text-xs` utility styles.
+- Dual-theme support: Used `dark:` variants for all new content to ensure legibility.
 
 ## [Failure Classification]
-- `non-blocking warning`: `next lint` emits Next.js deprecation notice for `next lint` command, but lint checks complete with no ESLint errors/warnings.
+- `none`
 
 ## [Scope Extension]
-- None requested.
+- `none`
+
+## [Deviations]
+- `none`
 
 ## [Ready for Next Agent]
 - `yes`
-
-*Report created: 2026-02-14*
-*Frontend Agent*

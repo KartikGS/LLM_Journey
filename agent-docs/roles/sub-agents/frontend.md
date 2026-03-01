@@ -15,7 +15,7 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Frontend-specific readings.
 
 ### Role-Specific Readings (Frontend)
@@ -29,6 +29,7 @@ Before executing any task, also read:
 
 - Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/conversations/tech-lead-to-frontend.md)
 - Use [Frontend To Tech Lead Report Template](/agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md) when drafting the active CR report in [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
+- Treat instructional/content intent as BA-owned. If page narrative goals for Product End Users are unclear or conflicting, raise clarification before implementation.
 
 ## Architecture-Only Refactor Mode (Conditional)
 
@@ -61,10 +62,10 @@ If preserving behavior requires changing any frozen area, mark `scope extension 
 
 ### Accessibility & Testability Contracts
 
-- **Single-select controls** (exactly one option active) MUST use radio semantics:
-  - container: `role="radiogroup"`
-  - options: `role="radio"` + `aria-checked`
-  - keyboard behavior: arrow-key navigation between options.
+- **Single-select controls** (exactly one option active) MUST use one of two ARIA patterns based on interaction type:
+  - **Option selection** (choosing between discrete values, for example size/color/strategy): radio semantics — container `role="radiogroup"`, options `role="radio"` + `aria-checked`, arrow-key navigation between options.
+  - **Panel navigation** (switching between panels of content, for example strategy tabs/view modes): tablist semantics — container `role="tablist"`, items `role="tab"` + `aria-selected`, associated panels `role="tabpanel"`. Arrow-key navigation within tablist; `Tab` moves focus to the active panel.
+  - When a handoff explicitly names a control a "tab" or "tab selector," apply tablist semantics. When terminology is neutral ("selector," "switcher," "picker"), apply radiogroup semantics unless the control navigates between panels of content.
 - Use toggle-button semantics (`aria-pressed`) only for true independent on/off controls.
 - Repeated interactive items (tabs/options/cards in mapped lists) MUST expose deterministic selectors derived from stable IDs.
   - Preferred pattern: `data-testid="<prefix>-${stableId}"`.
@@ -206,10 +207,14 @@ Before marking work complete:
 
 ## Verification & Reporting Protocol
 
+**Pre-Replacement Check (mandatory):** Before replacing `frontend-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+
+- Run runtime preflight per `tooling-standard.md` Runtime Preflight (canonical source). If below the minimum version, classify as `environmental` in the report before running any verification commands.
 - Run verification commands in this exact order:
-  1. `pnpm exec tsc --noEmit`
-  2. `pnpm lint`
+  1. `pnpm lint`
+  2. `pnpm exec tsc --noEmit`
 - In the frontend handoff report, include raw pass/fail outcome for both commands in the same order.
+- Full pipeline verification order remains defined in `/agent-docs/testing-strategy.md` for Tech Lead closure (`test -> lint -> tsc -> build`).
 - Include contract evidence using file references for: route contract checks, selector/accessibility contract checks, and shared-component blast-radius checks (when `app/ui/**` changed).
 - Add a behavioral sanity check section mapped to Tech Lead handoff DoD (for example open/close flow, reduced-motion behavior, or interaction semantics called out in DoD).
 - If a command fails due to a pre-existing issue, record it explicitly and stop scope expansion unless Tech Lead updates the handoff.
@@ -225,7 +230,7 @@ Before marking work complete:
 | Skipping loading states | Bad UX | Loading states are required |
 | Using `any` types | TypeScript strictness enforced | Define proper types |
 | Using `module` as variable name | Reserved in some Next.js contexts | Use `mod`, `item`, etc. |
-| Unescaped special characters in JSX | Lint errors | Use `&quot;` or `{'"'}` |
+| Unescaped special characters in JSX (apostrophes `'`, quotes `"`, ampersands `&`) | `react/no-unescaped-entities` lint error — common in educational prose and section headings | Apostrophes: use `{'\''}`  or `&apos;`; quotes: use `&quot;` or `{'"'}`; ampersands: use `&amp;`. Run `pnpm lint --file <path>` on your files before submitting to catch these before the full gate. |
 | Using wrong icon library | Standard Kit violation | Only `lucide-react` |
 | Missing dark mode styles | Dual-theme is mandatory | Add `dark:` variants |
 | `whileHover={{ scale }}` on grid items | Layout jitter ("shaky screen") | Use shadow + border transitions instead |

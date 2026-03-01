@@ -11,7 +11,7 @@ LLM Journey is a Next.js application (App Router) integrating client-side infere
 
 ## Data Flow
 -   **Chat**: User Input -> `ChatInput` -> `useLLM` Hook -> Web Worker -> ONNX Runtime -> Response.
--   **Telemetry**: App -> OTel SDK -> `/app/api/otel/trace` (Proxy) -> OTel Collector.
+-   **Telemetry**: App -> OTel SDK -> `/api/otel/trace` (Proxy) -> OTel Collector.
 
 ## Architectural Invariants
 
@@ -21,6 +21,7 @@ The following constraints are non-negotiable and must be preserved by all change
 - Telemetry must never block, crash, or degrade user-facing functionality
 - Failures in tracing, metrics, or logging are always swallowed or isolated
 - The OTEL proxy is a **failure boundary**, not a reliability dependency
+- For observability design principles and instrumentation decision rules (when to use spans vs. metrics+logs), see [`agent-docs/llm-journey/project-principles/observability.md`](/agent-docs/llm-journey/project-principles/observability.md) — specifically the **Purposeful Observability Principle**.
 
 ### Security Boundaries
 - All external inputs are treated as untrusted

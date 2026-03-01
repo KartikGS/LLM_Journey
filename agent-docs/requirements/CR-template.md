@@ -1,11 +1,12 @@
 # CR-XXX: [Title]
 
 ## Status
-[Draft | Clarified | In Progress | Done | Blocked]
+[Draft | Clarified | In Progress | Done | Done (user validation pending) | Blocked]
 
 ## Business Context
-**User Need:** 
+**User Need:**
 **Expected Value:**
+**Execution Mode:** [Standard | Fast | Heavy]
 
 ## Functional Requirements
 1. 
@@ -34,6 +35,7 @@
 - **User Validation**: [How will the human verify this? e.g., 'Navigation link takes me to /new-page']
 
 ## Baseline Failure Snapshot (Required for Regression/Incident CRs)
+<!-- If the failure is an external service constraint (e.g., API tier limitation, provider quota) not reproducible by any local command, write: "N/A — external service failure; baseline not reproducible locally. See Notes." -->
 - **Date**: [YYYY-MM-DD]
 - **Command(s)**: [Exact command(s) used]
 - **Execution Mode**: [sandboxed | local-equivalent/unsandboxed]
@@ -45,14 +47,18 @@
 - **Execution Mode**: [sandboxed | local-equivalent/unsandboxed]
 - **Observed Result**: [Pass/fail summary, including browser matrix for E2E]
 
+## Environment Variable Changes
+<!-- Required only when this CR adds, removes, or redefines environment variables. Delete section if not applicable. -->
+- `VAR_NAME` — add / remove / rename: [purpose and expected value or reference]
+
 ## Dependencies
-- Blocks: 
+- Blocks:
 - Blocked by:
 
 ## Notes
 [BA Agent notes, user clarifications, etc.]
 
-## Technical Analysis (filled by Tech Lead)
+## Technical Analysis (filled by Tech Lead — required for M/L/H complexity; optional for [S])
 **Complexity:** [Low | Medium | High]
 **Estimated Effort:** [S | M | L]
 **Affected Systems:**

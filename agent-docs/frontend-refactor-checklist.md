@@ -3,6 +3,7 @@
 Use this checklist for rendering-boundary refactors, server/client extraction, and shared UI component updates.
 
 ## 1. Intent Lock
+- [ ] If execution mode is already declared in the Tech Lead handoff, this step is satisfied. Confirm and proceed.
 - [ ] Confirm task mode: `architecture-only` or `feature-ui`.
 - [ ] If `architecture-only`, freeze visual behavior, copy, route structure, and information architecture.
 - [ ] Record allowed scope and explicit out-of-scope items from handoff.
@@ -18,6 +19,7 @@ Use this checklist for rendering-boundary refactors, server/client extraction, a
 - [ ] Move state/input logic into client islands only.
 - [ ] Keep non-interactive presentational composition server-first.
 - [ ] Verify parent layout/container overflow behavior after extraction (no clipping/truncation regressions).
+- [ ] **Test maintenance carve-out**: If a structural implementation change (e.g., state machine refactor, SSE reader introduction) directly causes existing component tests to fail, repairing those tests is permitted and required without explicit delegation. Conditions: (a) the implementation change is within delegated scope, AND (b) the test failure is a direct structural consequence of that change (not a pre-existing failure). Record all repaired test files in `[Changes Made]` in the completion report. If repair requires adding new test logic beyond structural alignment (new assertions, new test cases), pause and request explicit Tech Lead delegation before proceeding.
 
 ## 4. Shared Component Blast-Radius Check (When `app/ui/**` Changes)
 - [ ] List impacted routes in preflight.
@@ -27,8 +29,9 @@ Use this checklist for rendering-boundary refactors, server/client extraction, a
   - no selector/semantic contract regressions.
 
 ## 5. Verification Commands (Mandatory Order)
-1. `pnpm exec tsc --noEmit`
-2. `pnpm lint`
+Run in the order specified in `frontend.md` Verification & Reporting Protocol (canonical source for frontend command sequence):
+1. `pnpm lint`
+2. `pnpm exec tsc --noEmit`
 
 ## 6. Report Evidence Format
 For each DoD/contract item, include:

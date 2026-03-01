@@ -29,35 +29,14 @@ const mockRequestSizeHistogram = { record: jest.fn() };
 const mockUpstreamLatencyHistogram = { record: jest.fn() };
 
 jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
     getOtelProxyRequestsCounter: jest.fn(() => mockRequestsCounter),
     getOtelProxyErrorsCounter: jest.fn(() => mockErrorsCounter),
     getOtelProxyRequestSizeHistogram: jest.fn(() => mockRequestSizeHistogram),
     getOtelProxyUpstreamLatencyHistogram: jest.fn(() => mockUpstreamLatencyHistogram),
 }));
 
-// 4. Mock OTEL Tracing
-// We verify that a span is started and status is set
-const mockSpan = {
-    setAttribute: jest.fn(),
-    setStatus: jest.fn(),
-    addEvent: jest.fn(),
-    recordException: jest.fn(),
-    end: jest.fn(),
-    isRecording: jest.fn(() => true),
-};
-
-const mockTracer = {
-    startActiveSpan: jest.fn((name, options, callback) => {
-        // execute the callback immediately with the mock span
-        return callback(mockSpan);
-    }),
-};
-
-jest.mock('@/lib/otel/tracing', () => ({
-    getTracer: jest.fn(() => mockTracer),
-}));
-
-// 5. Mock Logger to avoid console noise and verify error logging
+// 4. Mock Logger to avoid console noise and verify error logging
 jest.mock('@/lib/otel/logger', () => ({
     warn: jest.fn(),
     error: jest.fn(),
@@ -145,15 +124,6 @@ describe('Integration: OTEL Trace Proxy', () => {
             expect(mockErrorsCounter.add).not.toHaveBeenCalled();
             expect(mockRequestSizeHistogram.record).toHaveBeenCalled();
             expect(mockUpstreamLatencyHistogram.record).toHaveBeenCalled();
-
-            // 4. Tracing
-            expect(mockTracer.startActiveSpan).toHaveBeenCalledWith(
-                'otel_proxy.forward_traces',
-                expect.anything(),
-                expect.any(Function)
-            );
-            expect(mockSpan.setStatus).toHaveBeenCalledWith({ code: 1 }); // OK
-            expect(mockSpan.end).toHaveBeenCalled();
         });
     });
 
@@ -167,7 +137,6 @@ describe('Integration: OTEL Trace Proxy', () => {
 
             expect(res.status).toBe(401);
             expect(global.fetch).not.toHaveBeenCalled();
-            expect(mockTracer.startActiveSpan).not.toHaveBeenCalled(); // Should exit before span start
         });
 
         it('should return 401 when token is invalid', async () => {
@@ -203,7 +172,6 @@ describe('Integration: OTEL Trace Proxy', () => {
             expect(res.status).toBe(413);
             expect(global.fetch).not.toHaveBeenCalled();
             expect(mockErrorsCounter.add).toHaveBeenCalledWith(1, { error_type: 'payload_too_large' });
-            expect(mockSpan.setStatus).toHaveBeenCalledWith(expect.objectContaining({ code: 2 })); // ERROR
         });
 
         it('should return 400 when body is empty', async () => {
@@ -227,12 +195,6 @@ describe('Integration: OTEL Trace Proxy', () => {
             expect(res.status).toBe(500);
 
             expect(mockErrorsCounter.add).toHaveBeenCalledWith(1, { error_type: 'upstream_error' });
-            expect(mockSpan.setStatus).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    code: 2, // ERROR
-                    message: 'Upstream returned 500'
-                })
-            );
         });
 
         it('should handle network connection error', async () => {
@@ -243,7 +205,6 @@ describe('Integration: OTEL Trace Proxy', () => {
 
             expect(res.status).toBe(502);
             expect(mockErrorsCounter.add).toHaveBeenCalledWith(1, { error_type: 'connection_error' });
-            expect(mockSpan.recordException).toHaveBeenCalled();
         });
 
         it('should handle upstream timeout', async () => {
@@ -280,7 +241,7 @@ describe('Integration: OTEL Trace Proxy', () => {
             // Inspect what was passed to fetch
             const [_, options] = (global.fetch as jest.Mock).mock.calls[0];
 
-            // The implementation reads the stream and passes it. 
+            // The implementation reads the stream and passes it.
             // In mock environment we passed a JSON stringified body to NextRequest.
             // NextRequest processing in the implementation uses readStreamWithLimit.
             // We need to verify that 'options.body' contains the binary representation of our payload.

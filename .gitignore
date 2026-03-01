@@ -45,3 +45,6 @@ logs/
 # Playwright
 /playwright-report/
 /test-results/
+
+# Local Claude settings
+.claude/

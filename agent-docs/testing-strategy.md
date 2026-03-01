@@ -16,6 +16,16 @@ This project follows a layered testing approach. **Critically, tests are not jus
 - **Integration tests** validate interaction between subsystems.
 - **E2E tests** validate user-critical flows using Playwright.
 
+### Negative Space Rule (Mandatory Verification Primitive)
+
+For every removal, restriction, or containment constraint of the form "X must NOT appear in Y," verification must include **both**:
+1. **Absence assertion** — grep or equivalent for zero matches of X in Y (confirms the removal is complete).
+2. **Retained-path assertion** — a positive test confirming the allowed alternative path still works (confirms the removal did not break the intended behavior).
+
+A positive-only test does not satisfy a containment invariant. An absence check alone does not confirm the retained path is functional. Both are required.
+
+This rule applies at every verification layer: unit/integration tests, coordinator adversarial review, and BA acceptance. When the Tech Lead handoff includes a DoD item with "X must NOT appear in Y" form, the sub-agent MUST include both assertions in their verification evidence.
+
 ### Testability as a Requirement
 A feature is not "Done" unless it is testable. If a component lacks unique selectors (`data-testid`, `id`) or accessibility attributes required for robust testing, it is considered a **bug** in the implementation, not a missing feature in the test suite.
 
@@ -74,6 +84,11 @@ Configuration lives in:
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
 
+Note: `agent-docs/tooling-standard.md` includes a quick command canon, but this file is canonical for E2E triage/classification policy.
+
+### Runtime Preflight
+> **Canonical source:** `agent-docs/tooling-standard.md` — Runtime Preflight (Mandatory). Run preflight per that section before verification commands. If the runtime is below the documented minimum, classify as `environmental` in the role report — do not duplicate the protocol text here.
+
 ### E2E Reproducibility Rule
 When reporting E2E outcomes for handoff evidence, always include:
 - exact command string used,
@@ -89,13 +104,31 @@ If E2E fails, classify using this sequence:
 3. Confirm there is no stale server/process conflict on port `3001`.
 4. If startup/runtime differs in constrained execution, run a local-equivalent/unsandboxed verification.
 5. Inspect Playwright artifacts (`error-context.md`, screenshots, video) before classifying root cause.
-6. Declare `Blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
+6. Declare `blocked` only after at least two reproducible runs in different execution contexts or after deterministic proof of missing contract.
 
 ### E2E Failure Classification Heuristics
 - `Process from config.webServer exited early`: environment/process startup class until reproduced in local-equivalent run.
 - Selector missing while app is clearly rendered: likely contract or test regression.
 - Selector missing while app is stuck on compatibility/guard screen: environment/runtime gate until proven persistent across contexts.
 - Browser-specific only failures: classify by browser scope and do not generalize to full E2E failure.
+
+### Provider-Backed E2E Determinism
+
+**Coverage path classification (required for every provider-backed CR):**
+
+| Coverage path | When applicable | Required environment prerequisite |
+|---|---|---|
+| **Fallback-path only** | Default — CR does not touch the live-provider code path, or live credentials are absent | No API key required; deterministic |
+| **Live-path required** | CR explicitly changes streaming/live-provider behavior AND the change is not exercisable via the fallback path | API key present; explicitly stated in handoff `Live-path availability` field |
+| **Both paths** | CR changes shared infrastructure that affects both live and fallback behaviors | API key present for live path; note which assertions apply to which path |
+
+Classify the required coverage path in the Testing handoff and assessment table before writing tests. Do not assume live-path coverage is possible — verify `Live-path availability` in the handoff caveats first.
+
+- Default policy: prefer fallback-path coverage when the CR's core change is exercisable without live credentials. Reserve live-path coverage for changes that are only observable via the live provider path.
+- If live-path coverage is required:
+  - confirm `Live-path availability: yes` in the handoff,
+  - document environment prerequisites in the handoff/report, and
+  - classify provider/network flakiness separately from UI contract regressions.
 
 ### E2E Selector Reliability Ladder (Mandatory)
 Use the highest reliable contract available for assertions:
@@ -106,13 +139,16 @@ Use the highest reliable contract available for assertions:
 
 If level 4 is used, report why levels 1-3 were unavailable in the testing handoff report.
 
+### Contract Registry
+- Prefer documenting durable route/selector/semantic contracts in `agent-docs/testing-contract-registry.md` so CR handoffs can reference a stable baseline.
+
 ### Prohibited Brittle Assertions (Default)
 - Hard dependency on transient loading copy (for example exact `"Generating..."` visibility windows) unless the CR explicitly defines that copy as product contract.
 - Strict DOM shape selectors tied to layout internals (for example `div.grid > a`) when semantic/test-id contracts exist.
 - Timing-only waits without behavior/state confirmation.
 
 ### Command Sequencing Rule (Pipeline Verification)
-For final CR verification evidence, run quality gates in sequence, not in parallel:
+For final CR verification evidence, run verification gates in sequence, not in parallel:
 1. `pnpm test`
 2. `pnpm lint`
 3. `pnpm exec tsc --noEmit`
@@ -120,7 +156,7 @@ For final CR verification evidence, run quality gates in sequence, not in parall
 
 Reason: some projects include generated `.next/types` entries in `tsconfig` and concurrent `tsc` + `build` execution can produce false negatives from transient type-generation state.
 
-### Tech Lead Verification Matrix (Canonical)
+### Tech Lead Verification Gates (Canonical)
 - `Always required`:
   - `pnpm test`
   - `pnpm lint`
@@ -160,7 +196,7 @@ If any checklist item is out of scope, report it as an explicit risk in `testing
 Use this order when a CR objective is to restore a broken pipeline:
 1. Fix test-path/module-resolution regressions first (fast signal restoration).
 2. Fix feature/type regressions next (strict compile/build blockers).
-3. Run full quality gates once at the end for closure evidence.
+3. Run full verification gates once at the end for closure evidence.
 
 ### Ownership Guidance
 - Testing Agent: test-path fixes and full gate execution/reporting.
@@ -184,7 +220,7 @@ To support CI/CD and debugging, the E2E suite follows these policies:
 
 ### Observability Testing Policy
 
-E2E tests that assert on observability signals (e.g., intercepting `/app/api/otel/trace`) should be:
+E2E tests that assert on observability signals (e.g., intercepting `/api/otel/trace`) should be:
 - **Rare**: Only implemented for high-value integration boundaries.
 - **Robust**: Resilience to minor telemetry delays is required (e.g., using `waitForRequest`).
 - **Isolated**: These tests are reserved for validating that the system-under-test correctly emits telemetry during core loops.
@@ -248,6 +284,28 @@ Helpers such as `safeMetric` are mocked to preserve **semantic behavior**:
 - The wrapped function executes
 - Errors are swallowed
 - Tests validate system resilience, not helper internals
+
+#### OTel Metrics Mocking Pattern (Mandatory for API Route Tests)
+
+Any API route test that exercises counter increments must mock `@/lib/otel/metrics` using the following pattern. Do not re-invent this block in individual test files — copy it verbatim and adjust the getter names for the route under test.
+
+```ts
+// --- Metrics mock ---
+const mockAdd = jest.fn();
+jest.mock('@/lib/otel/metrics', () => ({
+    safeMetric: (fn: () => void) => fn(),
+    get<RoutePrefix>RequestsCounter: () => ({ add: mockAdd }),
+    get<RoutePrefix>FallbacksCounter: () => ({ add: mockAdd }),
+}));
+```
+
+**Pattern notes:**
+
+- `mockAdd` is a single shared spy used for all counters. This is intentional: tests that need to distinguish counter calls use `mockAdd.mock.calls` filtering (for example, `calls.filter(call => call[1]?.reason_code)` isolates fallback counter calls from request counter calls).
+- `safeMetric` is replaced with a pass-through `(fn) => fn()` so that the wrapped counter call executes synchronously in tests. This validates that the route correctly invokes the counter, while avoiding the error-swallowing behavior that would silently hide a misconfigured getter.
+- Replace `<RoutePrefix>` with the actual getter prefix for the route under test. Examples: `getAdaptationGenerateRequestsCounter` (adaptation route), `getFrontierGenerateRequestsCounter` (frontier base-generate route).
+- Clear `mockAdd` in `beforeEach` alongside `jest.clearAllMocks()`: `mockAdd.mockClear()`.
+- Reference implementations: `__tests__/api/adaptation-generate.test.ts`, `__tests__/api/frontier-base-generate.test.ts`.
 
 ---
 

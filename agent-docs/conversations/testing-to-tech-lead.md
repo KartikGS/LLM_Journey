@@ -1,78 +1,38 @@
-# Handoff: Testing Agent -> Tech Lead
-
-## Subject
-`CR-010 - E2E Baseline Stabilization (Landing + Transformer Contract Alignment)`
-
-## Preflight
-
-### Assumptions I'm making
-- Home CTA contract is `Start Your Journey →` linking to `/foundations/transformers`.
-- Landing page can be validated via stable role/href contracts without depending on `div.grid > a`.
-- Transformer generation completion should be validated by durable post-submit behavior, not transient loading text visibility.
-
-### Risks not covered by current scope
-- Constrained/sandboxed execution can fail before Playwright webServer startup.
-- OTEL upstream at `127.0.0.1:4318` may refuse connection; this is non-blocking if user-visible flow remains intact.
-
-### Questions for Tech Lead
-- None.
-
----
-
-## CR-010 - E2E Baseline Stabilization Report
-
-### [Status]
-- Completed
-
-### [Changes Made]
-- Updated `__tests__/e2e/landing-page.spec.ts`:
-  - Replaced stale CTA destination assertion from `/transformer` to `/foundations/transformers`.
-  - Removed brittle structural selector dependency (`div.grid > a`).
-  - Added stable href-contract assertions for journey links (`/models/adaptation`, `/context/engineering`, `/ops/deployment`).
-- Updated `__tests__/e2e/transformer.spec.ts`:
-  - Removed brittle transient `Generating...` visibility dependency.
-  - Added durable generation assertions: submit button disabled->enabled cycle and response container visibility/text after generation.
-  - Preserved OTEL request emission verification.
-- `__tests__/e2e/navigation.spec.ts`:
-  - No file change required.
-  - Verified as targeted regression check.
-
-### [Verification Results]
-
-#### Reproduction Matrix
-| Command | Mode | Browsers | Result | Classification |
-|---|---|---|---|---|
-| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e` | sandboxed | N/A (webServer startup) | FAIL (`Process from config.webServer exited early`) | environmental (constrained execution) |
-| `pnpm test:e2e -- __tests__/e2e/landing-page.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | CR-related assertions validated |
-| `pnpm test:e2e -- __tests__/e2e/navigation.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`12 passed`) | regression check passed |
-| `pnpm test:e2e -- __tests__/e2e/transformer.spec.ts` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`3 passed`) | durable transformer assertions validated |
-| `pnpm test:e2e` | local-equivalent/unsandboxed | chromium, firefox, webkit | PASS (`18 passed`) | suite baseline stable |
-
-### [Dependency Consumption]
-- No dependency or runtime config changes.
-
-### [Failure Classification]
-- CR-related:
-  - Fixed landing CTA route assertion drift.
-  - Fixed landing selector strategy drift (removed structural dependency).
-  - Fixed transformer generation assertion drift (removed transient text dependence).
-- Environmental:
-  - Sandboxed runs consistently failed before test execution (`config.webServer exited early`).
-- Non-blocking warning:
-  - OTEL upstream refusal (`ECONNREFUSED 127.0.0.1:4318`) observed in unsandboxed runs; expected under observability failure-boundary and did not affect user-visible flow/test pass.
-
-### [Ready for Next Agent]
-- Yes.
-
-### [New Artifacts]
-- Updated test files:
-  - `__tests__/e2e/landing-page.spec.ts`
-  - `__tests__/e2e/transformer.spec.ts`
-- Playwright artifacts from intermediate failed attempts exist under `test-results/navigation-*` and `test-results/landing-page-*`.
-
-### [Follow-up Recommendations]
-- Keep CR verification evidence sourced from local-equivalent/unsandboxed E2E runs in this environment until sandbox webServer startup behavior is resolved.
-
+# Testing Agent → Tech Lead
+## CR
+CR-022 — Adaptation Page Upgrade and Cleanup
+## Status
+partial
+## Files Created
+- __tests__/components/AdaptationChat.test.tsx
+## Files Modified
+- __tests__/e2e/adaptation.spec.ts
+## Test Count Delta
+- Unit tests added: +3
+- E2E assertions added: +2
+## Quality Gate Results
+| Gate | Result | Notes |
+|---|---|---|
+| pnpm test | ENV | Bash tool denied in this session — could not execute. Node version on default shell is v16.20.1 (below 20.x). Quality gates require `nvm use 20` + Bash execution. |
+| pnpm lint | ENV | Bash tool denied — could not execute. |
+| pnpm exec tsc --noEmit | ENV | Bash tool denied — could not execute. |
+| pnpm build | ENV | Bash tool denied — could not execute. |
+| pnpm test:e2e | ENV | Bash tool denied — could not execute. Dev server availability on port 3001 unconfirmed. |
+## Definition of Done
+- [x] AdaptationChat.test.tsx created with 3 test cases
+- [x] adaptation.spec.ts updated (+2 assertions)
+- [ ] pnpm test passes — ENV (Bash denied)
+- [ ] pnpm lint passes — ENV (Bash denied)
+- [ ] pnpm exec tsc --noEmit passes — ENV (Bash denied)
+- [ ] pnpm build passes — ENV (Bash denied)
+- [ ] pnpm test:e2e passes (or ENV if environmental) — ENV (Bash denied)
+## Deviations
+- Import style: The task instruction specifies `import AdaptationChat from '@/app/models/adaptation/components/AdaptationChat'` (default import). However, the component uses a named export (`export function AdaptationChat()`), not a default export. The test uses `import { AdaptationChat } from '@/app/models/adaptation/components/AdaptationChat'` to correctly match the source. A default import would result in `undefined` at runtime and all tests would fail. This is not a deviation from intent — it is a correction required by the actual source.
+- Bash tool was denied throughout this session, preventing execution of all quality gates. All file creation and modification tasks were completed successfully using Write/Edit/Read tools. Quality gates must be run by the operator using: `source ~/.nvm/nvm.sh && nvm use 20 && pnpm test && pnpm lint && pnpm exec tsc --noEmit && pnpm build`.
+## Notes
+- The `AdaptationChat` component (line 86 of `AdaptationChat.tsx`) uses `export function AdaptationChat()` — named export only. No default export exists.
+- The component already has `disabled={isStreaming}` on tab buttons (confirmed at line 347 of `AdaptationChat.tsx`) and `aria-selected={isActive}` on each tab button (line 344). This means all three tests should work correctly against the implemented component.
+- Test 3 relies on the native `disabled` attribute preventing `onClick` from firing — when a button is `disabled`, browser native behavior and React's event system both suppress click events, so `fireEvent.click` on a disabled button will not invoke the `handleTabChange` callback. This is the correct mechanism to assert "clicking while disabled has no effect."
+- The streaming state is triggered by: filling the textarea with a non-empty string, then clicking submit. The `onSubmit` handler calls `setIsStreaming(true)` at line 210 before the `fetch` call at line 218. Because `global.fetch` returns a never-resolving promise, the component stays in streaming state indefinitely, allowing assertions against disabled tab state.
+- E2E: The two new assertions (`adaptation-why-adapt`, `adaptation-limitations`) were added directly after the `adaptation-chat-status` assertion in the existing `@critical` static contracts test, as specified. No new test cases were added.
+- Prior CR-021 content in this file has been replaced per task instruction (overwrite).

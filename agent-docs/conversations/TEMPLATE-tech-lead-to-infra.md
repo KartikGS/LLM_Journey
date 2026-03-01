@@ -36,6 +36,7 @@
 - [ ] [Infra DoD 1]
 - [ ] [Infra DoD 2]
 - [ ] Required verification commands pass
+- [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
 - Infra posts preflight concerns/questions in `agent-docs/conversations/infra-to-tech-lead.md`.
@@ -46,5 +47,8 @@
 [Exact commands and negative-space checks.]
 
 ## Report Back
-Write completion report to `agent-docs/conversations/infra-to-tech-lead.md`.
+Write completion report to `agent-docs/conversations/infra-to-tech-lead.md` using:
+- `agent-docs/conversations/TEMPLATE-infra-to-tech-lead.md`
 
+Status vocabulary for infra reports:
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

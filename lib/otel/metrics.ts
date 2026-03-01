@@ -36,6 +36,20 @@ let otelProxyRequestSize: Histogram | null = null;
 let otelProxyUpstreamLatency: Histogram | null = null;
 let otelProxyErrors: Counter | null = null;
 
+// Pre-defined metrics for frontier generation
+let frontierGenerateRequests: Counter | null = null;
+let frontierGenerateFallbacks: Counter | null = null;
+
+// Pre-defined metrics for adaptation generation
+let adaptationGenerateRequests: Counter | null = null;
+let adaptationGenerateFallbacks: Counter | null = null;
+
+// Pre-defined metrics for frontier generation latency
+let frontierGenerateUpstreamLatency: Histogram | null = null;
+
+// Pre-defined metrics for adaptation generation latency
+let adaptationGenerateUpstreamLatency: Histogram | null = null;
+
 /**
  * Counter for total telemetry token requests
  */
@@ -112,4 +126,82 @@ export function getOtelProxyErrorsCounter(): Counter {
         });
     }
     return otelProxyErrors;
+}
+
+/**
+ * Counter for total frontier base-generate requests
+ */
+export function getFrontierGenerateRequestsCounter(): Counter {
+    if (!frontierGenerateRequests) {
+        frontierGenerateRequests = getMeter().createCounter('frontier_generate.requests', {
+            description: 'Total number of frontier base-generate requests',
+            unit: '1',
+        });
+    }
+    return frontierGenerateRequests;
+}
+
+/**
+ * Counter for frontier base-generate fallback outcomes by reason code
+ */
+export function getFrontierGenerateFallbacksCounter(): Counter {
+    if (!frontierGenerateFallbacks) {
+        frontierGenerateFallbacks = getMeter().createCounter('frontier_generate.fallbacks', {
+            description: 'Total number of frontier base-generate fallback outcomes',
+            unit: '1',
+        });
+    }
+    return frontierGenerateFallbacks;
+}
+
+/**
+ * Counter for total adaptation generate requests
+ */
+export function getAdaptationGenerateRequestsCounter(): Counter {
+    if (!adaptationGenerateRequests) {
+        adaptationGenerateRequests = getMeter().createCounter('adaptation_generate.requests', {
+            description: 'Total number of adaptation generate requests',
+            unit: '1',
+        });
+    }
+    return adaptationGenerateRequests;
+}
+
+/**
+ * Counter for adaptation generate fallback outcomes by reason code
+ */
+export function getAdaptationGenerateFallbacksCounter(): Counter {
+    if (!adaptationGenerateFallbacks) {
+        adaptationGenerateFallbacks = getMeter().createCounter('adaptation_generate.fallbacks', {
+            description: 'Total number of adaptation generate fallback outcomes',
+            unit: '1',
+        });
+    }
+    return adaptationGenerateFallbacks;
+}
+
+/**
+ * Histogram for frontier base-generate upstream AI provider latency
+ */
+export function getFrontierGenerateUpstreamLatencyHistogram(): Histogram {
+    if (!frontierGenerateUpstreamLatency) {
+        frontierGenerateUpstreamLatency = getMeter().createHistogram('frontier_generate.upstream_latency', {
+            description: 'Upstream AI provider latency for frontier base-generate requests in milliseconds',
+            unit: 'ms',
+        });
+    }
+    return frontierGenerateUpstreamLatency;
+}
+
+/**
+ * Histogram for adaptation generate upstream AI provider latency
+ */
+export function getAdaptationGenerateUpstreamLatencyHistogram(): Histogram {
+    if (!adaptationGenerateUpstreamLatency) {
+        adaptationGenerateUpstreamLatency = getMeter().createHistogram('adaptation_generate.upstream_latency', {
+            description: 'Upstream AI provider latency for adaptation generate requests in milliseconds',
+            unit: 'ms',
+        });
+    }
+    return adaptationGenerateUpstreamLatency;
 }

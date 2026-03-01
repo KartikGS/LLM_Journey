@@ -10,7 +10,7 @@ export interface JourneyStage {
 
 export const journeyStages: JourneyStage[] = [
     {
-        title: "Transformers (Foundations)",
+        title: "Transformers",
         href: "/foundations/transformers",
         description: "How do we turn math into language? Start with attention, embeddings, and the decoder-only architecture.",
         stage: 1,
@@ -31,7 +31,7 @@ export const journeyStages: JourneyStage[] = [
         icon: FileText,
     },
     {
-        title: "RAG (Retrieval)",
+        title: "RAG",
         href: "/systems/rag",
         description: "How do we stop the model from forgetting or hallucinating? Ground responses with external knowledge.",
         stage: 4,
@@ -52,7 +52,7 @@ export const journeyStages: JourneyStage[] = [
         icon: Users,
     },
     {
-        title: "MCP (Standardization)",
+        title: "MCP",
         href: "/protocols/mcp",
         description: "How do we standardize model interactions? Learn the Model Context Protocol for interoperability.",
         stage: 7,

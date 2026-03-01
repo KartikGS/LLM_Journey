@@ -11,10 +11,14 @@
 - [Route/selector/semantic contract inventory when UI or route scope is involved]
 
 ## Configuration Specifications
+<!-- Purpose: Record TL decisions that sub-agents would otherwise have to guess — constant values, valid option sets, default behaviors for failure paths on type extensions, etc. -->
 - [MANDATORY for task involving config files]
 - [Define critical rules/schema here. Do not defer critical logic to sub-agent]
 - [e.g. "eslint rules: warn on console.log", "commitlint scopes: [api, ui] only"]
 
+## Implementation Decisions (Tech Lead Owned)
+<!-- Document technical choices explicitly deferred from BA handoff scope to Tech Lead authority. For each: state the decision question, options considered, chosen approach, and rationale. If the BA handoff contained no deferred decisions, write "none." -->
+- [Decision or `none`]
 
 ## Critical Assumptions
 - [List of things that MUST be true for this plan to work]
@@ -25,12 +29,14 @@
 - [Architectural impacts]
 
 ## Contract Delta Assessment (Mandatory)
+<!-- If backend-only scope (no route, data-testid, or accessibility contract changes), replace this section with: "No contract changes — backend-only scope." -->
 - Route contracts changed? [yes/no + details]
 - `data-testid` contracts changed? [yes/no + details]
 - Accessibility/semantic contracts changed? [yes/no + details]
 - Testing handoff required per workflow matrix? [yes/no + rationale]
 
 ## Architecture-Only Freeze Checklist (Conditional)
+<!-- Delete this section if this is not an Architecture-Only CR. -->
 If CR intent is architecture-only/refactor-only:
 - [ ] No visual redesign
 - [ ] No copy/content rewrite
@@ -67,6 +73,21 @@ If CR intent is architecture-only/refactor-only:
 - [ ] **Observability**: Tracing/Logging/Metrics included.
 - [ ] **Artifacts**: `.gitignore` updated if needed.
 - [ ] **Rollback**: How to revert this change.
+
+## Documentation Impact (Mandatory)
+<!--
+Canonical semantics source for the Documentation Impact field across all CR artifacts.
+Sub-agent handoff DoD items (TEMPLATE-tech-lead-to-*.md) and the BA closure checklist
+(agent-docs/roles/ba.md) reference this field's semantics as defined here.
+When the field definition changes, update this section first; consumers cross-reference it.
+Every CR must include an explicit documentation impact decision.
+-->
+- **Decision**: `required` | `not-required`
+- **If required — files to update** (list each file explicitly):
+  - `README.md`: [what changes]
+  - `agent-docs/[file]`: [what changes]
+  - `human-docs/[file]`: [what changes]
+- **If not required — rationale**: [explain why no doc update is needed for this CR]
 
 ## Definition of Done (Technical)
 - [ ] [Technical AC 1]

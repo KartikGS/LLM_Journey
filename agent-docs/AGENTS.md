@@ -8,17 +8,31 @@ This file helps gather the necessary context for a role-specific agent to perfor
 ## What is this project?
 LLM Journey is an educational platform built with Next.js that demonstrates the evolution of Large Language Models. It is a reference implementation for advanced agentic patterns, RAG, and model fine-tuning.
 
+## Terminology (Mandatory)
+
+To avoid ambiguity, use these terms consistently:
+- **Human User**: The person directing the agent session (the requester in chat).
+- **Product End User**: The person using the LLM Journey website experience.
+
+Default rule:
+- If a document says "user" without context, it means **Human User**.
+- For website audience, explicitly say **Product End User**.
+
 ## Required Reading
 
 > [!IMPORTANT]
 > **Two-Layer Reading Structure:**
 > 1. **First:** Read ALL "Universal Standards" below (applies to EVERY agent)
 > 2. **Then:** Read your role file, which contains **additional role-specific readings**
-> 
+>
 > Your role file is NOT just a job description—it has its own "Required Readings" section with context you MUST load before starting work.
+>
+> **Reference following (mandatory):** When a document you load contains a cross-reference (markdown link) to another file within `agent-docs/`, treat that referenced file as required reading for any task that touches the referenced topic. Do not treat cross-references as optional context — follow the link to the source file before proceeding. Cross-references point to the authoritative source for a specific topic; the inline description in the referencing doc is a summary only.
 
 ### Layer 1: Universal Standards (ALL agents)
-- **How to think:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
+- **General Engineering Principles (cross-project):** [General Principles](/agent-docs/coordination/general-principles.md)
+- **Project-Specific Principles (LLM Journey):** [Project Principles](/agent-docs/project-principles.md)
+- **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
 - **Tooling & Environment:** [Tooling Standard](/agent-docs/tooling-standard.md)
 - **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
 - **How we work:** [Workflow](/agent-docs/workflow.md)
@@ -41,42 +55,48 @@ Failed coordination kills projects. Stick to these contracts:
 - If a rule is not written in `agent-docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
 - Treat closed CRs in `/agent-docs/requirements/` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
-- Agents may propose process improvements, but process/policy changes are not effective until Tech Lead verification is recorded.
+- Agents may propose process improvements. Process/policy changes become effective when either:
+  - Tech Lead verification is recorded, or
+  - The Human User explicitly approves an override in-session.
 
 ## Authority & Conflict Resolution
 
 When sources of truth conflict, resolve in this order:
 
-**Scope & Intent Conflicts**
+1. **Scope & Intent ownership**
 - BA Agent owns requirement clarity and scope
 - Tech Lead Agent owns technical feasibility and execution
 
+2. **Technical truth precedence**
 - Tests (define expected behavior)
 - Code (current implementation)
 - Architecture & Vision docs (define intent)
 - Workflow & Style docs (define process)
 
-If documentation and tests disagree, tests win.
+If documentation and tests disagree, treat tests as primary behavioral evidence and investigate whether the failure reflects product behavior, stale test premise, or scope mismatch.
+Do not force implementation changes to satisfy an invalid test premise.
 If intent is unclear, stop and ask the user.
+
+### Human User Override Clarification
+- Human User in-session overrides can approve scope/process changes.
+- Such overrides do **not** automatically transfer role ownership of files/systems.
+- If an override crosses ownership boundaries, delegate to the owning role or get explicit role reassignment.
 
 ## After Reading - What Now?
 
 > [!CAUTION]
-> **Mandatory Reading Check**: Before you take your first action in this session, you MUST list the files you have read from the "Required Reading" section. If you proceed without naming these files, you are in violation of protocol.
+> **Mandatory Reading Check**: Your first output message in this session MUST attest that required context has been loaded. If you proceed without this output, you are in violation of protocol.
 
-
-- **Mandatory Output Check**: You MUST publish an explicit early-session message listing the files you have read.
-   - This requirement is tooling-agnostic. Use whatever communication primitive is available in your runtime.
-   - *Example*: "I have read `AGENTS.md`, `technical-context.md`, `roles/ba.md`, and `reasoning-principles.md`."
-   - **Failure to do this implies you have not loaded context.**
+- **Mandatory Output Check**: Publish an explicit early-session message confirming context is loaded.
+  - **Standard form** (all required readings loaded per your role file, no skips): _"Context loaded per `<role>.md` required readings. Conditional reads: [none | list]. No skips."_
+  - **Full listing form** (required if any file was intentionally skipped): List each file individually and include a one-line rationale for each skip.
+  - This requirement is tooling-agnostic. Use whatever communication primitive is available in your runtime.
+  - **Failure to do this implies you have not loaded context.**
 
 - **Verify your task is clear**
    - Do you understand the goal?
    - Do you know what success looks like?
    - Are constraints explicit?
-
-- **Execute**
-   - Follow [Workflow](/agent-docs/workflow.md)
 
 - **If stuck**
    - Don't guess
@@ -95,4 +115,4 @@ Yes. For the purpose of authority:
 - **Requirements (`/agent-docs/requirements/`)**: Owned by **BA**.
 - **System Docs (`/README.md`, `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
 - **Role Docs (`/agent-docs/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
-- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared, but modifications require **Tech Lead** verification.
+- **Process Docs (`/agent-docs/workflow.md`, `/agent-docs/AGENTS.md`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.

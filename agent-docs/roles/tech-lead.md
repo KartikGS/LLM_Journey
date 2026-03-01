@@ -34,6 +34,7 @@ The Tech Lead Agent does **not**:
 - Guess requirements or acceptance criteria
 - Redefine scope unilaterally
 - Act as a product manager
+- Own instructional page narrative/copy decisions for Product End Users (BA responsibility), except technical-accuracy corrections
 - **Write feature code** (see Hard Rule below)
 
 If scope, intent, or technical assumptions are unclear:
@@ -63,10 +64,13 @@ The Tech Lead may **only** directly modify:
 | Category | Files | Examples |
 |----------|-------|----------|
 | **Project Config** | Root config files | `tsconfig.json`, `next.config.js`, `jest.config.ts`, `tailwind.config.ts` |
-| **Environment** | Env templates | `.env.example`, `.env.local.example` |
+| **Dependency Governance** | Dependency manifest + lockfile | `package.json`, `pnpm-lock.yaml` (install/update operations only) |
+| **Environment** | Env templates | `.env.example`, `.env.local.example`. Note: Backend may also add new env vars to `.env.example` when directly introduced by their CR scope (no explicit delegation required; must be recorded in preflight note). |
 | **Documentation** | Agent docs, README | `README.md`, `agent-docs/*.md` |
 | **CI/CD** | Workflow files | `.github/workflows/*` |
-| **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*` (generic utilities only) |
+| **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*`, `lib/security/*` (non-feature utilities only — no business logic, no route handlers) |
+
+Dependency installation approval and execution is Tech Lead-owned. Sub-agents must request delegation when dependency changes are required.
 
 ### Everything Else → DELEGATE
 
@@ -149,10 +153,10 @@ For each file, ask: **"Is this feature code?"**
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Tech Lead-specific readings.
 
-### First Time (Onboarding)
+### First Time (Onboarding or New Session)
 - **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
 
 ### Every Task (Role-Specific)
@@ -163,10 +167,10 @@ Before planning or executing ANY task, also read:
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
-Use the mandatory reading output protocol from `AGENTS.md`. For Tech Lead sessions, include at least:
-> "I have read:
-> - **Universal** (AGENTS.md): `reasoning-principles.md`, `tooling-standard.md`, `technical-context.md`, `workflow.md`
-> - **Role-Specific** (Tech Lead): `testing-strategy.md`, `project-log.md`, `architecture.md`, `keep-in-mind.md`, `handoff-protocol.md`"
+Use the mandatory reading output protocol from `AGENTS.md` (canonical format). Standard form for Tech Lead sessions with no skips:
+> _"Context loaded per `tech-lead.md` required readings. Conditional reads: [none | list any conditional files loaded]. No skips."_
+>
+> Use full listing form only if any required file was intentionally skipped (list each file individually with one-line rationale per skip).
 
 ## Execution Responsibilities (🛑 REQUIRED: Step-by-Step Technical Execution)
 
@@ -193,6 +197,24 @@ Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead H
 
 If any check fails or an assumption is invalidated → **Stop** and invoke the **BA Feedback Protocol**.
 
+#### Metric Mock Cascade Check (Mandatory when Backend CR adds or renames exported functions in a shared metric module)
+
+Before writing any Backend handoff that adds or renames exported functions in a shared infrastructure module (e.g., `lib/otel/metrics.ts`), run:
+
+```
+grep -rn 'jest.mock.*otel/metrics' __tests__/
+```
+
+(Adjust the module path for the specific module being extended.)
+
+If any **closed-factory mock** is found — a `jest.mock(...)` call that returns a literal object `{ ... }` without the new function — this is a **metric mock cascade** condition. The test will silently receive `undefined` for the new getter, causing a TypeError that propagates through the route's error boundary and surfaces as a wrong-content-type response assertion failure.
+
+Resolve **before issuing the Backend handoff**:
+- Option A: Explicitly name the affected test files in Backend's delegation scope (allow Backend to update the mocks).
+- Option B: Add a Testing Agent handoff to update the mocks separately.
+
+Do not issue the Backend handoff without resolving this — the DoD will require `pnpm test` to pass, and the cascade will block completion with a hard-to-diagnose failure.
+
 ---
 
 ### Technical Planning & Delegation
@@ -204,9 +226,10 @@ Before any code is modified or any terminal command is run (except for discovery
 -  **Determine Delegation**: 
     - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/roles/sub-agents/`).
     - Define the order of execution.
-    - **MANDATORY**: Specify the Testing Sequence. 
+    - **MANDATORY**: Specify the Testing Sequence.
       - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
       - Deciding between Test-Driven Development (TDD) or Implementation-First is a Tech Lead technical decision.
+      - **Exception**: When tests are explicitly delegated to Backend (not Testing Agent) in the same handoff, TDD is structurally unavailable. Use Implementation-First and state this explicitly in the plan.
     - **Code Ownership**: 
       - **Tech Lead Agent**: Owns Project Configuration, Documentation, and Shared Infra only.
       - **Sub-Agents**: Own ALL Feature Code (`components/`, `app/`, `hooks/`, feature tests).
@@ -236,14 +259,61 @@ Present the **complete plan** to the USER, including:
 > If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Tech Lead Agent MUST halt, inform the BA, and potentially return to **Validate & Internalize Phase** (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
 
 
-**Skip this step only if the task is strictly `[S][DOC]` (Documentation-only) or simple discovery.**
+**Skip condition:** See `workflow.md` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here). Summary: skip only for `[S][DOC]` work, pure discovery sessions, or `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment.
+
+---
+
+### CR Execution Model (Multi-Sub-Agent)
+
+**Tech Lead session scope (all CRs):** context load → discovery → planning → direct permitted changes → `TL-session-state.md` authoring → BA handoff authoring. The Tech Lead does not read implementation files, perform adversarial diff review, or run quality gates after Session A — those are CR Coordinator responsibilities.
+
+**CR Coordinator scope (one session per sub-agent round-trip):** receives TL-authored handoff → issues to sub-agent → performs adversarial diff review of the completion report → runs quality gates → returns a verified conclusion summary to the Tech Lead. The CR Coordinator does NOT modify the plan or make architecture decisions.
+
+**Authority boundary:**
+
+| Responsibility | Owner |
+|---|---|
+| Architecture planning, direct permitted changes | Tech Lead |
+| `TL-session-state.md` authorship | Tech Lead |
+| `tech-lead-to-ba.md` authorship | Tech Lead |
+| Adversarial diff review of sub-agent completion reports | CR Coordinator |
+| Quality gate execution per sub-agent cycle | CR Coordinator |
+| `tech-lead-to-<role>.md` handoff issuance | CR Coordinator |
+
+**Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. A single-sub-agent `[S]` CR requires 3 sessions: TL Session A, 1 CR Coordinator session, TL Session B. There is no single-session exception for `[S]` CRs — the Coordinator model applies to all CRs regardless of sub-agent count. Parallel Coordinator cycles reduce wall-clock time but not session count.
+
+**Direct-execution CR (N=0 sub-agents):** When all CR changes fall within the Tech Lead's permitted direct zones and no sub-agent delegation is required, Session A and Session B collapse into a single session — 0 CR Coordinator sessions exist, 1 combined TL session total. Canonical spec for this path: `workflow.md` Session Scope Management step 8. Three specific behaviors apply in this case:
+1. `TL-session-state.md` is still written as an internal record; Coordinator-targeted sections (per-sub-agent entry instructions, Coordinator conclusion summaries) will be empty — this is expected behavior, not a compliance gap.
+2. The Wait State exits directly to BA handoff authoring; Wait State output items 2 (sub-agent roles) and 3 (handoff file locations) report "none."
+3. The Go/No-Go skip in step 5(a) applies — no Go/No-Go is required for a strictly `[S][DOC]` direct-execution CR.
+
+**Sequential execution model:**
+- TL Session A → CR Coordinator ↔ Backend → CR Coordinator ↔ Frontend → CR Coordinator ↔ Testing → TL Session B → BA
+
+**Parallel execution model (when sub-agents are independent):**
+- TL Session A → [CR Coordinator ↔ Backend] + [CR Coordinator ↔ Frontend] → CR Coordinator ↔ Testing → TL Session B → BA
+
+**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions (empty for direct-execution CRs with N=0 — expected), (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state. For direct-execution CRs, Session B does not exist as a separate session; BA handoff authoring occurs at the end of the single combined session.
+
+> **Note:** The two-session model from CR-018 was insufficient for 3-sub-agent CRs — CR-021 required four saturated sessions despite the two-session fix. The CR Coordinator model supersedes the two-session model and scales linearly to N sub-agents by narrowing each session's file-read scope to one sub-agent's work.
 
 ---
 
 ### Execution & Coordination
 Once approved:
+-  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
 -  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
    - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+   - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.
+   - **Known Environmental Caveats (required section in every sub-agent handoff):** Include environment constraints known at handoff time (Node version, nvm path, pnpm requirements, unavailable tooling). All sub-agents face the same environment; populate once and include in all handoffs.
+   - **Self-check before issuing**: If the handoff says "follow [pattern] exactly," verify no later spec item contradicts "exactly." Preferred framing: "Follow the structure and error-handling patterns of [pattern] — deviations are itemized below and take precedence."
+   - **Self-check**: If the handoff specifies multiple distinct error codes for one endpoint, explicitly define priority when multiple fields fail simultaneously (for example, if both `strategy` and `prompt` are invalid, return `invalid_strategy`). Do not leave this as an implementation judgment call.
+   - **Pattern fidelity handoffs**: When requiring pattern fidelity to a named component, include an explicit step: "Read `<ComponentPath>` before writing your implementation."
+   - **Self-check**: If the referenced pattern includes an output limit constant (for example `MAX_CHARS`), explicitly state whether the new route uses it, uses a different value, or intentionally omits it.
+   - **Self-check**: For per-variant user-visible labels (terminal labels, filenames, panel headings), specify the required label pattern explicitly; do not rely on agent inference.
+   - **Self-check**: If any snippet in the handoff contains `// @ts-expect-error`, name both outcomes explicitly: (a) if TypeScript raises a compile error for the annotated line — keep the directive; (b) if TypeScript does NOT raise an error — omit the directive entirely (leaving it causes TS2578: Unused '@ts-expect-error' directive). Both outcomes must be documented; do not assume only one environment-sensitive path is possible.
+   - **Selector-contract phrasing**: Use "These N selectors are the required minimum. Do not add others without documenting them in the completion report." Avoid wording that can be misread as a prohibition or as optional scope.
+   - **Inline snippet size constraint:** Snippets up to ~30 lines (e.g., a single mock pattern, a single stub) may be inlined in the handoff file. Larger specs (e.g., 10+ test case bodies) must be placed in a separate spec file at `agent-docs/specs/CR-XXX-test-spec.md`; the handoff file links to it. This preserves snippet-first clarity while avoiding handoff files that exhaust context on their own.
 -  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.
 -  **Handle failures**: If a sub-agent is stuck, analyze first principles before pivoting the plan.
 
@@ -272,33 +342,23 @@ An ADR **must** be created when:
 - Adding cross-cutting concerns
 - Changing security or observability boundaries
 
+**Decision test**: Create an ADR when the change introduces a new top-level concept (provider type, auth mechanism, rendering boundary, observability contract). Do NOT create an ADR when the change extends an existing documented pattern (new value in an existing config enum, new route following an existing handler structure, or a format migration within an existing provider type where the provider-type token itself is unchanged).
+
 ADRs live in:
 `agent-docs/decisions/`
 
 ---
 
-### Verification & BA Handoff
+### CR Coordinator: Adversarial Review & Quality Gates
 
-Before handing off to BA Agent, complete the **Verification Checklist**:
+> **The CR Coordinator's full operational spec lives in `agent-docs/roles/coordinator.md`.** The Tech Lead does not execute adversarial review or quality gate steps — the CR Coordinator does, one session per sub-agent round-trip. Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
 
-#### Verification Checklist
-- [ ] Read sub-agent report (`conversations/<role>-to-tech-lead.md`)
-- [ ] **Adversarial Diff Review**: Read the actual modified files line-by-line against the CR's Acceptance Criteria
-    - **Rule**: Never trust the sub-agent's verification blindly.
-    - **Check**: Look for edge cases (e.g. strictness bugs, off-by-one errors) that tests might miss.
-- [ ] Run quality gates in sequence (per `testing-strategy.md`):
-  1. `pnpm test`
-  2. `pnpm lint`
-  3. `pnpm exec tsc --noEmit`
-  4. `pnpm build`
-- [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
-- [ ] If E2E is required by contract change or explicit CR scope, run `pnpm test:e2e` and classify failures as **CR-related** vs. **pre-existing**.
-- [ ] For global/browser-sensitive changes that include E2E scope, ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
-- [ ] If UI was changed: verify Light/Dark mode rendering
-- [ ] If accessibility requirements exist: verify compliance (e.g., `prefers-reduced-motion`)
-- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants
-- [ ] Verify documentation updates
-- [ ] **Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`
+The Coordinator's session entry, execution mode guidance, Bash-denied fallback protocol, pre-authored handoff issuance, adversarial review checklist, portable adversarial dimensions, deviation severity classification, and quality gate steps are all defined in `coordinator.md`. CR-specific adversarial check items (which testids to verify, which grep patterns to run) are authored by the Tech Lead in `TL-session-state.md` per CR and extend the portable dimensions.
+
+**Tech Lead Session B steps (after receiving all Coordinator conclusion summaries):**
+- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants.
+- [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision.
+- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 
 #### Pre-Existing Test Failures
 If tests fail for reasons **unrelated** to the current CR:

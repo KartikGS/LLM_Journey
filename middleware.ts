@@ -27,6 +27,18 @@ const API_CONFIG: Record<string, { rateLimit_windowMs: number; rateLimit_max: nu
         contentLengthRequired: true, // content passed in a post request
         maxBodySize: 1_000_000, // 1 MB
     },
+    '/api/frontier/base-generate': {
+        rateLimit_windowMs: ONE_MINUTE,
+        rateLimit_max: 20,
+        contentLengthRequired: false,
+        maxBodySize: 8_192,
+    },
+    '/api/adaptation/generate': {
+        rateLimit_windowMs: ONE_MINUTE,
+        rateLimit_max: 20,
+        contentLengthRequired: false,
+        maxBodySize: 8_192,
+    },
 };
 
 export function middleware(request: NextRequest) {

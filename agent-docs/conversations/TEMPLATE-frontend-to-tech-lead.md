@@ -18,7 +18,7 @@
 - `clear-to-implement` | `blocked`
 
 ## [Status]
-- `complete` | `blocked` | `partial`
+- `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
@@ -32,8 +32,8 @@
 - Concise list of implemented changes.
 
 ## [Verification Results]
-1. `pnpm exec tsc --noEmit` -> `PASS|FAIL` (+ short evidence)
-2. `pnpm lint` -> `PASS|FAIL` (+ short evidence)
+1. `pnpm lint` -> `PASS|FAIL` (+ short evidence)
+2. `pnpm exec tsc --noEmit` -> `PASS|FAIL` (+ short evidence)
 
 ## [Contract Evidence]
 - Route contracts:
@@ -50,16 +50,17 @@
 - [DoD behavior 2 + evidence]
 
 ## [Failure Classification]
-- CR-related failures:
-- Pre-existing failures:
-- Environmental failures:
-- Non-blocking warnings:
+- `CR-related`:
+- `pre-existing`:
+- `environmental`:
+- `non-blocking warning`:
 
 ## [Scope Extension]
 - `none` OR `scope extension requested` (+ reason and decision owner)
 
 ## [Deviations]
 - `none` OR list deviations with rationale.
+- **Note**: CSS class changes that accompany text content updates (e.g., removing placeholder/muted styling when replacing TBD cells with real data) must be reported here even when the handoff specifies "text content only." Content semantic changes that necessitate style changes are in-scope deviations, not violations.
 
 ## [Ready for Next Agent]
 - `yes` | `no`
