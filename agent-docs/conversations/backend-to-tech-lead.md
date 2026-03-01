@@ -1,39 +1,41 @@
 # Report: Backend -> Tech Lead
 
 ## Subject
-`CR-023 — Purpose-Driven Observability Refinement`
+`CR-024 — Generation Route Body Size Enforcement`
 
 ## Status
 `completed`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing Backend handoff context: `CR-022`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-022-plan.md` ✓ (confirmed by TL pre-replacement check attestation in `tech-lead-to-backend.md`)
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md` status is `Done` ✓ (confirmed by TL pre-replacement check attestation; prior backend report shows `status: completed`)
+- Prior outgoing Backend handoff context: `CR-023`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-023-plan.md` ✓ (attested in TL incoming handoff)
+- Evidence 2 (prior CR closed): prior `backend-to-tech-lead.md` shows `status: completed` ✓
 - Result: replacement allowed for new CR context.
 
 ---
 
 ## [Preflight: Assumptions]
 
-- **Assumption 1**: `safeMetric` is exported from `lib/otel/metrics.ts`.
-  - **Verification**: Confirmed at line 20 of `lib/otel/metrics.ts`. Export present and correctly typed as `export function safeMetric(fn: () => void)`.
-- **Assumption 2**: `performance.now()` is available in the Next.js API route runtime.
-  - **Verification**: Confirmed by existing usage in `app/api/otel/trace/route.ts` and both generation routes. No additional import required.
-- **Assumption 3**: `strategy` variable is in scope at the latency recording point in the adaptation route.
-  - **Verification**: Confirmed — `const { prompt, strategy } = parsed.data;` declared before the inner fetch try block.
-- **Assumption 4**: The proxy integration test mock for `@/lib/otel/metrics` does not include `safeMetric`.
-  - **Verification**: Confirmed — `safeMetric` was absent from the mock; added per handoff.
+- **Assumption 1**: `readStreamWithLimit` is exported from `lib/security/contentLength.ts`.
+  - **Status**: ✅ CONFIRMED — exported at line 64. Signature: `readStreamWithLimit(req: NextRequest, limit: number, contentLength: number, timeoutMs?: number)`.
+
+- **Assumption 2**: `new NextRequest(url, { body: ReadableStream })` is accepted in the test environment.
+  - **Status**: ✅ CONFIRMED — `duplex: 'half'` accepted by TypeScript without suppression; new 413 tests pass.
+
+- **Assumption 3**: Existing `createRequest` helper sends bodies well under 8192 bytes.
+  - **Status**: ✅ CONFIRMED — maximum observed body is `'a'.repeat(2001)` (~2012 bytes). All 165 prior tests continued to pass.
+
+- **Import status**: Neither route previously imported from `@/lib/security/contentLength`. A new import line was added to both files.
+
+- **Metric mock cascade check**: This CR adds no new exported functions to `lib/otel/metrics.ts`. No cascade condition applies.
 
 ## [Preflight: Adjacent Risks]
 
-- **Risk 1 — Node.js runtime mismatch (environmental)**: Active shell runtime was v16.20.1 on session start (below required v20.x). Not tracked in `project-log.md`. Resolved by sourcing nvm manually. Runtime after activation: `v20.20.0` ✓.
-- **Risk 2 — Generation route safeMetric compliance**: All existing metric calls in both generation routes are already wrapped in `safeMetric()`. No bare calls found.
+- **Risk 1 — Node.js runtime**: System default was v16.20.1. Resolved by activating nvm. Runtime after activation: v20.20.0 ✓.
+- **Risk 2 — ReadableStream body in tests**: `req.body?.getReader()` was non-null in the test environment. New 413 tests passed correctly.
 
-## [Preflight: Out-of-Scope Flags]
-
-- **Flag: Additional `getTelemetryTokenErrorsCounter` call site**: Beyond the known `lib/otel/token.ts:20` reference, `__tests__/lib/otel/telemetryToken.test.ts:3` also references it (test mock). Since AC-4 is descoped and the counter is NOT being removed, this reference remains valid and harmless.
-- **Span assertion coverage**: All span assertions in `__tests__/integration/otel-proxy.test.ts` are covered by the handoff removal list. No unexpected span assertions found.
+## [Preflight: Open Questions]
+- none
 
 ## [Preflight Status]
 `clear-to-implement`
@@ -43,26 +45,23 @@
 ## [Scope Check]
 - Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
 - Files modified:
-  - `lib/otel/metrics.ts`
-  - `app/api/otel/trace/route.ts`
-  - `__tests__/integration/otel-proxy.test.ts` (explicitly delegated in handoff)
   - `app/api/frontier/base-generate/route.ts`
   - `app/api/adaptation/generate/route.ts`
-  - `__tests__/api/frontier-base-generate.test.ts` (scope extension — see below)
-  - `__tests__/api/adaptation-generate.test.ts` (scope extension — see below)
+  - `__tests__/api/frontier-base-generate.test.ts` (explicitly delegated)
+  - `__tests__/api/adaptation-generate.test.ts` (explicitly delegated)
 - Scope compliance:
-  - [x] All modified files are in Backend ownership or explicitly delegated/approved.
-  - [x] Two test files modified under scope extension approved by Human User in-session (see Deviations).
+  - [x] All modified files are in Backend ownership or explicitly delegated.
+  - [x] Test files modified only under explicit delegation from handoff.
 
 ## [Changes Made]
 
-- **`lib/otel/metrics.ts`**: Added `frontierGenerateUpstreamLatency` and `adaptationGenerateUpstreamLatency` module-level variables (both `Histogram | null`). Added `getFrontierGenerateUpstreamLatencyHistogram()` and `getAdaptationGenerateUpstreamLatencyHistogram()` exported getter functions following the established lazy-init pattern.
-- **`app/api/otel/trace/route.ts`**: Removed `SpanStatusCode`, `SpanKind` imports and `getTracer` import entirely. Added `safeMetric` to metrics import. Removed `const tracer = getTracer()` and the entire `tracer.startActiveSpan(...)` wrapper — handler body flattened. Removed `const startTime = performance.now()`. Removed success-path `logger.info` call. Removed all `span.*` calls (setAttribute, setStatus, addEvent, recordException, end). Wrapped all 11 metric instrument calls in `safeMetric()`. Removed `span.end()` from finally block; `clearTimeout(timeout)` retained. Removed pre-existing commented-out `logger.warn` line (debug artifact per DoD checklist).
-- **`__tests__/integration/otel-proxy.test.ts`**: Removed `mockSpan` and `mockTracer` declarations. Removed `jest.mock('@/lib/otel/tracing', ...)` block. Added `safeMetric: (fn: () => void) => fn()` to the `@/lib/otel/metrics` mock. Removed span assertions from happy path, 401, 413, 500 upstream, and connection error tests.
-- **`app/api/frontier/base-generate/route.ts`**: Added `getFrontierGenerateUpstreamLatencyHistogram` to metrics import. Added `const upstreamFetchStart = performance.now()` immediately before the inner fetch try block. Added `safeMetric(() => getFrontierGenerateUpstreamLatencyHistogram().record(performance.now() - upstreamFetchStart, { route: ROUTE_PATH }))` immediately before `streamingActive = true`.
-- **`app/api/adaptation/generate/route.ts`**: Added `getAdaptationGenerateUpstreamLatencyHistogram` to metrics import. Added `const upstreamFetchStart = performance.now()` immediately before the inner fetch try block. Added `safeMetric(() => getAdaptationGenerateUpstreamLatencyHistogram().record(performance.now() - upstreamFetchStart, { strategy }))` immediately before `streamingActive = true`.
-- **`__tests__/api/frontier-base-generate.test.ts`**: Added `getFrontierGenerateUpstreamLatencyHistogram: () => ({ record: jest.fn() })` to the `@/lib/otel/metrics` mock factory. (scope extension approved by user)
-- **`__tests__/api/adaptation-generate.test.ts`**: Added `getAdaptationGenerateUpstreamLatencyHistogram: () => ({ record: jest.fn() })` to the `@/lib/otel/metrics` mock factory. (scope extension approved by user)
+- **`app/api/frontier/base-generate/route.ts`**: Added `import { readStreamWithLimit } from '@/lib/security/contentLength'`. Added `const MAX_BODY_SIZE = 8192` constant. Replaced `try { rawBody = await req.json() }` block with stream-level read: reads `content-length` header, computes `declaredLength` (falls back to `MAX_BODY_SIZE` when header absent), calls `readStreamWithLimit(req, MAX_BODY_SIZE, declaredLength)`, returns 413/400 on stream error, then parses body via `JSON.parse(new TextDecoder().decode(rawBytes))`.
+
+- **`app/api/adaptation/generate/route.ts`**: Identical change pattern. Added `readStreamWithLimit` import and `MAX_BODY_SIZE` constant. Replaced `req.json()` block with stream-level read.
+
+- **`__tests__/api/frontier-base-generate.test.ts`**: Added `describe('Body Size Enforcement')` block with `createOversizedStreamRequest` helper (8200-byte ReadableStream body, no Content-Length header) and `it('returns 413 for body exceeding 8192 bytes with no Content-Length header')` test.
+
+- **`__tests__/api/adaptation-generate.test.ts`**: Same new describe block and test case targeting the adaptation route URL.
 
 ## [Verification Results]
 
@@ -71,20 +70,20 @@
   - **Execution Mode**: local-equivalent/unsandboxed (nvm activated manually)
   - **Result**: `PASS — v20.20.0`
 
-- **Command**: `pnpm exec tsc --noEmit`
-  - **Scope**: full project
+- **Command**: `pnpm test`
+  - **Scope**: full suite (18 suites, 167 tests)
   - **Execution Mode**: local-equivalent/unsandboxed
-  - **Result**: `PASS — no TypeScript errors`
+  - **Result**: `PASS — 167 passed, 0 failed`
 
-- **Command**: `pnpm lint --file app/api/otel/trace/route.ts --file lib/otel/metrics.ts --file app/api/frontier/base-generate/route.ts --file app/api/adaptation/generate/route.ts`
+- **Command**: `pnpm lint --file app/api/frontier/base-generate/route.ts --file app/api/adaptation/generate/route.ts`
   - **Scope**: targeted (Backend-owned files per tooling-standard.md)
   - **Execution Mode**: local-equivalent/unsandboxed
   - **Result**: `PASS — No ESLint warnings or errors` (deprecation warning for `next lint` CLI is pre-existing, CR-021)
 
-- **Command**: `pnpm test`
-  - **Scope**: full suite (18 suites, 165 tests)
+- **Command**: `pnpm exec tsc --noEmit`
+  - **Scope**: full project
   - **Execution Mode**: local-equivalent/unsandboxed
-  - **Result**: `PASS — 165 passed, 0 failed`
+  - **Result**: `PASS — no TypeScript errors`
 
 - **Command**: `pnpm build`
   - **Scope**: full production build
@@ -93,16 +92,25 @@
 
 ### DoD Grep Evidence
 
-- **AC-1**: `grep -n "startActiveSpan\|SpanKind\|SpanStatusCode\|getTracer" app/api/otel/trace/route.ts` → **no matches** ✓
-- **AC-2**: All 11 metric calls in `app/api/otel/trace/route.ts` wrapped in `safeMetric()` at lines 34, 44, 53, 60, 70, 73, 82, 101, 106, 113, 118 — no bare calls ✓
-- **AC-3**: `grep -n "logger.info" app/api/otel/trace/route.ts` → **no matches** ✓
-- **AC-4**: DESCOPED — not verified, not touched ✓
-- **AC-5**: `getFrontierGenerateUpstreamLatencyHistogram().record(...)` present at line 322 of `app/api/frontier/base-generate/route.ts`, positioned immediately before `streamingActive = true` ✓
-- **AC-6**: `getAdaptationGenerateUpstreamLatencyHistogram().record(..., { strategy })` present at line 319–322 of `app/api/adaptation/generate/route.ts`, positioned immediately before `streamingActive = true`, includes `strategy` dimension ✓
-- **AC-7**: `pnpm test` — PASS (165/165). `pnpm lint` — PASS. `pnpm exec tsc --noEmit` — PASS. `pnpm build` — PASS ✓
+- **`grep -n "req.json" app/api/frontier/base-generate/route.ts`** → **no matches** ✓
+- **`grep -n "req.json" app/api/adaptation/generate/route.ts`** → **no matches** ✓
+- **`grep -n "readStreamWithLimit" app/api/frontier/base-generate/route.ts`** → matches at lines 4, 173 ✓
+- **`grep -n "readStreamWithLimit" app/api/adaptation/generate/route.ts`** → matches at lines 4, 158 ✓
+
+### AC Verification
+
+- **AC-1**: POST to either generation route with body > 8192 bytes returns 413 regardless of Content-Length state — enforced at stream level before Zod parsing. `readStreamWithLimit` fires when `offset + value.length > MAX_BODY_SIZE`. ✓
+- **AC-2**: 413 rejection occurs in the stream-read block (lines 171–178 frontier, 156–163 adaptation), which precedes the upstream `fetch()` call. No external API call is made for rejected bodies. ✓
+- **AC-3**: New test added in `describe('Body Size Enforcement')` in both test files. Tests pass (167 total). ✓
+- **AC-4**: All 165 prior tests continue to pass. ✓
+- **AC-5**: `pnpm lint` PASS, `pnpm exec tsc --noEmit` PASS, `pnpm test` PASS (167/167), `pnpm build` PASS. ✓
+- **AC-6**: No route paths, response contract shapes for existing status codes, `data-testid`, or accessibility semantics changed. ✓
 
 ## [Out-of-Scope Requests Detected]
 - `none`
+
+## [Out-of-Scope Flags (per handoff)]
+- **Remaining `req.json()` calls in other routes**: `grep -rn "req\.json()" app/api/` → **no matches**. All API routes are now covered. No follow-up candidates identified.
 
 ## [Blockers]
 - `none`
@@ -110,17 +118,15 @@
 ## [Failure Classification]
 - `CR-related`: none.
 - `pre-existing`: Worker-process teardown warning during test suite teardown (project-log.md, CR-021). `require-in-the-middle` critical dependency warning in `pnpm build` (project-log.md, CR-021). Deprecation warning for `next lint` CLI (pre-existing, CR-021).
-- `environmental`: Node.js runtime was v16.20.1 on session start; resolved via nvm before verification. Not tracked in project-log.md — recommend adding as Next Priority (see Follow-up).
+- `environmental`: Node.js runtime was v16.20.1 on session start (same as CR-023); resolved via nvm. Pre-existing condition, not newly tracked.
 - `non-blocking warning`: none.
 
 ## [Deviations]
 
-- **Minor deviation — removed pre-existing commented-out logger.warn**: `app/api/otel/trace/route.ts` contained a commented-out `// logger.warn({ sessionId }, 'Unauthorized telemetry trace attempt');` line pre-CR. Removed per DoD checklist ("No debug artifacts — commented-out code blocks — in any modified file"). No behavioral impact.
-
-- **Scope extension — test mock updates approved by Human User**: The handoff scoped "Do NOT modify: any other test file." Adding histogram getter calls to the generation routes caused `TypeError` propagation in two test files whose `safeMetric` mock is `(fn) => fn()` (no error handling). Backend raised this as a blocker; Human User approved scope extension in-session to add 1-line mock entries to `__tests__/api/frontier-base-generate.test.ts` and `__tests__/api/adaptation-generate.test.ts`. **Scope extension approved by user.**
+- **Minor deviation — removed `@ts-expect-error` from test helpers**: The handoff template included `// @ts-expect-error duplex required for streaming body in some environments` on the `duplex: 'half'` option. TypeScript in this project's configuration accepts `duplex` without suppression; the directive caused a `TS2578: Unused '@ts-expect-error' directive` error under `pnpm exec tsc --noEmit`. Removed the directive from both test files. No behavioral impact — `duplex: 'half'` is still passed.
 
 ## [Ready for Next Agent]
 `yes`
 
 ## [Follow-up Recommendations]
-- **nvm sourcing (environmental)**: Shell profile does not auto-source nvm; requires manual activation each session (`v16.20.1` is the default without it). Recommend adding nvm init to `.bashrc`/`.zshrc`. Suggest adding as `[S]` Next Priority in `project-log.md`.
+- **nvm sourcing (environmental)**: Shell profile does not auto-source nvm (same condition as CR-023). nvm init should be added to `.bashrc`/`.zshrc`. Recommend adding as `[S]` Next Priority in `project-log.md` if not already tracked.

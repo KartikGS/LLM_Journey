@@ -21,7 +21,13 @@ This document defines the mandatory tools and environment configurations for thi
 - If runtime is below the documented minimum, classify as an **environmental mismatch** in the role report instead of silently downgrading requirements.
 - If the mismatch is pre-existing and already tracked in `project-log.md`, proceed and document it in the active report.
 - If the mismatch is new and below the documented minimum, halt and report to Tech Lead before running verification commands.
-- **Recovery path**: Use `nvm use <documented-version>` (or equivalent version manager command) to activate the documented runtime version. Re-run the preflight check after switching. If the version manager is unavailable, report as a blocker via the feedback protocol — do not proceed with a mismatched runtime.
+- **Recovery path**: To activate the documented runtime version, run the full nvm sourcing sequence — `nvm use` alone silently fails in non-interactive shells without the sourcing step:
+  ```sh
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+  nvm use <documented-version>
+  ```
+  Re-run `node -v` after switching to confirm the version changed. If nvm is unavailable (not installed or not sourced from the shell profile), report as a blocker via the feedback protocol — do not proceed with a mismatched runtime.
 
 ## Testing Stack
 - **Unit/Integration**: Jest + React Testing Library
@@ -61,3 +67,8 @@ pnpm lint --file app/api/foundations/frontier-base-generate/route.ts
 - Sub-agents (Backend, Frontend): use targeted linting for their own domain files during self-verification.
 - Testing Agent or CR Coordinator: run full-suite `pnpm lint` as the final integration gate — this is the authoritative pass.
 - A targeted lint pass does not substitute for the full-suite gate. Both may be needed in the same CR cycle.
+
+**DoD interpretation rule (Lint Gate Authority):** When a DoD item specifies `pnpm lint` without a `--file` qualifier, interpret it at the agent's appropriate scope:
+- Sub-agents: run targeted lint on their modified (and explicitly delegated) files. A pre-existing lint error in an unrelated file does not block a sub-agent's targeted lint attestation — that remains the Lint Gate Authority's responsibility.
+- Lint Gate Authority (Testing Agent or CR Coordinator): run full-suite `pnpm lint`. This is the gate that catches pre-existing failures in unrelated files and must pass before CR closure.
+- Both gates must pass before a CR is closed; neither alone is sufficient.

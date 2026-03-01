@@ -59,7 +59,21 @@ function readWithTimeout<T>(
 
 
 /**
- * Reads a NextRequest stream with a byte limit to check content length.
+ * Reads a NextRequest stream with a byte limit to enforce content length.
+ *
+ * @param req - The incoming NextRequest whose body stream will be consumed.
+ * @param limit - Hard byte ceiling. Any chunk that would push the running total
+ *   past this value immediately returns a 413 error.
+ * @param contentLength - Declared body size to enforce as a secondary ceiling.
+ *   - **Header present**: pass the parsed numeric value of the `Content-Length`
+ *     header. Both `limit` and `contentLength` are enforced independently — an
+ *     overstated header is caught by `limit`; an understated header is caught by
+ *     `contentLength` before `limit` triggers.
+ *   - **Header absent**: pass `limit` (e.g., `MAX_BODY_SIZE`). This makes both
+ *     checks fire at the same threshold, providing a single effective byte cap
+ *     with no declared-length bypass.
+ * @param timeoutMs - Optional read timeout in milliseconds. If the stream stalls
+ *   beyond this duration, returns a 408 error.
  */
 export async function readStreamWithLimit(
     req: NextRequest,

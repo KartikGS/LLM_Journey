@@ -44,6 +44,19 @@ Before executing any task, also read:
   - Do not install new npm packages. If a new dependency is required, flag it in the preflight note and request Tech Lead approval.
   - Verification scope: **check the handoff DoD first.** If the DoD specifies `pnpm test` (full suite), run full suite — the DoD takes precedence over this default. Otherwise, run only the scoped spec file (`pnpm test <spec-file>`). Full-suite verification is the Tech Lead's responsibility unless the DoD explicitly delegates it to Backend.
 
+### Security Vulnerability Class Scan (Conditional)
+
+When implementing a fix for a **class of vulnerability** (for example: unbounded body reads, missing auth checks, unsanitized input paths), after completing your implementation:
+
+1. **Scan all affected surface area** for the same vulnerability class — not just the files in your handoff scope.
+   - Use the grep pattern appropriate to the class (e.g., `grep -rn "req\.json()" app/api/` for unbounded body reads).
+2. **Flag but do not fix** any adjacent instances found outside your handoff scope.
+   - Report them in your completion report under a dedicated "Adjacent Vulnerability Scan" section.
+   - Do not implement fixes for out-of-scope instances — that creates undeclared scope expansion.
+3. If the grep finds zero matches beyond what you fixed, report that explicitly as a closed-class signal.
+
+This scan is triggered by the security nature of the CR, not by an explicit handoff instruction. Apply it whenever your CR is categorized as a security fix.
+
 ### Scope Gate (Mandatory Before Editing)
 
 **Handoff structure note**: The Tech Lead handoff may include an `## Out-of-Scope But Must Be Flagged (Mandatory)` section. Each item in that section is a pre-agreed stop-and-report condition — an adjacent risk or edge case that Tech Lead identified before delegation. Encountering any listed condition during implementation means **STOP** and report to Tech Lead before proceeding, not resolve unilaterally. Read this section before starting any implementation work.

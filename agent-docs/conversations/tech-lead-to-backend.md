@@ -1,22 +1,22 @@
 # Handoff: Tech Lead → Backend Agent
 
 ## Subject
-`CR-023 — Purpose-Driven Observability Refinement`
+`CR-024 — Generation Route Body Size Enforcement`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing Backend handoff context: `CR-022`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-022-plan.md` ✓
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md` status is `Done` ✓
+- Prior outgoing Backend handoff context: `CR-023`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-023-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-023-purpose-driven-observability-refinement.md` status is `Done` ✓
 - Result: replacement allowed for new CR context.
 
 ---
 
 ## Exact Artifact Paths (Mandatory)
-- Requirement: `agent-docs/requirements/CR-023-purpose-driven-observability-refinement.md`
-- Plan: `agent-docs/plans/CR-023-plan.md`
+- Requirement: `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md`
+- Plan: `agent-docs/plans/CR-024-plan.md`
 - Upstream report (if sequential): N/A — single agent
 - Report back to: `agent-docs/conversations/backend-to-tech-lead.md`
 
@@ -24,25 +24,17 @@
 
 ## Objective
 
-Correct three observability issues across four API routes:
-
-1. **Proxy route** (`app/api/otel/trace/route.ts`): Remove the span entirely (no parent trace context; metrics + logs fully cover all signals). Wrap all bare metric calls in `safeMetric()` (crash-risk fix enforcing the architecture.md Observability Safety invariant). Remove the success-path `logger.info` call (noise on a high-frequency infrastructure route).
-
-2. **Generation routes** (`app/api/frontier/base-generate/route.ts`, `app/api/adaptation/generate/route.ts`): Record upstream AI provider latency (in milliseconds) on the streaming success path. Add supporting histogram getters to `lib/otel/metrics.ts`.
-
-3. **Proxy integration test** (`__tests__/integration/otel-proxy.test.ts`): Remove span-related mocks and assertions made redundant by the span removal. Add `safeMetric` to the metrics mock.
-
-**AC-4 from the CR is descoped**: `getTelemetryTokenErrorsCounter` is an active signal in `lib/otel/token.ts` — do not touch it.
+Close the body size enforcement gap on both generation routes. When a POST request arrives at `/api/frontier/base-generate` or `/api/adaptation/generate` without a `Content-Length` header, the middleware body size check is skipped and `req.json()` reads the full body into memory with no byte cap. This CR replaces `req.json()` with a stream-level byte-capped read using the existing `readStreamWithLimit` utility, enforcing the 8192-byte policy regardless of header presence.
 
 ---
 
 ## Rationale (Why)
 
-The proxy is a security/control boundary. It gates, validates, and forwards telemetry payloads. It has no parent trace context — browser clients do not propagate trace headers in telemetry uploads. Every proxy span is a disconnected root span: trace volume with nothing to link to. Metrics and structured logs already cover all operational signals (volume, error rates, payload size, upstream latency). The span is instrumenting the infrastructure, not a product operation — removing it is a deliberate design decision, documented in the CR.
+The middleware is configured with `contentLengthRequired: false` for generation routes — intentionally, to avoid 411-ing clients that omit `Content-Length`. But this means the header-based size check in middleware is bypassed for those clients. `req.json()` then reads an unbounded body before Zod validation can reject it.
 
-The `safeMetric()` gap is a concrete crash risk. All other instrumented routes in this codebase already use `safeMetric()`. The proxy was the only exception. A metric instrument failure in the proxy (the telemetry failure boundary itself) currently throws bare and can affect request handling — directly violating the invariant in `architecture.md`: "Telemetry must never block, crash, or degrade user-facing functionality."
+`readStreamWithLimit` in `lib/security/contentLength.ts` already exists, is already tested, and is already used in production by the otel proxy route. Wiring it into the generation routes closes the gap without changing any middleware behavior, any client-facing contracts, or any existing tests.
 
-The generation routes call external AI providers — the most latency-variable and failure-prone operations in the system. The proxy (stable infrastructure target) has a latency histogram; the AI provider calls do not. This is inverted priority. Adding upstream latency histograms to the generation routes provides the most actionable latency signal in the system.
+This is a security correctness fix, not a behavioral change for well-formed clients.
 
 ---
 
@@ -50,298 +42,207 @@ The generation routes call external AI providers — the most latency-variable a
 
 - **Node.js runtime**: System runtime may be below `>=20.x`. Run `node -v` first. If below 20.x, activate via `nvm use 20`. If nvm unavailable, classify as `environmental` in your report.
 - **pnpm**: Use `pnpm` exclusively. Never `npm` or `yarn`.
-- **Live-path availability**: `no` — API key is not required. All metric/span changes are testable without live credentials. The existing fallback-path test coverage is sufficient.
+- **Live-path availability**: `no` — no API key required. All changes are testable via the fallback path and unit test infrastructure.
 
 ---
 
 ## Constraints
 
 ### Technical Constraints
-- **No new npm packages** — all required OTel histogram infrastructure (`Histogram`, `getMeter()`) already exists in `lib/otel/metrics.ts`.
+- **No new npm packages.**
+- **`maxBodySize` threshold stays at 8192** — enforce the existing policy, do not redefine it.
 - **TypeScript strict mode** must remain satisfied — `pnpm exec tsc --noEmit` must pass.
-- **Error- and warn-level logs in the proxy route must not be removed** — they are intentional security/operational signals.
-- **Upstream latency must only be recorded when `fetch()` completes with a response on the streaming success path** — timed-out or connection-failed paths do not record latency.
-- **AC-4 is descoped**: Do not touch `getTelemetryTokenErrorsCounter` or its backing variable in `lib/otel/metrics.ts`. Do not touch `lib/otel/token.ts`.
-- **No API response contracts, `data-testid` attributes, or route paths are changed.**
+- **No route path, response contract for existing status codes, `data-testid`, or accessibility semantics changed.**
+- **Do NOT change `middleware.ts`** or `__tests__/middleware.test.ts`. The middleware test at line 246 (`'passes when content-length header is absent for /api/frontier/base-generate'`) remains valid and must continue to pass.
 
 ### Ownership Constraints
 - **Files in scope** (explicit delegation):
-  - `lib/otel/metrics.ts`
-  - `app/api/otel/trace/route.ts`
-  - `__tests__/integration/otel-proxy.test.ts` — explicitly delegated for span-assertion cleanup
   - `app/api/frontier/base-generate/route.ts`
   - `app/api/adaptation/generate/route.ts`
-- **Do NOT modify**: Any frontend component, any other test file, `lib/otel/token.ts`, any config file.
+  - `__tests__/api/frontier-base-generate.test.ts` — test changes explicitly delegated to Backend
+  - `__tests__/api/adaptation-generate.test.ts` — test changes explicitly delegated to Backend
+- **Do NOT modify**: `middleware.ts`, `__tests__/middleware.test.ts`, `lib/security/contentLength.ts`, any frontend component, any E2E test, any config file.
 
 ---
 
 ## Assumptions To Validate (Mandatory)
 
-- **Live-path availability**: `no` — API key not required for this CR.
-- Assumption 1: `safeMetric` is exported from `lib/otel/metrics.ts`. Confirmed during TL discovery (line 20). Verify before writing proxy route import.
-- Assumption 2: `performance.now()` is available in the Next.js API route runtime. Confirmed by existing usage in both generation routes and the proxy route. No additional import required.
-- Assumption 3: `strategy` variable is in scope at the latency recording point in the adaptation route. Confirmed: `const { prompt, strategy } = parsed.data;` is declared before the fetch block.
-- Assumption 4: The proxy integration test mock for `@/lib/otel/metrics` does NOT currently include `safeMetric`. Confirmed during TL discovery — must be added.
+- **Live-path availability**: `no` — API key not required.
+- **Assumption 1**: `readStreamWithLimit` is exported from `lib/security/contentLength.ts`. Confirmed during TL discovery. Verify the import path before writing.
+- **Assumption 2**: `new NextRequest(url, { body: ReadableStream })` is accepted in the test environment (same pattern used in `__tests__/lib/security/readStreamWithLimit.test.ts`). Confirm before writing oversized-body test helper.
+- **Assumption 3**: Existing route test helper `createRequest` sends bodies well under 8192 bytes. Confirm by inspecting test file before adding new test cases — no existing test should be affected by the route change.
 
 ---
 
 ## Out-of-Scope But Must Be Flagged (Mandatory)
 
-- If you discover any import or call site of `getTelemetryTokenErrorsCounter` beyond what is already known (`lib/otel/token.ts:20`), flag it before proceeding.
-- If any existing test in `__tests__/integration/otel-proxy.test.ts` asserts on span behavior that is not covered by the removal list in this handoff, flag it rather than silently removing it.
-- Do not add safeMetric wrapping to the generation routes — they already comply. Flag if you find any unwrapped metric calls in those files.
+- If you find any other route that calls `req.json()` without a byte cap, flag it in your report as a follow-up candidate — do not fix it in this CR.
+- If the `readStreamWithLimit` function behaves differently than expected in the route handler context (e.g., `req.body` is null in a particular test setup), flag it immediately rather than working around it.
+- Do not add a body-read timeout — this is out of scope for CR-024.
 
 ---
 
 ## Scope: Files to Modify
 
-### 1. `lib/otel/metrics.ts` — Add histogram getters (do this first)
+### 1. `app/api/frontier/base-generate/route.ts`
 
-Add two new module-level variables and their getter functions, following the established pattern exactly. Place them in the "Pre-defined metrics for frontier/adaptation generation" sections:
-
+#### 1a. Add import
+Add `readStreamWithLimit` to the existing `lib/security/contentLength` import. If no such import exists yet, add:
 ```ts
-// Pre-defined metrics for frontier generation latency
-let frontierGenerateUpstreamLatency: Histogram | null = null;
-
-// Pre-defined metrics for adaptation generation latency
-let adaptationGenerateUpstreamLatency: Histogram | null = null;
+import { readStreamWithLimit } from '@/lib/security/contentLength';
 ```
 
+#### 1b. Add constant
+Near the top of the file (with the other route-level constants like `PROMPT_MAX_CHARS`):
 ```ts
-/**
- * Histogram for frontier base-generate upstream AI provider latency
- */
-export function getFrontierGenerateUpstreamLatencyHistogram(): Histogram {
-    if (!frontierGenerateUpstreamLatency) {
-        frontierGenerateUpstreamLatency = getMeter().createHistogram('frontier_generate.upstream_latency', {
-            description: 'Upstream AI provider latency for frontier base-generate requests in milliseconds',
-            unit: 'ms',
-        });
-    }
-    return frontierGenerateUpstreamLatency;
-}
+const MAX_BODY_SIZE = 8192; // mirrors middleware maxBodySize policy for this route
+```
 
-/**
- * Histogram for adaptation generate upstream AI provider latency
- */
-export function getAdaptationGenerateUpstreamLatencyHistogram(): Histogram {
-    if (!adaptationGenerateUpstreamLatency) {
-        adaptationGenerateUpstreamLatency = getMeter().createHistogram('adaptation_generate.upstream_latency', {
-            description: 'Upstream AI provider latency for adaptation generate requests in milliseconds',
-            unit: 'ms',
-        });
-    }
-    return adaptationGenerateUpstreamLatency;
+#### 1c. Replace the body-reading block
+The current code:
+```ts
+let rawBody: unknown;
+
+try {
+    rawBody = await req.json();
+} catch {
+    span.setStatus({ code: SpanStatusCode.ERROR, message: 'Invalid JSON body' });
+    return NextResponse.json<RequestErrorResponse>(
+        {
+            error: {
+                code: 'invalid_json',
+                message: 'Request body must be valid JSON.',
+            },
+        },
+        { status: 400 }
+    );
 }
 ```
 
-`Histogram` is already imported at line 1. No new imports needed in this file.
+Replace with:
+```ts
+const contentLengthHeader = req.headers.get('content-length');
+const declaredLength = contentLengthHeader !== null ? Number(contentLengthHeader) : MAX_BODY_SIZE;
+
+const { body: rawBytes, error: streamError } = await readStreamWithLimit(req, MAX_BODY_SIZE, declaredLength);
+if (streamError) {
+    span.setStatus({ code: SpanStatusCode.ERROR, message: streamError.message });
+    return new NextResponse(
+        streamError.status === 413 ? 'Payload Too Large' : 'Bad Request',
+        { status: streamError.status }
+    );
+}
+
+let rawBody: unknown;
+
+try {
+    rawBody = JSON.parse(new TextDecoder().decode(rawBytes));
+} catch {
+    span.setStatus({ code: SpanStatusCode.ERROR, message: 'Invalid JSON body' });
+    return NextResponse.json<RequestErrorResponse>(
+        {
+            error: {
+                code: 'invalid_json',
+                message: 'Request body must be valid JSON.',
+            },
+        },
+        { status: 400 }
+    );
+}
+```
+
+**Note on `declaredLength`:** When `Content-Length` is absent, `declaredLength = MAX_BODY_SIZE`. This makes `readStreamWithLimit`'s secondary check (`offset + value.length > declaredLength`) equivalent to the primary limit check (`offset + value.length > MAX_BODY_SIZE`). Both fire at 8193 bytes — correct behavior. When `Content-Length` is present, the declared value is passed; the primary `limit` parameter (8192) still enforces the cap even if the header overstates the body size.
+
+**Note on span/metrics for 413 path:** Set `span.setStatus(ERROR)` — already in the block above. Do NOT call `getFrontierGenerateFallbacksCounter()` on the 413 path. A 413 rejection is not a fallback. The existing `finally` block handles `span.end()` correctly since `streamingActive` remains `false`.
 
 ---
 
-### 2. `app/api/otel/trace/route.ts` — Proxy route refactor
+### 2. `app/api/adaptation/generate/route.ts`
 
-#### 2a. Remove imports
-From `@opentelemetry/api` import: remove `SpanStatusCode`, `SpanKind`. The `metrics` import (if any) is not present in this file — nothing to remove there.
-Remove the entire `import { getTracer } from '@/lib/otel/tracing';` line.
+Identical change pattern to item 1. Same import, same `MAX_BODY_SIZE` constant, same body-reading block replacement.
 
-#### 2b. Update metrics import
-Add `safeMetric` to the existing `@/lib/otel/metrics` import block:
+The only difference is the import line — adaptation route does not currently import from `lib/security/contentLength`. Add:
 ```ts
-import {
-    safeMetric,
-    getOtelProxyRequestsCounter,
-    getOtelProxyRequestSizeHistogram,
-    getOtelProxyUpstreamLatencyHistogram,
-    getOtelProxyErrorsCounter,
-} from '@/lib/otel/metrics';
+import { readStreamWithLimit } from '@/lib/security/contentLength';
 ```
-
-#### 2c. Refactor POST handler
-Remove `const tracer = getTracer();` and the entire `tracer.startActiveSpan('otel_proxy.forward_traces', { kind: SpanKind.INTERNAL }, async (span) => { ... })` wrapper. Flatten the handler body so the `try/catch/finally` block is at the top level of the `POST` function.
-
-Remove `const startTime = performance.now();` — it is only used by the `logger.info` success call being removed.
-
-Wrap ALL metric instrument calls in `safeMetric()`. There are approximately 10 call sites across the handler:
-
-| Current (bare) | After (safeMetric-wrapped) |
-|---|---|
-| `getOtelProxyRequestsCounter().add(1)` | `safeMetric(() => getOtelProxyRequestsCounter().add(1))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'empty_payload' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'empty_payload' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'misconfigured' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' })` (stream) | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'payload_too_large' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'body_timeout' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'body_timeout' }))` |
-| `getOtelProxyRequestSizeHistogram().record(body.byteLength, {...})` | `safeMetric(() => getOtelProxyRequestSizeHistogram().record(body.byteLength, {...}))` |
-| `getOtelProxyUpstreamLatencyHistogram().record(upstreamLatency, {...})` | `safeMetric(() => getOtelProxyUpstreamLatencyHistogram().record(upstreamLatency, {...}))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'upstream_error' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'upstream_error' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'upstream_timeout' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'upstream_timeout' }))` |
-| `getOtelProxyErrorsCounter().add(1, { error_type: 'connection_error' })` | `safeMetric(() => getOtelProxyErrorsCounter().add(1, { error_type: 'connection_error' }))` |
-
-Remove ALL `span.*` calls:
-- All `span.setAttribute(...)` calls
-- All `span.setStatus(...)` calls
-- All `span.addEvent(...)` calls
-- `span.recordException(err as Error)`
-- `span.end()` (in `finally` block)
-
-Remove the success-path `logger.info(...)` call only (lines approximately 144–147: `logger.info({ latencyMs: ... }, 'OTEL proxy: Traces forwarded successfully')`). Preserve all `logger.warn(...)` and `logger.error(...)` calls — they are security/operational signals.
-
-The `finally` block should retain only `clearTimeout(timeout)` after `span.end()` is removed.
-
-The `upstreamStart` / `upstreamLatency` variables for the upstream latency histogram **remain** — they are still used by `getOtelProxyUpstreamLatencyHistogram().record(upstreamLatency, {...})`.
 
 ---
 
-### 3. `__tests__/integration/otel-proxy.test.ts` — Span assertion cleanup
+### 3. `__tests__/api/frontier-base-generate.test.ts` *(explicitly delegated)*
 
-Read the file before editing (required by Write-Before-Read constraint).
+Read the file before editing.
 
-#### 3a. Remove tracing mock and span mocks
-Remove the `mockSpan` object declaration block (approximately lines 40–47).
-Remove the `mockTracer` object declaration block (approximately lines 49–53).
-Remove the entire `jest.mock('@/lib/otel/tracing', ...)` block (approximately lines 56–58).
+Add a new test case covering AC-3. Suggested placement: new `describe` block or inline with existing request-validation tests. The test must:
 
-#### 3b. Add `safeMetric` to the metrics mock
-The current `jest.mock('@/lib/otel/metrics', ...)` block does not include `safeMetric`. Add it as a pass-through:
+1. Create a `NextRequest` **without** a `Content-Length` header and with a body exceeding 8192 bytes. Use a `ReadableStream` body to avoid the runtime auto-setting `Content-Length`:
+
 ```ts
-jest.mock('@/lib/otel/metrics', () => ({
-    safeMetric: (fn: () => void) => fn(),
-    getOtelProxyRequestsCounter: jest.fn(() => mockRequestsCounter),
-    getOtelProxyErrorsCounter: jest.fn(() => mockErrorsCounter),
-    getOtelProxyRequestSizeHistogram: jest.fn(() => mockRequestSizeHistogram),
-    getOtelProxyUpstreamLatencyHistogram: jest.fn(() => mockUpstreamLatencyHistogram),
-}));
+function createOversizedStreamRequest(url: string): NextRequest {
+    const payload = 'x'.repeat(8200); // > 8192 bytes
+    const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+            controller.enqueue(new TextEncoder().encode(payload));
+            controller.close();
+        },
+    });
+    return new NextRequest(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // No Content-Length header — intentional
+        body: stream,
+        // @ts-expect-error duplex required for streaming body in some environments
+        duplex: 'half',
+    });
+}
 ```
 
-#### 3c. Remove span assertions from each test case
+2. Assert the response status is 413:
 
-**Happy path test** (section 1): Remove the tracing assertions block:
 ```ts
-// Remove these three assertions:
-expect(mockTracer.startActiveSpan).toHaveBeenCalledWith(
-    'otel_proxy.forward_traces',
-    expect.anything(),
-    expect.any(Function)
-);
-expect(mockSpan.setStatus).toHaveBeenCalledWith({ code: 1 }); // OK
-expect(mockSpan.end).toHaveBeenCalled();
-```
-All other assertions in the happy path (HTTP 202, fetch called, metrics recorded) remain.
-
-**401 missing token test**: Remove:
-```ts
-expect(mockTracer.startActiveSpan).not.toHaveBeenCalled();
+it('returns 413 for body exceeding 8192 bytes with no Content-Length header', async () => {
+    const req = createOversizedStreamRequest('http://localhost/api/frontier/base-generate');
+    const res = await POST(req);
+    expect(res.status).toBe(413);
+});
 ```
 
-**413 content-length test**: Remove:
-```ts
-expect(mockSpan.setStatus).toHaveBeenCalledWith(expect.objectContaining({ code: 2 })); // ERROR
-```
-
-**500 upstream test**: Remove:
-```ts
-expect(mockSpan.setStatus).toHaveBeenCalledWith(
-    expect.objectContaining({
-        code: 2,
-        message: 'Upstream returned 500'
-    })
-);
-```
-
-**Connection error test**: Remove:
-```ts
-expect(mockSpan.recordException).toHaveBeenCalled();
-```
-
-All HTTP status assertions, metrics counter assertions, and fetch call assertions in all test cases remain unchanged.
+**If `duplex: 'half'` causes a TypeScript error that the `@ts-expect-error` does not suppress cleanly, use `as unknown as NextRequest` cast on the options object instead.**
 
 ---
 
-### 4. `app/api/frontier/base-generate/route.ts` — Add upstream latency recording
+### 4. `__tests__/api/adaptation-generate.test.ts` *(explicitly delegated)*
 
-#### 4a. Add import
-Add `getFrontierGenerateUpstreamLatencyHistogram` to the existing `@/lib/otel/metrics` import:
+Same new test case. Update the URL to `'http://localhost/api/adaptation/generate'` and call the `POST` import from the adaptation route. The `createOversizedStreamRequest` helper can be defined locally in this file as well (or extracted to a shared test util — your choice, but do not create a new shared file if this would be the only consumer).
+
 ```ts
-import {
-    safeMetric,
-    getFrontierGenerateRequestsCounter,
-    getFrontierGenerateFallbacksCounter,
-    getFrontierGenerateUpstreamLatencyHistogram,
-} from '@/lib/otel/metrics';
+it('returns 413 for body exceeding 8192 bytes with no Content-Length header', async () => {
+    const req = createOversizedStreamRequest('http://localhost/api/adaptation/generate');
+    const res = await POST(req);
+    expect(res.status).toBe(413);
+});
 ```
-
-#### 4b. Add timer start
-Immediately before the inner try block that calls `fetch()` (the block beginning `let upstreamResponse: Response; try {`), declare:
-```ts
-const upstreamFetchStart = performance.now();
-```
-
-#### 4c. Add latency recording on streaming success path
-After all fallback checks pass (after the `!contentType.includes('text/event-stream')` check that returns a fallback), and immediately before `streamingActive = true`, add:
-```ts
-safeMetric(() => getFrontierGenerateUpstreamLatencyHistogram().record(
-    performance.now() - upstreamFetchStart,
-    { route: ROUTE_PATH }
-));
-```
-
-The insertion point is at the start of the streaming success block, before `span.setAttribute('frontier.mode', 'live')`.
-
----
-
-### 5. `app/api/adaptation/generate/route.ts` — Add upstream latency recording
-
-#### 5a. Add import
-Add `getAdaptationGenerateUpstreamLatencyHistogram` to the existing `@/lib/otel/metrics` import:
-```ts
-import {
-    safeMetric,
-    getAdaptationGenerateRequestsCounter,
-    getAdaptationGenerateFallbacksCounter,
-    getAdaptationGenerateUpstreamLatencyHistogram,
-} from '@/lib/otel/metrics';
-```
-
-#### 5b. Add timer start
-Immediately before the inner try block that calls `fetch()`, declare:
-```ts
-const upstreamFetchStart = performance.now();
-```
-
-#### 5c. Add latency recording on streaming success path
-After all fallback checks pass (after the `!contentType.includes('text/event-stream')` check), immediately before `streamingActive = true`, add:
-```ts
-safeMetric(() => getAdaptationGenerateUpstreamLatencyHistogram().record(
-    performance.now() - upstreamFetchStart,
-    { strategy }
-));
-```
-
-The `strategy` variable is already in scope at this point from `const { prompt, strategy } = parsed.data;`.
 
 ---
 
 ## Definition of Done
 
-- [ ] AC-1: `grep -n "startActiveSpan\|SpanKind\|SpanStatusCode\|getTracer" app/api/otel/trace/route.ts` returns no matches
-- [ ] AC-2: All metric instrument calls in `app/api/otel/trace/route.ts` are wrapped in `safeMetric()` — no bare metric calls outside `safeMetric()`
-- [ ] AC-3: `grep -n "logger.info" app/api/otel/trace/route.ts` returns no matches
-- [ ] AC-4: **DESCOPED** — not verified, not touched
-- [ ] AC-5: `getFrontierGenerateUpstreamLatencyHistogram().record(...)` call exists in `app/api/frontier/base-generate/route.ts`, positioned immediately before `streamingActive = true`
-- [ ] AC-6: `getAdaptationGenerateUpstreamLatencyHistogram().record(..., { strategy })` call exists in `app/api/adaptation/generate/route.ts`, positioned immediately before `streamingActive = true`, includes `strategy` dimension
-- [ ] AC-7: `pnpm test` passes, `pnpm lint` passes, `pnpm exec tsc --noEmit` passes, `pnpm build` passes
-- [ ] No `span.*` calls, `getTracer`, `SpanKind`, or `SpanStatusCode` remain in `app/api/otel/trace/route.ts`
-- [ ] No debug artifacts (console.log, commented-out blocks, TODO markers) in any modified file
+- [ ] **AC-1**: POST to either generation route with body > 8192 bytes returns 413 regardless of `Content-Length` header state (absent, present-but-understated, present-and-accurate-but-oversized).
+- [ ] **AC-2**: The 413 rejection occurs before any `fetch()` call to the upstream AI provider — the body rejection happens in the stream-read block, which precedes the upstream fetch block.
+- [ ] **AC-3**: New test added for each route: no `Content-Length` header + body > 8192 bytes → 413 (`frontier-base-generate.test.ts` and `adaptation-generate.test.ts`).
+- [ ] **AC-4**: All existing tests in both route test files continue to pass (no regression).
+- [ ] **AC-5**: `pnpm lint` passes, `pnpm exec tsc --noEmit` passes, `pnpm test` passes, `pnpm build` passes.
+- [ ] **AC-6**: No route path, existing response contract shapes, `data-testid`, or accessibility semantics changed.
+- [ ] Grep confirmation: `grep -n "req.json" app/api/frontier/base-generate/route.ts` and `grep -n "req.json" app/api/adaptation/generate/route.ts` both return **no matches**.
+- [ ] `grep -n "readStreamWithLimit" app/api/frontier/base-generate/route.ts` and `grep -n "readStreamWithLimit" app/api/adaptation/generate/route.ts` both return matches.
 
 ---
 
 ## Clarification Loop (Mandatory)
 
-Before implementation, Backend posts preflight note in `agent-docs/conversations/backend-to-tech-lead.md` covering:
-- Assumptions confirmed (or any that failed validation)
-- Adjacent risks not covered by current scope
-- Open questions (if any — pause and wait for TL response before implementing if non-trivial)
+Before implementation, Backend posts preflight note to `agent-docs/conversations/backend-to-tech-lead.md` covering:
+- Assumptions confirmed or invalidated
+- Any adjacent risks discovered
+- Open questions (if non-trivial — pause and await TL response before implementing)
 
 ---
 
@@ -351,9 +252,9 @@ Run in sequence. Report each using the Command Evidence Standard:
 
 ```
 node -v
+pnpm test
 pnpm lint
 pnpm exec tsc --noEmit
-pnpm test
 pnpm build
 ```
 
@@ -363,7 +264,7 @@ Format for each:
 - **Execution Mode**: `[sandboxed | local-equivalent/unsandboxed]`
 - **Result**: `[PASS/FAIL + key counts or failure summary]`
 
-AC-1, AC-2, AC-3 verification evidence must include the grep commands from the Definition of Done items with their output.
+DoD grep commands must be included in the completion report with their output.
 
 ---
 
@@ -371,18 +272,18 @@ AC-1, AC-2, AC-3 verification evidence must include the grep commands from the D
 
 Before starting:
 - [ ] Read this handoff completely
-- [ ] Read the plan at `agent-docs/plans/CR-023-plan.md`
-- [ ] Read `lib/otel/metrics.ts` before modifying it
-- [ ] Read `app/api/otel/trace/route.ts` before modifying it
-- [ ] Read `__tests__/integration/otel-proxy.test.ts` before modifying it
+- [ ] Read the plan at `agent-docs/plans/CR-024-plan.md`
 - [ ] Read `app/api/frontier/base-generate/route.ts` before modifying it
 - [ ] Read `app/api/adaptation/generate/route.ts` before modifying it
+- [ ] Read `__tests__/api/frontier-base-generate.test.ts` before modifying it
+- [ ] Read `__tests__/api/adaptation-generate.test.ts` before modifying it
+- [ ] Read `lib/security/contentLength.ts` to confirm `readStreamWithLimit` signature
 - [ ] Write preflight note to `backend-to-tech-lead.md`
 
 Before reporting:
 - [ ] All Definition of Done items verified
-- [ ] Full quality gate run completed (`pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`)
-- [ ] Completion report written to `backend-to-tech-lead.md`
+- [ ] Full quality gate run completed in sequence (`pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`)
+- [ ] Completion report written to `backend-to-tech-lead.md` using the template
 
 ---
 

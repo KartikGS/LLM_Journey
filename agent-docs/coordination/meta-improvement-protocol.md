@@ -204,31 +204,20 @@ Phase 2 synthesis reads this section only — not the full file.
 
 Synthesis requires editorial judgment without ownership bias over prior implementation decisions. The findings files carry sufficient context forward; the synthesis agent does not need to remember why decisions were made, only whether the doc gaps that caused friction should be fixed.
 
-**Synthesis owner:** Tech Lead role for technical/coordination findings. BA role for findings about requirement clarity, CR templates, and workflow scope. For a combined synthesis, use Tech Lead — they can flag BA-scoped items for BA review.
+**Synthesis owner:** Improvement Agent. The Improvement Agent's role definition and permitted change scope are in `agent-docs/roles/improvement.md`.
 
 **Standard session prompt (use verbatim when starting the synthesis session):**
 
 ```
-You are a Tech Lead operating in meta-improvement mode for the LLM Journey project.
+You are an Improvement Agent for the LLM Journey project.
+
+Read Agents.md
 
 Attached are per-agent findings files from a <CR-ID> meta-analysis:
 - [list findings files with paths]
 
-Your task:
-1. Read ONLY the `## Top 5 Findings (Ranked)` section from each findings file — not the full files.
-2. De-duplicate overlapping findings across agents.
-3. Assign consolidated priority: High (blocks agent effectiveness) / Medium (friction or confusion) / Low (polish).
-4. For each finding, decide: Fix | Defer | Reject — with a one-line rationale.
-5. Before finalizing, cross-reference the most recent prior synthesis Fix table (`agent-docs/meta/META-*-synthesis.md`) for overlapping items. Flag any finding that may already have been addressed as a regression risk (⚠️) — the implementing agent will confirm current file state.
-6. For any Fix items that span multiple chunks and require consistent vocabulary (e.g., a renamed term used in two files), pre-decide the exact term in the synthesis document. Do not leave cross-chunk vocabulary to be resolved independently by implementing agents.
-7. Group Fix items into implementation chunks (1-3 files per chunk) that can execute independently. Include a "Cross-chunk coordination notes" section for items spanning multiple chunks.
-
-Do NOT propose before/after wording. That is written by the implementing agent during Phase 3.
-
-Output: agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md
-
-This is NOT a CR execution session. Do not write plans, handoffs, or code.
-Do not treat prior implementation decisions as correct by default — evaluate each finding on its merits.
+Follow Phase 2 of `agent-docs/coordination/meta-improvement-protocol.md`.
+Your synthesis responsibilities are defined in `agent-docs/roles/improvement.md`.
 ```
 
 **Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md`
@@ -325,13 +314,13 @@ This mode is intended to run in parallel with feature CRs without forcing a full
 
 | Finding Category | Synthesis Owner | Final Approver |
 |---|---|---|
-| Handoff template gaps, coordination protocol issues | Tech Lead | User |
-| Role boundary ambiguities, ownership matrix gaps | Tech Lead | User |
-| CR template gaps, requirement clarity, scope definition | BA | User |
-| Workflow step redundancy, phase sequencing | Tech Lead proposes, BA ratifies | User |
-| Portable vs project-specific instruction boundary changes | Tech Lead + BA jointly | User |
-| Collaboration throughput/cadence changes to meta procedure | Tech Lead proposes, BA ratifies | User |
-| Cross-cutting policy (affects multiple roles) | Tech Lead + BA jointly | User |
+| Handoff template gaps, coordination protocol issues | Improvement Agent | User |
+| Role boundary ambiguities, ownership matrix gaps | Improvement Agent | User |
+| CR template gaps, requirement clarity, scope definition | Improvement Agent | User |
+| Workflow step redundancy, phase sequencing | Improvement Agent | User |
+| Portable vs project-specific instruction boundary changes | Improvement Agent | User |
+| Collaboration throughput/cadence changes to meta procedure | Improvement Agent | User |
+| Cross-cutting policy (affects multiple roles) | Improvement Agent | User |
 
 ---
 

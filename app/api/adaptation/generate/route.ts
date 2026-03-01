@@ -1,6 +1,7 @@
 import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { readStreamWithLimit } from '@/lib/security/contentLength';
 import { ADAPTATION_GENERATION_CONFIG } from '@/lib/config/generation';
 import logger from '@/lib/otel/logger';
 import {
@@ -19,6 +20,7 @@ import { parseChatChunk, createSseRelayStream } from '@/lib/server/generation/st
 
 const ROUTE_PATH = '/api/adaptation/generate';
 const PROMPT_MAX_CHARS = 2000;
+const MAX_BODY_SIZE = 8192; // mirrors middleware maxBodySize policy for this route
 
 const ADAPTATION_OUTPUT_MAX_CHARS = ADAPTATION_GENERATION_CONFIG.outputMaxChars;
 
@@ -150,10 +152,22 @@ export async function POST(req: NextRequest) {
             let streamingActive = false;
 
             try {
+                const contentLengthHeader = req.headers.get('content-length');
+                const declaredLength = contentLengthHeader !== null ? Number(contentLengthHeader) : MAX_BODY_SIZE;
+
+                const { body: rawBytes, error: streamError } = await readStreamWithLimit(req, MAX_BODY_SIZE, declaredLength);
+                if (streamError) {
+                    span.setStatus({ code: SpanStatusCode.ERROR, message: streamError.message });
+                    return new NextResponse(
+                        streamError.status === 413 ? 'Payload Too Large' : 'Bad Request',
+                        { status: streamError.status }
+                    );
+                }
+
                 let rawBody: unknown;
 
                 try {
-                    rawBody = await req.json();
+                    rawBody = JSON.parse(new TextDecoder().decode(rawBytes));
                 } catch {
                     span.setStatus({ code: SpanStatusCode.ERROR, message: 'Invalid JSON body' });
                     return NextResponse.json<RequestErrorResponse>(

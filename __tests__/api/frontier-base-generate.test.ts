@@ -484,4 +484,29 @@ describe('Integration: Frontier Base Generate API', () => {
             });
         });
     });
+
+    describe('Body Size Enforcement', () => {
+        function createOversizedStreamRequest(url: string): NextRequest {
+            const payload = 'x'.repeat(8200); // > 8192 bytes
+            const stream = new ReadableStream<Uint8Array>({
+                start(controller) {
+                    controller.enqueue(new TextEncoder().encode(payload));
+                    controller.close();
+                },
+            });
+            return new NextRequest(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // No Content-Length header — intentional
+                body: stream,
+                duplex: 'half',
+            });
+        }
+
+        it('returns 413 for body exceeding 8192 bytes with no Content-Length header', async () => {
+            const req = createOversizedStreamRequest('http://localhost/api/frontier/base-generate');
+            const res = await POST(req);
+            expect(res.status).toBe(413);
+        });
+    });
 });

@@ -68,7 +68,7 @@ The Tech Lead may **only** directly modify:
 | **Environment** | Env templates | `.env.example`, `.env.local.example`. Note: Backend may also add new env vars to `.env.example` when directly introduced by their CR scope (no explicit delegation required; must be recorded in preflight note). |
 | **Documentation** | Agent docs, README | `README.md`, `agent-docs/*.md` |
 | **CI/CD** | Workflow files | `.github/workflows/*` |
-| **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*` (generic utilities only) |
+| **Shared Infra** | Non-feature utilities | `lib/config/*`, `lib/utils/*`, `lib/security/*` (non-feature utilities only — no business logic, no route handlers) |
 
 Dependency installation approval and execution is Tech Lead-owned. Sub-agents must request delegation when dependency changes are required.
 
@@ -280,7 +280,7 @@ Present the **complete plan** to the USER, including:
 | Quality gate execution per sub-agent cycle | CR Coordinator |
 | `tech-lead-to-<role>.md` handoff issuance | CR Coordinator |
 
-**Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. Parallel Coordinator cycles reduce wall-clock time but not session count.
+**Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. A single-sub-agent `[S]` CR requires 3 sessions: TL Session A, 1 CR Coordinator session, TL Session B. There is no single-session exception for `[S]` CRs — the Coordinator model applies to all CRs regardless of sub-agent count. Parallel Coordinator cycles reduce wall-clock time but not session count.
 
 **Sequential execution model:**
 - TL Session A → CR Coordinator ↔ Backend → CR Coordinator ↔ Frontend → CR Coordinator ↔ Testing → TL Session B → BA
@@ -306,6 +306,7 @@ Once approved:
    - **Pattern fidelity handoffs**: When requiring pattern fidelity to a named component, include an explicit step: "Read `<ComponentPath>` before writing your implementation."
    - **Self-check**: If the referenced pattern includes an output limit constant (for example `MAX_CHARS`), explicitly state whether the new route uses it, uses a different value, or intentionally omits it.
    - **Self-check**: For per-variant user-visible labels (terminal labels, filenames, panel headings), specify the required label pattern explicitly; do not rely on agent inference.
+   - **Self-check**: If any snippet in the handoff contains `// @ts-expect-error`, name both outcomes explicitly: (a) if TypeScript raises a compile error for the annotated line — keep the directive; (b) if TypeScript does NOT raise an error — omit the directive entirely (leaving it causes TS2578: Unused '@ts-expect-error' directive). Both outcomes must be documented; do not assume only one environment-sensitive path is possible.
    - **Selector-contract phrasing**: Use "These N selectors are the required minimum. Do not add others without documenting them in the completion report." Avoid wording that can be misread as a prohibition or as optional scope.
    - **Inline snippet size constraint:** Snippets up to ~30 lines (e.g., a single mock pattern, a single stub) may be inlined in the handoff file. Larger specs (e.g., 10+ test case bodies) must be placed in a separate spec file at `agent-docs/specs/CR-XXX-test-spec.md`; the handoff file links to it. This preserves snippet-first clarity while avoiding handoff files that exhaust context on their own.
 -  **Monitor progress**: Step in only to resolve conflicts or answer clarifications.

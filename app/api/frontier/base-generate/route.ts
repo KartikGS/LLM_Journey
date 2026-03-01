@@ -1,6 +1,7 @@
 import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { readStreamWithLimit } from '@/lib/security/contentLength';
 import { FRONTIER_GENERATION_CONFIG, type FrontierProvider } from '@/lib/config/generation';
 import logger from '@/lib/otel/logger';
 import {
@@ -21,6 +22,7 @@ const ROUTE_PATH = '/api/frontier/base-generate';
 const PROMPT_MAX_CHARS = 2000;
 const FRONTIER_OUTPUT_MAX_CHARS = 4000;
 const HF_MAX_NEW_TOKENS = 256;
+const MAX_BODY_SIZE = 8192; // mirrors middleware maxBodySize policy for this route
 
 const FALLBACK_SAMPLES = [
     'A frontier base model is strong at broad pattern recall but often inconsistent at instruction-following without adaptation.',
@@ -165,10 +167,22 @@ export async function POST(req: NextRequest) {
             let streamingActive = false;
 
             try {
+                const contentLengthHeader = req.headers.get('content-length');
+                const declaredLength = contentLengthHeader !== null ? Number(contentLengthHeader) : MAX_BODY_SIZE;
+
+                const { body: rawBytes, error: streamError } = await readStreamWithLimit(req, MAX_BODY_SIZE, declaredLength);
+                if (streamError) {
+                    span.setStatus({ code: SpanStatusCode.ERROR, message: streamError.message });
+                    return new NextResponse(
+                        streamError.status === 413 ? 'Payload Too Large' : 'Bad Request',
+                        { status: streamError.status }
+                    );
+                }
+
                 let rawBody: unknown;
 
                 try {
-                    rawBody = await req.json();
+                    rawBody = JSON.parse(new TextDecoder().decode(rawBytes));
                 } catch {
                     span.setStatus({ code: SpanStatusCode.ERROR, message: 'Invalid JSON body' });
                     return NextResponse.json<RequestErrorResponse>(
