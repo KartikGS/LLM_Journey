@@ -12,6 +12,11 @@ Use this protocol when the user asks for:
 - process clarity or governance improvements,
 - template/role-doc consistency cleanup.
 
+**"Completed CR" definition for meta timing:**
+- **Tech Lead meta pass:** can run after TL verification is recorded (Tech Lead Session B complete and `tech-lead-to-ba.md` issued). Does not require prior BA closure.
+- **BA meta pass:** can run once TL verification is recorded. Does not require prior BA closure — the BA meta pass is typically the BA's last action before or during closure, not after it.
+- **Improvement Agent (Phase 2):** can run as soon as all required per-agent findings files are present in `agent-docs/meta/`. CR closure state is not a prerequisite.
+
 ---
 
 ## Operating Model (Hybrid)

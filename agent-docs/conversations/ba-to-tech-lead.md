@@ -1,75 +1,85 @@
 # BA to Tech Lead Handoff
 
 ## Subject
-`CR-024 — Generation Route Body Size Enforcement`
+`CR-025 — README Refresh and Documentation Governance in CR Flow`
 
 ## Status
 `issued`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior outgoing BA handoff context: `CR-023`
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-023-plan.md` ✓
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-023-purpose-driven-observability-refinement.md` status is `Done` ✓
+- Prior outgoing BA handoff context: `CR-024`
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-024-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md` status is `Done` ✓
 - Result: replacement allowed for new CR context.
 
 ## Objective
 
-CR-024 closes a body size enforcement gap on the two generation routes. The middleware is configured with `contentLengthRequired: false` for these routes, meaning requests without a `Content-Length` header bypass the 8192-byte size check entirely. `req.json()` then reads the full body into memory with no byte cap — Zod validation runs after parse, not before allocation.
+Deliver a documentation hardening CR with two linked outcomes:
 
-This is a backend-only correctness fix. No API contracts, response shapes, UI, or route paths change.
+1. **Modernize root `README.md`** so it accurately serves both project audiences (learner-user and developer-user), reflects current architecture and roadmap, and gives deterministic onboarding/contribution instructions.
+2. **Operationalize docs freshness** by adding a mandatory documentation-impact decision to CR planning/execution/acceptance artifacts so doc updates are explicitly owned in every CR.
+
+This is not a product behavior change. It is documentation + workflow quality hardening.
 
 ## Linked Artifacts
-- CR: `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md`
+- CR: `agent-docs/requirements/CR-025-readme-refresh-and-documentation-governance.md`
 
 ## Audience & Outcome Check
-- **Human User intent:** Enforce the documented `maxBodySize: 8192` policy for generation routes robustly — regardless of header presence.
-- **Developer-user impact:** The codebase correctly models the security posture it documents. The middleware config and actual enforcement are consistent.
-- **Learner-user impact:** None — purely backend.
+- **Human User intent:** README should stop drifting and CR flow should systematically keep docs current.
+- **Developer-user impact:** Faster, correct project onboarding and accurate contribution model for agentic development.
+- **Learner-user impact:** Indirect quality benefit only; no immediate UI/runtime changes.
 
-## The Core Decision You Must Make First
+## Scope Clarification
 
-Two valid implementation approaches exist. You must choose one and document it in the plan:
+### In scope
+- Root README rewrite/refresh to reflect current project reality.
+- Doc/process artifact updates that make documentation-impact review mandatory during CR execution and BA closure.
+- Applying the documentation-impact rule across `README.md`, `agent-docs/**`, and `human-docs/**` when impacted by a CR.
 
-**Option A — Require Content-Length in middleware:**
-Set `contentLengthRequired: true` for both generation routes in `middleware.ts`. Requests without the header return `411`. Simple, one-line change in middleware config.
+### Out of scope
+- Feature implementation, route/API behavior changes, or UI redesign.
+- Re-architecting role ownership model.
 
-- Pro: Enforced before the route handler runs. Zero route-level changes.
-- Con: Changes existing behavior for any client that omits `Content-Length` (rare for browser `fetch` with JSON body, but possible).
-- **Test impact:** The existing test at `__tests__/middleware.test.ts:246` (`'passes when content-length header is absent for /api/frontier/base-generate'`) asserts the old behavior — it must be updated to assert `411` under Option A.
+## Technical Sanity Notes
 
-**Option B — Stream-level enforcement before `req.json()`:**
-Add byte-limit enforcement in the route handlers (or a shared utility) before calling `req.json()`. Returns `413` only when the body actually exceeds the limit.
+Current README has known drift and contradictions versus canonical docs, including:
+- package manager ambiguity (`pnpm` policy vs README mentioning npm/yarn/bun),
+- stale structure/module references,
+- missing explicit explanation of the current BA -> Tech Lead -> sub-agent CR flow.
 
-- Pro: Preserves behavior for no-body + no-header requests. More targeted.
-- Con: Requires reading the stream before `req.json()`. Confirm Next.js App Router allows this without consuming the stream twice (likely requires reading to a buffer first, then parsing from that buffer — or `req.text()` + `JSON.parse()` pattern).
-- **Test impact:** Existing test at `__tests__/middleware.test.ts:246` remains valid (it sends no body, so no size concern).
-
-Before choosing, verify:
-```
-grep -rn "contentLengthRequired" middleware.ts
-```
-And confirm the stream-read approach is viable in Next.js App Router if you lean Option B.
+Use canonical truth sources while rewriting:
+- `agent-docs/tooling-standard.md`
+- `agent-docs/technical-context.md`
+- `agent-docs/project-vision.md`
+- `agent-docs/architecture.md`
+- `agent-docs/workflow.md`
+- `agent-docs/decisions/ADR-0001-telemetry-proxy.md`
 
 ## Reversal Risk
 
-> **Reversal Risk — AC-1 & AC-3:** Before implementing, confirm whether the test at `__tests__/middleware.test.ts:246` needs to change under your chosen approach. Under Option A it MUST change (old assertion becomes wrong). Under Option B it MAY remain. Do not close the CR with a test asserting behavior the implementation no longer exhibits.
+- **Reversal Risk — AC-2:** Before finalizing README runtime/tooling statements, verify every command/policy line against canonical docs (`tooling-standard.md`, `technical-context.md`, `workflow.md`). If any contradiction appears, stop and align wording before merge.
+- **Reversal Risk — AC-4/AC-5:** Before adding new documentation-impact language to workflow/templates, check for existing equivalent gates to avoid duplicative or conflicting policy text. If conflict is found, stop and request BA clarification on consolidation approach.
 
 ## Suggested Execution Mode
 
-Single Backend sub-agent, single session. Both routes are affected identically. If Option A, this may be a middleware-only change with a test update. If Option B, route-level changes are needed for both routes.
+`Sequential` recommended.
 
-## Acceptance Criteria Summary (full detail in CR-024)
+Reason:
+1. First complete README refresh (content truth alignment).
+2. Then apply workflow/template/checklist guardrail updates informed by final wording and avoid policy duplication.
 
-- **AC-1:** POST to either generation route with body > 8192 bytes returns `4xx` regardless of `Content-Length` header state.
-- **AC-2:** Rejection occurs without forwarding to upstream AI provider (no external call for rejected bodies).
-- **AC-3:** New test: no `Content-Length` + body > 8192 → `4xx`, for both routes.
-- **AC-4:** Existing valid-request and oversized-with-correct-header tests still pass.
-- **AC-5:** `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build` pass.
-- **AC-6:** No route path, response contract, `data-testid`, or accessibility changes.
+## Acceptance Criteria Summary (full detail in CR-025)
+
+- **AC-1:** README reorganized with audience-aware structure and required sections.
+- **AC-2:** README setup/policy lines match canonical docs, with no contradictions.
+- **AC-3:** Stale README references removed/corrected.
+- **AC-4:** Planning/execution artifacts include mandatory "Documentation Impact" field.
+- **AC-5:** BA closure guidance includes explicit doc-impact verification before `Done`.
+- **AC-6:** No app/runtime contract changes.
 
 ## Constraints
 
-- No new npm packages.
-- `maxBodySize` threshold stays at 8192 — enforce the existing policy, do not redefine it.
-- TypeScript strict mode must remain satisfied.
-- If Option A is chosen: update the middleware test at line 246 in the same CR.
+- No implementation code changes required for this CR.
+- Preserve role ownership boundaries.
+- Keep policy additions audit-friendly (field/checklist based, not broad prose).
+- Do not create conflicting process authorities across docs.

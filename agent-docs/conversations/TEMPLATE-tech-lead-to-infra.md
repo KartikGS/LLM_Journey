@@ -36,6 +36,7 @@
 - [ ] [Infra DoD 1]
 - [ ] [Infra DoD 2]
 - [ ] Required verification commands pass
+- [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
 - Infra posts preflight concerns/questions in `agent-docs/conversations/infra-to-tech-lead.md`.

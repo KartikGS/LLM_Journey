@@ -1,59 +1,71 @@
 # Handoff: Tech Lead -> BA Agent
 
 ## Subject
-`CR-024 — Generation Route Body Size Enforcement`
+`CR-025 — README Refresh and Documentation Governance in CR Flow`
 
 ## Status
 `verified`
 
 ## Pre-Replacement Check (Conversation Freshness)
-- Prior content: `CR-023` (`Purpose-Driven Observability Refinement`)
-- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-023-plan.md` ✓
-- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-023-purpose-driven-observability-refinement.md` status is `Done` ✓
+- Prior content: `CR-024` (Generation Route Body Size Enforcement)
+- Evidence 1 (plan artifact exists): `agent-docs/plans/CR-024-plan.md` ✓
+- Evidence 2 (prior CR closed): `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md` status is `Done` per project-log.md Recent Focus entry ✓
 - Result: replacement allowed.
 
 ---
 
 ## Exact Artifact Paths
-- Requirement: `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md`
-- Plan: `agent-docs/plans/CR-024-plan.md`
-- Sub-agent report: `agent-docs/conversations/backend-to-tech-lead.md`
+- Requirement: `agent-docs/requirements/CR-025-readme-refresh-and-documentation-governance.md`
+- Plan: `agent-docs/plans/CR-025-plan.md`
+- Sub-agent reports: none — all changes were direct Tech Lead execution
 
 ---
 
 ## Technical Summary
 
-CR-024 closes the body size enforcement gap on both generation routes. The middleware was configured with `contentLengthRequired: false`, meaning requests without a `Content-Length` header bypassed the 8192-byte size check entirely — `req.json()` read the full body into memory before Zod validation could reject it.
+CR-025 is a pure `[S][DOC]` CR. All changes are in the Tech Lead permitted direct-edit zone. No sub-agents were delegated.
 
-**Implementation (Option B — stream-level enforcement):**
+**Two outcomes delivered:**
 
-- Both `app/api/frontier/base-generate/route.ts` and `app/api/adaptation/generate/route.ts` now use `readStreamWithLimit(req, MAX_BODY_SIZE, declaredLength)` (imported from `lib/security/contentLength`) before calling `JSON.parse`. The stream is read to a `Uint8Array` buffer capped at 8192 bytes; `JSON.parse` runs on that buffer.
-- When `Content-Length` header is absent, `declaredLength = MAX_BODY_SIZE (8192)` — enforcing the cap regardless of header presence.
-- When `Content-Length` is present, the declared value is used as the secondary bound; the primary 8192-byte `limit` still enforces the cap even for lying headers.
-- Bodies exceeding 8192 bytes return `new NextResponse('Payload Too Large', { status: 413 })` — plain text, consistent with middleware and otel proxy conventions. The `RequestErrorResponse` typed union is unchanged.
-- Rejection occurs at the stream-read block, which precedes the upstream AI provider `fetch()` call — no external API call is made for rejected bodies.
-- Span: `setStatus(ERROR)` on 413 path. `span.end()` handled by existing `finally` block. Fallbacks counter is NOT called on 413 (correct — rejection is not a fallback).
-- `const MAX_BODY_SIZE = 8192` defined locally in each route file with a comment referencing the middleware policy. Not centralized — body limits are security policy, not generation config.
+**1. README.md rewrite** — replaced stale, contradictory README content with accurate, audience-aware documentation:
+- Dual-audience framing (learner-user / developer-user) added per `project-vision.md`.
+- 10-stage roadmap table with canonical routes from `project-vision.md`, with Live/Planned status.
+- Setup section: `pnpm` listed as the only supported package manager. "npm/yarn/bun" removed. Node >=20.x explicit. Port 3001 explicit.
+- Project structure updated to reflect actual directory layout (`app/foundations/`, `app/models/`, `app/api/frontier/`, etc.). All stale module references (`app/base-llm/`, `app/fine-tuning/`, `app/rag/`, `app/tools/`, `app/mcps/`) removed.
+- Architecture diagram added showing browser/server/OTel flow, with reference to ADR-0001.
+- Agentic workflow section added with CR lifecycle diagram and role file table.
+- Documentation map added covering `agent-docs/`, `human-docs/`, and subdirectories.
+- Clone instruction corrected: `cd LLM_Journey` (was `cd LLM-Journey`).
+- Stale "Key Components" section removed (listed non-existent components).
 
-**No middleware changes.** `middleware.ts` and `__tests__/middleware.test.ts` are unchanged.
-
-**Test changes (explicitly delegated to Backend):**
-- `__tests__/api/frontier-base-generate.test.ts`: Added `describe('Body Size Enforcement')` block with `createOversizedStreamRequest` helper (8200-byte `ReadableStream` body, no `Content-Length` header) and one new test asserting 413.
-- `__tests__/api/adaptation-generate.test.ts`: Identical block targeting the adaptation route URL.
-- Total tests: 165 → 167 (+2 new test cases).
-
-**Out-of-scope finding (Backend flag):** `grep -rn "req\.json()" app/api/` returned **no matches** — all API routes are now covered by stream-level enforcement. No follow-up CR needed for this specific gap.
+**2. Documentation governance guardrails:**
+- `agent-docs/plans/TEMPLATE.md`: Added `## Documentation Impact` mandatory section (required/not-required decision with explicit file list). Placed between Operational Checklist and Definition of Done so it is evaluated at planning time.
+- `TEMPLATE-tech-lead-to-frontend.md`: Added `Documentation Impact` DoD item.
+- `TEMPLATE-tech-lead-to-backend.md`: Added `Documentation Impact` DoD item.
+- `TEMPLATE-tech-lead-to-testing.md`: Added `Documentation Impact` DoD item.
+- `TEMPLATE-tech-lead-to-infra.md`: Added `Documentation Impact` DoD item.
+- `agent-docs/roles/ba.md`: Added `Documentation Impact resolved` item at end of BA Closure Checklist — requires verifying all `required` doc updates are done before marking `Done`.
 
 ---
 
 ## Evidence of AC Fulfillment
 
-- **AC-1**: POST to either generation route with body > 8192 bytes returns 413 regardless of `Content-Length` header state — enforced at stream level before Zod parsing. `readStreamWithLimit` rejects when `offset + value.length > 8192`. New tests confirm 413 for no-header + 8200-byte body. ✓
-- **AC-2**: 413 rejection occurs in the stream-read block (frontier: lines 171–179; adaptation: lines 156–164), which precedes the upstream `fetch()` call in both handlers. No external API call is made for rejected bodies — confirmed by code structure and test passing with mocked fetch (no fetch calls triggered on 413 path). ✓
-- **AC-3**: New test added in `describe('Body Size Enforcement')` in both `frontier-base-generate.test.ts` and `adaptation-generate.test.ts`. Both pass. ✓
-- **AC-4**: All 165 prior tests continue to pass (167 total, 0 failures). ✓
-- **AC-5**: `pnpm lint` PASS, `pnpm exec tsc --noEmit` PASS, `pnpm test` PASS (167/167), `pnpm build` PASS. ✓
-- **AC-6**: No route paths, response contract shapes for existing status codes, `data-testid` attributes, or accessibility semantics changed. `middleware.ts` and `__tests__/middleware.test.ts` unchanged. ✓
+- **AC-1 (README Structure):** `README.md` now contains: project purpose + vision statement, dual-audience framing ("Who This Is For" section), 10-stage roadmap table, setup/runtime/tooling section, architecture overview with OTel diagram, agentic contribution flow section, documentation map table. — `README.md` full rewrite.
+
+- **AC-2 (README Accuracy):** All setup commands and policy statements in `README.md` are consistent with canonical sources:
+  - "pnpm (required — do not use npm, yarn, or bun)" — matches `tooling-standard.md` "NEVER use npm or yarn".
+  - "Node.js >= 20.x" — matches `tooling-standard.md` "Node.js >= 20.x".
+  - "http://localhost:3001" — matches `tooling-standard.md` "Port: 3001".
+  - Routes `/foundations/transformers`, `/models/adaptation` — match `project-vision.md` roadmap and actual `app/` directory structure.
+  - No contradictory package manager or runtime instructions present. Confirmed by adversarial review.
+
+- **AC-3 (Stale Content Removal):** Removed: "pnpm (or npm/yarn/bun)" prerequisite, stale project structure block (`app/base-llm/`, `app/fine-tuning/`, `app/rag/`, `app/tools/`, `app/mcps/`), "Key Components" section (listed non-existent components: `BaseLLMChat`, `InteractLLM`, `ChatInput`, `LoadButton`), incorrect clone directory `cd LLM-Journey`. Confirmed by diff review.
+
+- **AC-4 (CR Process Guardrail):** `agent-docs/plans/TEMPLATE.md` updated with `## Documentation Impact` section (planning artifact). All four sub-agent handoff templates (`TEMPLATE-tech-lead-to-frontend.md`, `TEMPLATE-tech-lead-to-backend.md`, `TEMPLATE-tech-lead-to-testing.md`, `TEMPLATE-tech-lead-to-infra.md`) updated with Documentation Impact DoD item (execution handoff templates). AC-4 requires "at least one planning artifact and one execution handoff template" — five artifacts updated (exceeds minimum). — `agent-docs/plans/TEMPLATE.md`, `agent-docs/conversations/TEMPLATE-tech-lead-to-*.md`.
+
+- **AC-5 (Closure Guardrail):** `agent-docs/roles/ba.md` BA Closure Checklist updated with `Documentation Impact resolved` item — requires verifying all required doc updates are complete before marking `Done`. — `agent-docs/roles/ba.md` (last checklist item).
+
+- **AC-6 (No Contract Drift):** This CR made no changes to: app runtime behavior, routes, API endpoints, `data-testid` attributes, accessibility semantics, or any feature code. Confirmed by: quality gates all pass with identical test count (167), `pnpm build` shows same 7 routes, no code files modified.
 
 ---
 
@@ -61,7 +73,7 @@ CR-024 closes the body size enforcement gap on both generation routes. The middl
 
 - **Command**: `node -v`
 - **Scope**: session-level preflight
-- **Execution Mode**: local-equivalent/unsandboxed (Node v20.20.0 via nvm)
+- **Execution Mode**: local-equivalent/unsandboxed (Node v20.20.0 via `nvm use`)
 - **Result**: PASS — v20.20.0
 
 - **Command**: `pnpm test`
@@ -69,87 +81,86 @@ CR-024 closes the body size enforcement gap on both generation routes. The middl
 - **Execution Mode**: local-equivalent/unsandboxed
 - **Result**: PASS — 167 passed, 0 failed
 
-- **Command**: `pnpm lint --file app/api/frontier/base-generate/route.ts --file app/api/adaptation/generate/route.ts`
-- **Scope**: targeted (Backend-owned files per tooling-standard.md)
+- **Command**: `pnpm lint`
+- **Scope**: full project
 - **Execution Mode**: local-equivalent/unsandboxed
 - **Result**: PASS — no ESLint warnings or errors
 
 - **Command**: `pnpm exec tsc --noEmit`
 - **Scope**: full project
 - **Execution Mode**: local-equivalent/unsandboxed
-- **Result**: PASS — no TypeScript errors
+- **Result**: PASS — no output (clean)
 
 - **Command**: `pnpm build`
 - **Scope**: full production build
 - **Execution Mode**: local-equivalent/unsandboxed
-- **Result**: PASS — all 7 routes compiled successfully
-
-**DoD grep evidence (TL adversarial verification):**
-- `grep -n "req.json" app/api/frontier/base-generate/route.ts` → **0 matches** ✓
-- `grep -n "req.json" app/api/adaptation/generate/route.ts` → **0 matches** ✓
-- `grep -n "readStreamWithLimit" app/api/frontier/base-generate/route.ts` → matches at lines 4, 173 ✓
-- `grep -n "readStreamWithLimit" app/api/adaptation/generate/route.ts` → matches at lines 4, 158 ✓
+- **Result**: PASS — 7 routes compiled successfully (routes unchanged)
 
 ---
 
 ## Failure Classification Summary
+
 - **CR-related**: none
-- **Pre-existing**: Worker-process teardown warning during test suite teardown (tracked CR-021). `require-in-the-middle` build warning (tracked CR-021). `next lint` CLI deprecation warning (tracked CR-023).
-- **Environmental**: Node.js runtime v16.20.1 on session start — same pre-existing condition as CR-023, resolved via `nvm use 20`. Not newly tracked.
+- **Pre-existing**: Worker-process teardown warning in `pnpm test` (tracked, CR-021). `require-in-the-middle` build warning (tracked, CR-021). `next lint` CLI deprecation warning (tracked, CR-023).
+- **Environmental**: Node.js runtime v16.20.1 on initial `node -v` — pre-existing mismatch, resolved via `nvm use 20`. Same condition as prior CRs, not newly tracked.
 - **Non-blocking warning**: none
 
 ---
 
 ## Adversarial Diff Review
 
-**`app/api/frontier/base-generate/route.ts`:**
-- Stream-read block at lines 169–179, immediately inside `try`, before config check and upstream `fetch()`. AC-2 positional requirement met.
-- `declaredLength` logic correct: absent header → `MAX_BODY_SIZE`, present header → `Number(header)`. Primary `limit` parameter enforces 8192 regardless.
-- 413 path: `span.setStatus(ERROR)`, returns `new NextResponse('Payload Too Large', { status: 413 })`. `streamingActive` remains `false` → `span.end()` fires in `finally`. No fallbacks counter call. Correct.
-- `JSON.parse(new TextDecoder().decode(rawBytes))` replaces `req.json()` with no semantic loss for existing valid-request paths.
+**README.md:**
+- All "pnpm" references confirmed; no occurrence of "npm install", "yarn add", or "bun install" in new content.
+- Port 3001 explicit in both dev server instruction and E2E note.
+- Node >=20.x explicit in prerequisites.
+- Route roadmap matches `project-vision.md` stage/route map exactly.
+- Architecture diagram structure consistent with `architecture.md` and ADR-0001 OTel proxy pattern.
+- `human-docs/` included in documentation map — confirmed 4 files exist there.
+- No residual stale references found.
 
-**`app/api/adaptation/generate/route.ts`:**
-- Identical structure. AC-2 satisfied: stream-read block at lines 154–164, before upstream `fetch()` at ~line 225.
-- Same `declaredLength`, `MAX_BODY_SIZE`, and span/response pattern. ✓
+**TEMPLATE.md:**
+- `## Documentation Impact` section added as a distinct mandatory section — does not overload any existing section.
+- Format is `required | not-required` with explicit file list or rationale — enforceable, auditable.
+- No conflict with existing policy text in TEMPLATE.md.
 
-**Test files:**
-- `createOversizedStreamRequest` uses `ReadableStream` body (8200 bytes, > 8192 limit). No `Content-Length` header set. `duplex: 'half'` present — TypeScript accepted without suppression in this project's configuration.
-- Assertions: `res.status === 413`. Minimal and correct — tests the enforcement boundary, not implementation internals.
-- Negative Space Rule satisfied: oversized body → 413 (absence assertion); all 165 prior tests pass with valid bodies (retained-path assertion). ✓
+**Handoff templates:**
+- Documentation Impact DoD item format is consistent across all four templates: `**Documentation Impact**: required — [list files updated] | not-required — [rationale]`.
+- Placed as the last DoD item so it does not break existing item ordering.
+- No conflict with existing DoD items.
 
-**Residual risks**: none identified.
+**ba.md BA Closure Checklist:**
+- New item added at the end of the checklist — does not disrupt existing item ordering.
+- Wording is explicit: "all documentation files listed as `required` ... have been updated." Non-vague, auditable.
+- No conflict with existing checklist items.
+
+**Residual risks:** none identified.
 
 ---
 
 ## Deviations
 
-- **Minor — `@ts-expect-error` directive omitted from test helper**: The handoff template included `// @ts-expect-error duplex required for streaming body in some environments` on the `duplex: 'half'` option. TypeScript accepted `duplex: 'half'` without suppression in this project's strict configuration; the directive would have caused a `TS2578: Unused '@ts-expect-error' directive` error. Removed from both test files. No behavioral impact — `duplex: 'half'` is still passed. **Classification: Minor** (no AC intent change, no contract change, no security impact). BA log in CR.
+- **Minor — AC-4 coverage extends to all four handoff templates instead of minimum one**: BA spec requires "at least one planning artifact and one execution handoff template." All four sub-agent templates were updated for uniform enforcement. No AC intent change; this is a conservative interpretation of the minimum requirement. Classification: Minor.
 
 ---
 
-## Technical Retrospective
+## Tech Lead Recommendations
 
-**Option B over Option A:** Stream-level enforcement preserves the "no Content-Length header is acceptable" behavior for generation routes, avoids updating the middleware test at line 246, and is strictly stronger than Option A (also catches lying headers). Pattern is consistent with the otel proxy, creating uniformity across the API surface.
-
-**`readStreamWithLimit` reuse:** The utility was already in production (otel proxy) with its own unit tests. Zero new infrastructure required. This CR demonstrates the value of the utility abstraction introduced in CR-018.
-
-**Remaining gap (none):** `grep -rn "req\.json()" app/api/` → 0 matches. All API routes now have stream-level body size enforcement. No follow-up CR required for this specific gap.
+- The `TEMPLATE-tech-lead-to-sub-agent.md` generic template was not updated with the Documentation Impact field. This template is the base; the role-specific templates are what agents actually use. If a new role-specific template is created in the future, the field should be added at creation time. No follow-up CR needed unless the generic template sees active use.
 
 ---
 
 ## Deployment Notes
-- No new environment variables. No config changes. No new npm packages.
-- No API contract changes — 413 is a new response status from these routes, but it is additive and replaces unbounded memory allocation behavior. No client-visible contract regression.
-- All 7 routes compiled successfully. All 167 tests pass.
+- No new environment variables. No config changes. No new packages. No runtime behavior changes.
+- All 7 routes unchanged. Documentation-only CR.
 
 ---
 
 ## Link to Updated Docs
-- Requirement: `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md`
-- Plan: `agent-docs/plans/CR-024-plan.md`
-- Backend report: `agent-docs/conversations/backend-to-tech-lead.md`
+- Requirement: `agent-docs/requirements/CR-025-readme-refresh-and-documentation-governance.md`
+- Plan: `agent-docs/plans/CR-025-plan.md`
+- Session state: `agent-docs/coordination/TL-session-state.md`
 
 ---
 
-*Report created: 2026-02-28*
-*Tech Lead Agent — Single Session (S-class CR)*
+*Report created: 2026-03-01*
+*Tech Lead Agent — Single Session (S-class [DOC] CR, direct execution)*

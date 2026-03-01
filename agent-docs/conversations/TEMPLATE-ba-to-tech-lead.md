@@ -32,6 +32,20 @@
 ## Risk Analysis
 - [Key delivery risks, assumption risks, and scope risks.]
 
+## Documentation Impact (Preliminary)
+<!--
+BA assessment at requirement time. This is an early flag for the Tech Lead's binding documentation
+decision in the plan. The TL plan's Documentation Impact section (canonical semantics source:
+agent-docs/plans/TEMPLATE.md) carries the binding decision; this field captures BA awareness at
+requirement authoring time to avoid late discovery.
+-->
+- **Likely required?**: `yes` | `no` | `unknown`
+- **If yes — known domains** (flag areas at requirement time; final file list is owned by the TL plan):
+  - `README.md`: [what context would change]
+  - `agent-docs/**`: [what context would change]
+  - `human-docs/**`: [what context would change]
+- **If no or unknown — rationale**: [why this CR is unlikely to require documentation updates, or what information is missing to assess]
+
 ## Reversal Risk
 <!--
 AC-level pre-implementation checks. Use when an AC contains an assumption the BA has not fully verified.

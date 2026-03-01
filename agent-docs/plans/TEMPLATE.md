@@ -74,6 +74,21 @@ If CR intent is architecture-only/refactor-only:
 - [ ] **Artifacts**: `.gitignore` updated if needed.
 - [ ] **Rollback**: How to revert this change.
 
+## Documentation Impact (Mandatory)
+<!--
+Canonical semantics source for the Documentation Impact field across all CR artifacts.
+Sub-agent handoff DoD items (TEMPLATE-tech-lead-to-*.md) and the BA closure checklist
+(agent-docs/roles/ba.md) reference this field's semantics as defined here.
+When the field definition changes, update this section first; consumers cross-reference it.
+Every CR must include an explicit documentation impact decision.
+-->
+- **Decision**: `required` | `not-required`
+- **If required — files to update** (list each file explicitly):
+  - `README.md`: [what changes]
+  - `agent-docs/[file]`: [what changes]
+  - `human-docs/[file]`: [what changes]
+- **If not required — rationale**: [explain why no doc update is needed for this CR]
+
 ## Definition of Done (Technical)
 - [ ] [Technical AC 1]
 - [ ] [Integration Test passes]

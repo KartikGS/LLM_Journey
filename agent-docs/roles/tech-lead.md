@@ -282,13 +282,18 @@ Present the **complete plan** to the USER, including:
 
 **Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. A single-sub-agent `[S]` CR requires 3 sessions: TL Session A, 1 CR Coordinator session, TL Session B. There is no single-session exception for `[S]` CRs — the Coordinator model applies to all CRs regardless of sub-agent count. Parallel Coordinator cycles reduce wall-clock time but not session count.
 
+**Direct-execution CR (N=0 sub-agents):** When all CR changes fall within the Tech Lead's permitted direct zones and no sub-agent delegation is required, Session A and Session B collapse into a single session — 0 CR Coordinator sessions exist, 1 combined TL session total. Canonical spec for this path: `workflow.md` Session Scope Management step 8. Three specific behaviors apply in this case:
+1. `TL-session-state.md` is still written as an internal record; Coordinator-targeted sections (per-sub-agent entry instructions, Coordinator conclusion summaries) will be empty — this is expected behavior, not a compliance gap.
+2. The Wait State exits directly to BA handoff authoring; Wait State output items 2 (sub-agent roles) and 3 (handoff file locations) report "none."
+3. The Go/No-Go skip in step 5(a) applies — no Go/No-Go is required for a strictly `[S][DOC]` direct-execution CR.
+
 **Sequential execution model:**
 - TL Session A → CR Coordinator ↔ Backend → CR Coordinator ↔ Frontend → CR Coordinator ↔ Testing → TL Session B → BA
 
 **Parallel execution model (when sub-agents are independent):**
 - TL Session A → [CR Coordinator ↔ Backend] + [CR Coordinator ↔ Frontend] → CR Coordinator ↔ Testing → TL Session B → BA
 
-**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions, (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state.
+**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions (empty for direct-execution CRs with N=0 — expected), (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state. For direct-execution CRs, Session B does not exist as a separate session; BA handoff authoring occurs at the end of the single combined session.
 
 > **Note:** The two-session model from CR-018 was insufficient for 3-sub-agent CRs — CR-021 required four saturated sessions despite the two-session fix. The CR Coordinator model supersedes the two-session model and scales linearly to N sub-agents by narrowing each session's file-read scope to one sub-agent's work.
 

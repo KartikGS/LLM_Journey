@@ -81,6 +81,7 @@ Use this table for any coverage or timeout decision that has a conditional dimen
 - [ ] `pnpm lint` passes
 - [ ] `pnpm exec tsc --noEmit` passes
 - [ ] `pnpm build` passes (when delegated in scope)
+- [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
 - Testing posts preflight concerns/questions in `agent-docs/conversations/testing-to-tech-lead.md`.

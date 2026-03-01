@@ -71,6 +71,7 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 - [ ] [If architecture-only] visual/copy/IA contracts unchanged unless explicitly approved
 - [ ] `pnpm lint` passes
 - [ ] `pnpm exec tsc --noEmit` passes
+- [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
 - Frontend posts preflight concerns/questions in `agent-docs/conversations/frontend-to-tech-lead.md`.

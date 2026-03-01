@@ -46,6 +46,7 @@
 - [ ] Route contract created/updated under `/agent-docs/api/` if API contract changed.
 - [ ] `pnpm lint` passes
 - [ ] `pnpm exec tsc --noEmit` passes
+- [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
 - Before implementation, Backend posts preflight concerns/questions in `agent-docs/conversations/backend-to-tech-lead.md`.

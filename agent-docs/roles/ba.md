@@ -195,6 +195,7 @@ Before declaring a CR closed, complete all items:
 - [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
 - [ ] If this CR removes server error codes, error enum values, or any server-emitted contract members: verify that client-side error handlers do not retain handling for the removed items (client-server contract parity). If a ghost handler is found and is out-of-scope for this CR, create a follow-up tracking item in `project-log.md` Next Priorities. Do not silently leave stale client handlers.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
+- [ ] **Documentation Impact resolved**: Confirm that all documentation files listed as `required` in the plan's `## Documentation Impact` section and in each sub-agent's DoD have been updated. If any doc update was recorded as `not-required`, verify the rationale still holds at closure. Do not mark `Done` with unresolved required doc updates.
 
 ---
 

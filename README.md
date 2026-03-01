@@ -8,213 +8,264 @@ LLM Journey is a guided learning environment for **software engineers with basic
 
 ---
 
-## 🎯 The Vision
-Most LLM education treats models as black boxes. This project treats them as **engineered components**. 
+## Who This Is For
 
-By the end of this journey, you won't just know how to use an agent; you will understand the architectural evolution that made it necessary, the failure modes that make it fragile, and the trade-offs required to make it production-grade.
+LLM Journey serves two audiences. Both are first-class.
 
-## 🗺️ The Learning Narrative: From Tensors to Teams
-We don't just list features; we follow a **conceptual dependency chain**. Each stage solves a fundamental limitation of the previous one.
+**Learner-user** — A software engineer who visits the website to understand LLM system architecture. Their goal is conceptual clarity, progressive narrative, and hands-on demonstrations. They judge success by whether they can reason about the system after reading — not by the elegance of code they never see.
 
-1.  **Foundations (The Engine)**: `Tensors → Transformers`. 
-    *   *The Lesson:* Why self-attention is the fire that fuels the engine, and what weights *cannot* tell you.
-2.  **Adaptation (The Behavior)**: `Base → Instruct → Optimized`. 
-    *   *The Lesson:* Alignment is a fragile layer of data, not an inherent property of scale.
-3.  **Context (The Interface)**: `Prompt → Structured Context`. 
-    *   *The Lesson:* Reliable LLM systems are built on context design, not temperature settings.
-4.  **Retrieval (The Memory)**: `RAG → Grounding`. 
-    *   *The Lesson:* How to stop models from dreaming by anchoring them in external reality.
-5.  **Agency (The Action)**: `Logic → Tool Use → Loop`. 
-    *   *The Lesson:* The shift from a chatbot to an agent happens when you hand the model a steering wheel.
-6.  **Coordination (The Organization)**: `Single Agent → Multi-Agent`. 
-    *   *The Lesson:* Solving complex problems by introducing roles, delegation, and (unavoidably) overhead.
-7.  **Protocol (The Standard)**: `Ad-hoc → MCP`. 
-    *   *The Lesson:* How to externalize capability safely using standardized interfaces.
-8.  **Engineering (The Reality)**: `Metrics → Observability → Safety`. 
-    *   *The Lesson:* Production AI is 10% model and 90% monitoring, evaluation, and security.
+**Developer-user** — A software engineer who reads the codebase as a reference implementation to build their own AI system: a production Next.js app integrating ONNX, streaming APIs, OpenTelemetry, and multi-provider LLM routing. They judge success by whether the code is architecturally legible, pattern-consistent, and production-realistic.
+
+---
+
+## The Learning Narrative: From Tensors to Teams
+
+Each stage solves a fundamental limitation of the previous one.
+
+| Stage | Topic | Route | Status |
+| :---: | :--- | :--- | :--- |
+| 1 | **Transformers (Foundations)** — Why self-attention is the engine, and what weights cannot tell you | `/foundations/transformers` | Live |
+| 2 | **Model Adaptation** — Alignment is a fragile layer of data, not an inherent property of scale | `/models/adaptation` | Live |
+| 3 | **Context Engineering** — Reliable LLM systems are built on context design, not temperature settings | `/context/engineering` | Planned |
+| 4 | **RAG (Retrieval)** — Stop models from hallucinating by anchoring them in external reality | `/systems/rag` | Planned |
+| 5 | **Agents & Tool Use** — The shift from chatbot to agent happens when you hand the model a steering wheel | `/agents/basic` | Planned |
+| 6 | **Multi-Agent Systems** — Solving complex problems by introducing roles, delegation, and overhead | `/agents/multi` | Planned |
+| 7 | **MCP (Standardization)** — Externalize capability safely using standardized interfaces | `/protocols/mcp` | Planned |
+| 8 | **Eval & Observability** — Production AI is 10% model and 90% monitoring, evaluation, and security | `/ops/observability` | Planned |
+| 9 | **Safety & Security** | `/ops/safety` | Planned |
+| 10 | **Deployment** | `/ops/deployment` | Planned |
 
 ---
 
 ## Tech Stack
 
-- **Framework**: [Next.js](https://nextjs.org) 15.5.7 (App Router)
-- **UI Library**: React 19.0.1
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 3.4.1
-- **ML Runtime**: ONNX Runtime Web 1.23.0
-- **Package Manager**: pnpm
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | Next.js 15 (App Router) |
+| **UI** | React 19, Tailwind CSS |
+| **Language** | TypeScript (strict mode) |
+| **ML Runtime** | ONNX Runtime Web (browser-side inference via WASM) |
+| **Package Manager** | pnpm (required — do not use npm, yarn, or bun) |
+| **Observability** | OpenTelemetry (traces, metrics, logs) — server + client |
+| **Testing** | Jest + React Testing Library (unit/integration), Playwright (E2E) |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- pnpm (or npm/yarn/bun)
+- **Node.js** >= 20.x
+- **pnpm** (only supported package manager — see [Tooling Standard](agent-docs/tooling-standard.md))
 
 ### Browser Support
 
-This project uses WebAssembly (WASM) for client-side inference. For security, we implement a strict Content Security Policy (CSP) that requires support for the `wasm-unsafe-eval` directive.
+This project uses WebAssembly (WASM) for client-side inference with a strict Content Security Policy requiring `wasm-unsafe-eval`.
 
-Supported browsers:
-- **Chrome / Edge**: 95+
-- **Firefox**: 102+
-- **Safari**: 17.4+
+| Browser | Minimum Version |
+| :--- | :--- |
+| Chrome / Edge | 95+ |
+| Firefox | 102+ |
+| Safari | 17.4+ |
 
 ### Installation
 
-1. Clone the repository:
-
 ```bash
 git clone https://github.com/KartikGS/LLM_Journey
-cd LLM-Journey
-```
-
-2. Install dependencies:
-
-```bash
+cd LLM_Journey
 pnpm install
 ```
 
-3. Set up environment variables (if needed):
+### Environment Setup
+
+Copy the environment template and add any required API keys:
 
 ```bash
-# Create a .env.local file for any required API keys
-# For example, if using Hugging Face API:
-HF_token=your_token_here
+cp .env.example .env.local
+# Edit .env.local — add FRONTIER_API_KEY for live frontier model inference
 ```
 
-### Running the Development Server
+The app runs without API keys by default (fallback mode is active for all AI routes).
 
-Start the development server:
+### Development Server
 
 ```bash
 pnpm dev
+# App available at http://localhost:3001
 ```
 
-The application will be available at [http://localhost:3001](http://localhost:3001).
+### Quality Gates
 
-### Building for Production
+```bash
+pnpm test               # Unit + integration tests (Jest)
+pnpm lint               # ESLint
+pnpm exec tsc --noEmit  # TypeScript type check
+pnpm build              # Production build
+pnpm test:e2e           # E2E tests (Playwright, requires local server on port 3001)
+```
+
+### Production Build
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-### Observability Infrastructure
+---
 
-The project includes an observability stack using Grafana Tempo for distributed tracing and Grafana for visualization.
+## Architecture Overview
 
-NOTE: The observability stack is only for local testing. For production, changes in the configuration are required.
-
-1. Start the observability services:
-
-```bash
-cd observability
-docker compose up -d
+```
+┌─────────────────────────────────────────────────────────┐
+│  Browser                                                │
+│  ┌───────────────────┐   ┌───────────────────────────┐ │
+│  │ ONNX Runtime Web  │   │ Frontier / Adaptation     │ │
+│  │ (tiny model,      │   │ Chat UI (SSE streaming    │ │
+│  │  browser WASM)    │   │  from server API routes)  │ │
+│  └───────────────────┘   └───────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+           │                          │
+           │                          ▼
+           │               ┌─────────────────────────┐
+           │               │  Next.js API Routes     │
+           │               │  /api/frontier/         │
+           │               │  /api/adaptation/       │
+           │               │  /api/otel/trace  ──────┼──► OTel Collector
+           │               │  /api/telemetry-token   │    (Grafana Tempo)
+           │               └─────────────────────────┘
+           │
+           ▼
+   Web Worker → ONNX Runtime
+   (browser inference, no server round-trip)
 ```
 
-2. Access Grafana at [http://localhost:3000](http://localhost:3000).
+**Key design decisions:**
+- **"Learn with Tiny, Build with Large"**: ONNX Runtime handles tiny-model mechanics in the browser; hosted APIs handle production-scale application demos.
+- **OTel proxy** ([ADR-0001](agent-docs/decisions/ADR-0001-telemetry-proxy.md)): Client telemetry is routed through a server-side proxy to prevent credential exposure, enforce payload limits, and maintain vendor-agnostic observability.
+- **Server-first rendering**: Pages default to Server Components; client islands are introduced only for user-interactive surfaces.
+- **SSE streaming**: Generation routes use Server-Sent Events for token-by-token streaming to the frontend.
 
-3. Stop the services:
-
-```bash
-docker compose down
-```
-
-#### Component Versions
-
-All observability components are pinned to explicit versions to ensure reproducibility.
-latest tags are intentionally avoided due to potential breaking changes in metrics schemas, storage formats, and scrape behavior.
-
-Tested stack versions:
-
-- OpenTelemetry JS SDK: 2.3.0
-- Grafana Tempo: 2.4.1
-- Prometheus: 2.48.1
-- Grafana: 10.2.3
-- Loki: 2.9.4
+---
 
 ## Project Structure
 
 ```
-LLM-Journey/
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── base-llm/         # Base LLM implementation
-│   ├── fine-tuning/      # Fine-tuning module
-│   ├── rag/              # RAG implementation
-│   ├── tools/            # Tools integration
-│   ├── mcps/             # MCP protocol implementation
-│   ├── ui/               # Reusable UI components
-│   └── lib/              # Utility functions and actions
-├── lib/                   # Shared libraries
-│   ├── llm/              # LLM generation logic
-│   └── tokenizer/        # Tokenization utilities
-├── public/                # Static assets
-│   └── models/           # ONNX model files
-└── package.json          # Project dependencies
+LLM_Journey/
+├── app/                        # Next.js App Router
+│   ├── foundations/transformers/   # Stage 1 — live
+│   ├── models/adaptation/          # Stage 2 — live
+│   ├── api/
+│   │   ├── frontier/               # Frontier base inference (multi-provider)
+│   │   ├── adaptation/             # Adaptation inference
+│   │   ├── otel/trace/             # OTel telemetry proxy (ADR-0001)
+│   │   └── telemetry-token/        # Short-lived client telemetry tokens
+│   └── ui/                         # Shared UI components
+├── components/                 # React components
+├── lib/
+│   ├── config/                 # Generation configs, stage metadata
+│   ├── llm/                    # LLM orchestration logic
+│   ├── otel/                   # Metrics + tracing setup
+│   ├── security/               # Rate limiting, input validation
+│   └── server/                 # Shared server utilities (SSE relay, etc.)
+├── __tests__/                  # Test suite (Jest + Playwright)
+│   ├── api/                    # API route integration tests
+│   ├── components/             # Component tests
+│   ├── lib/                    # Library unit tests
+│   └── e2e/                    # Playwright E2E specs
+├── agent-docs/                 # Agentic development documentation
+├── human-docs/                 # Human contributor documentation
+├── observability/              # Local OTel stack (Docker Compose)
+└── public/
+    └── onnx-runtime/           # ONNX Runtime WASM binaries
 ```
 
-## Key Components
+---
 
-- **BaseLLMChat**: Interactive chat interface for the base transformer model
-- **InteractLLM**: Main interaction component with model loading
-- **ChatInput**: Input component for user messages
-- **LoadButton**: Model loading button with state management
-- **Navbar**: Navigation component for module selection
+## Observability Infrastructure (Local)
+
+The project ships a Docker Compose stack for local tracing and metrics.
+
+```bash
+cd observability
+docker compose up -d
+# Grafana at http://localhost:3000
+# Tempo (traces), Prometheus (metrics), Loki (logs)
+docker compose down
+```
+
+Pinned component versions for reproducibility:
+
+| Component | Version |
+| :--- | :--- |
+| OpenTelemetry JS SDK | 2.3.0 |
+| Grafana Tempo | 2.4.1 |
+| Prometheus | 2.48.1 |
+| Grafana | 10.2.3 |
+| Loki | 2.9.4 |
+
+> **Note:** The observability stack is for local development only. Production deployments forward telemetry to Grafana Cloud via the OTel Collector.
+
+---
+
+## Agentic Development Workflow
+
+This project uses a structured multi-agent development process to keep code and documentation quality high as the system evolves.
+
+**Entry point:** [agent-docs/AGENTS.md](agent-docs/AGENTS.md) — read this first before contributing.
+
+**CR lifecycle (how changes land):**
+
+```
+Human User
+  └─► BA Agent: clarifies intent → produces CR-XXX artifact
+       └─► Tech Lead Agent: technical plan → delegates to sub-agents
+            ├─► Frontend / Backend / Testing / Infra Agent (execution)
+            └─► BA Agent: acceptance verification → CR marked Done
+```
+
+**Role files:**
+
+| Role | File |
+| :--- | :--- |
+| Business Analyst | [agent-docs/roles/ba.md](agent-docs/roles/ba.md) |
+| Tech Lead | [agent-docs/roles/tech-lead.md](agent-docs/roles/tech-lead.md) |
+| Frontend | [agent-docs/roles/sub-agents/frontend.md](agent-docs/roles/sub-agents/frontend.md) |
+| Backend | [agent-docs/roles/sub-agents/backend.md](agent-docs/roles/sub-agents/backend.md) |
+| Testing | [agent-docs/roles/sub-agents/testing.md](agent-docs/roles/sub-agents/testing.md) |
+| Infra | [agent-docs/roles/sub-agents/infra.md](agent-docs/roles/sub-agents/infra.md) |
+
+---
+
+## Documentation Map
+
+| Directory | Audience | Purpose |
+| :--- | :--- | :--- |
+| `agent-docs/` | Agents + contributors | Role definitions, CR workflow, architecture decisions, technical contracts |
+| `agent-docs/requirements/` | All | CR artifacts — change history and acceptance criteria |
+| `agent-docs/decisions/` | All | Architecture Decision Records (ADRs) |
+| `agent-docs/plans/` | Tech Lead + sub-agents | Technical execution plans per CR |
+| `agent-docs/conversations/` | Agents | Active handoff and report files between roles |
+| `human-docs/` | Human contributors | Getting started guide, style guide, personal journey notes |
+
+---
 
 ## Model Information
 
-The base model included in this project:
+The tiny base model used for browser-side inference in Stage 1:
 
-- **Architecture**: Decoder-only transformer with self-attention
-- **Parameters**: ~0.2M
-- **Training Data**: Shakespeare dataset
-- **Format**: ONNX (for efficient browser-based inference)
-- **Runtime**: ONNX Runtime Web (WASM backend)
+| Property | Value |
+| :--- | :--- |
+| Architecture | Decoder-only transformer (self-attention) |
+| Parameters | ~0.2M |
+| Training data | Shakespeare dataset |
+| Format | ONNX (browser WASM inference) |
+| Runtime | ONNX Runtime Web |
+| Context window | 32 characters |
 
-**Note**: The base model is intentionally small and trained on limited data for educational purposes. Outputs may appear somewhat illogical, demonstrating the progression from basic to advanced models.
+This model is intentionally small and limited to demonstrate transformer mechanics without API costs or latency. Stage 2 onward uses hosted frontier models.
 
-## Development
-
-### Linting
-
-```bash
-pnpm lint
-```
-
-### Type Checking
-
-TypeScript is configured for strict type checking. The project uses ESLint with Next.js configuration.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Documentation
-
-The project documentation has been continuously evolved to support both human contributors and AI agents.
-
-### [For Agents & Contributors](agent-docs/AGENTS.md)
-**[Read this first.](agent-docs/AGENTS.md)**
-
-The documentation is organized by role and stability:
-
--   **[agent-docs/AGENTS.md](agent-docs/AGENTS.md)**: The canonical entry point.
--   **[agent-docs/roles/](agent-docs/roles/)**: Role-specific guides (Frontend, Backend, Infra, etc.).
--   **[agent-docs/development/](agent-docs/development/)**: Coding standards and style guides.
--   **[agent-docs/api/](agent-docs/api/)**: System contracts.
+---
 
 ## License
 
 MIT
-
-## Resources
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/)
-- [React Documentation](https://react.dev)
-
-## Acknowledgments
-
-This project is designed as an educational resource to understand the evolution and capabilities of Large Language Models.

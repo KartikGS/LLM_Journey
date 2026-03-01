@@ -16,6 +16,6 @@ Using gRPC for servers telemetry
 
 Common chat interface
 
-Payments, auth, etc
+provide api's
 
-Update Project README
+Payments, auth, etc
