@@ -3,7 +3,7 @@
 This document defines the mandatory tools and environment configurations for this project.
 
 ## Package Management
-- **Manager**: `pnpm` 
+- **Manager**: `pnpm`
 - **Constraint**: NEVER use `npm` or `yarn`. Always use `pnpm` for installing dependencies and running scripts.
 - **Lockfile**: `/pnpm-lock.yaml` is the source of truth for dependencies.
 

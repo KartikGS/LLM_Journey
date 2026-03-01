@@ -76,7 +76,7 @@ If tests fail due to the environment (e.g., Playwright version mismatch, CI vs l
 - Update `/agent-docs/testing-strategy.md` if the quirk represents a permanent system constraint.
 
 ### Runtime Preflight (Mandatory)
-- Run runtime preflight per `tooling-standard.md` Runtime Preflight (canonical source). Record the observed version in your report if it affects classification.
+- Run runtime preflight per `$TOOLING_STANDARD` Runtime Preflight (canonical source). Record the observed version in your report if it affects classification.
 
 ## Checklist
 

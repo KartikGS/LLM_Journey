@@ -209,7 +209,7 @@ Before marking work complete:
 
 **Pre-Replacement Check (mandatory):** Before replacing `frontend-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
 
-- Run runtime preflight per `tooling-standard.md` Runtime Preflight (canonical source). If below the minimum version, classify as `environmental` in the report before running any verification commands.
+- Run runtime preflight per `$TOOLING_STANDARD` Runtime Preflight (canonical source). If below the minimum version, classify as `environmental` in the report before running any verification commands.
 - Run verification commands in this exact order:
   1. `pnpm lint`
   2. `pnpm exec tsc --noEmit`

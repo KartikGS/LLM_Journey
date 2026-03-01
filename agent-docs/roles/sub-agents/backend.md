@@ -69,7 +69,7 @@ This scan is triggered by the security nature of the CR, not by an explicit hand
 
 ## Checklist
 -   [ ] Before replacing `backend-to-tech-lead.md`: completed the Conversation File Freshness Pre-Replacement Check per `workflow.md` (prior CR plan exists + prior file shows `status: completed`)?
--   [ ] Did I run `node -v` before verification commands and confirm runtime is Node ≥ 20.x per `tooling-standard.md`? If not, classify as `environmental` before proceeding.
+-   [ ] Did I run `node -v` before verification commands and confirm runtime is Node ≥ 20.x per `$TOOLING_STANDARD`? If not, classify as `environmental` before proceeding.
 -   [ ] Are input validations in place?
 -   [ ] Are endpoint-level abuse controls in place (for example body-size / `content-length` limits when applicable)?
 -   [ ] Is observability instrumented (Tracing/Logs/Metrics)?

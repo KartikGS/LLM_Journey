@@ -18,6 +18,10 @@ Default rule:
 - If a document says "user" without context, it means **Human User**.
 - For website audience, explicitly say **Product End User**.
 
+## File Path Index
+
+Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](/agent-docs/llm-journey/indexes/main.md). When you see `$VARIABLE_NAME` in any doc, look up its current path in the index before following it. To relocate a file: update the one row in the index table, then grep for the variable name to confirm no stale hardcoded paths remain in active docs.
+
 ## Required Reading
 
 > [!IMPORTANT]
@@ -33,7 +37,7 @@ Default rule:
 - **General Engineering Principles (cross-project):** [General Principles](/agent-docs/coordination/general-principles.md)
 - **Project-Specific Principles (LLM Journey):** [Project Principles](/agent-docs/project-principles.md)
 - **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
-- **Tooling & Environment:** [Tooling Standard](/agent-docs/tooling-standard.md)
+- **Tooling & Environment:** `$TOOLING_STANDARD`
 - **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
 - **How we work:** [Workflow](/agent-docs/workflow.md)
 
@@ -44,6 +48,7 @@ Default rule:
 - Backend → [roles/sub-agents/backend.md](/agent-docs/roles/sub-agents/backend.md)
 - Infra → [roles/sub-agents/infra.md](/agent-docs/roles/sub-agents/infra.md)
 - Testing → [roles/sub-agents/testing.md](/agent-docs/roles/sub-agents/testing.md)
+- Improvement → [roles/improvement.md](/agent-docs/roles/improvement.md)
 
 ## Interfaces & Contracts
 Failed coordination kills projects. Stick to these contracts:

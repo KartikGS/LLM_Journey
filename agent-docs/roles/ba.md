@@ -73,7 +73,7 @@ The BA agent **MAY**:
   - `agent-docs/development/**`
   - `agent-docs/roles/**` (except this file, and ONLY during setup)
   - `agent-docs/technical-context.md`
-  - `agent-docs/tooling-standard.md`
+  - `$TOOLING_STANDARD`
   - `README.md` (root)
   - `agent-docs/architecture.md` (or any system-level documentation)
 - Must NOT introduce new system constraints directly. All constraints must be verified by a Tech Lead Agent.

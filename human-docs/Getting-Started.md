@@ -40,8 +40,12 @@ Agent docs aims to create documentation that agents can easily access to gather 
 
 ## Context consumption
 
-After meta analysis, agent docs are refined for better workflow adherence, but there is no upper limit set to how much additions can be made to the markdowns. The agent docs now consumes 30k to 50k of the context window per role. 
+After meta analysis, agent docs are refined for better workflow adherence, but there is no upper limit set to how much additions can be made to the markdowns. The agent docs now consumes 30k to 50k of the context window per role.
+
+## Usefullness
+
+At this point I don't know whether the agent docs setup is improving or degrading the agents performance. It seems like every CR, more work is done on handoffs than on actual code.
 
 ## Meta analysis "improvements"
 
-No concrete metric to measure whether agent docs are being approved or not.
+No concrete metric to measure whether agent docs are being approved or not. The only benchmarking is the vibes in the next iteration.
