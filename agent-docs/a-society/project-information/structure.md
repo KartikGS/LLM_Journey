@@ -92,3 +92,14 @@ New A-Society project documents are added to `project-information/`.
 Content from other projects never lives inside `a-society/`. Each project using this framework maintains its own folder at the same level as `a-society/` (e.g., `llm-journey/`, `[next-project]/`).
 
 When a sub-folder becomes warranted inside `general/instructions/`, the signal is: three or more instruction files that share a coherent category and are more useful grouped than flat. Do not create sub-folders preemptively.
+
+### Namespace Parity Exception
+
+Default behavior is still flat placement in `general/instructions/`. However, a single-file sub-folder is allowed when it preserves namespace parity with project-level artifact structure.
+
+Use this exception only when all conditions are true:
+- The namespace represents a real, reusable artifact category (not a one-off naming preference).
+- The sub-folder improves one-to-one mapping between instruction paths and project artifact paths across adopters.
+- The folder starts with `main.md` and uses that as the canonical entry point.
+
+This exception does not remove the three-file rule for ordinary categorization. It is a deliberate portability rule for structural symmetry, not a general invitation to pre-create folders.
