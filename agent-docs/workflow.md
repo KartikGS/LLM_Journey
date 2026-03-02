@@ -34,7 +34,7 @@
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
    - **Parallel Mode**: Use when tasks are independent and can run safely without upstream outputs.
    - **Sequential Mode**: Use when later tasks depend on outputs from earlier sub-agents.
-8. **Session Scope Management:** Apply the CR Coordinator model to **all CRs** regardless of sub-agent count. Canonical specs: CR Execution Model in `agent-docs/roles/tech-lead.md`; CR Coordinator operational spec in `agent-docs/roles/coordinator.md`. Summary:
+8. **Session Scope Management:** Apply the CR Coordinator model to **all CRs** regardless of sub-agent count. Canonical specs: CR Execution Model in `$LLM_JOURNEY_ROLE_TECH_LEAD`; CR Coordinator operational spec in `$LLM_JOURNEY_ROLE_COORDINATOR`. Summary:
    - **Tech Lead Session A**: full context load → plan → direct changes → `TL-session-state.md` → Wait State.
    - **CR Coordinator sessions**: one session per sub-agent. Load only `TL-session-state.md` + sub-agent report + modified files → adversarial review → quality gates → conclusion summary → Wait State.
    - **Tech Lead Session B**: load Coordinator conclusion summaries → BA handoff authoring.
@@ -123,7 +123,7 @@ When entering the Wait State, the Tech Lead MUST inform the user:
 Do NOT simply say "I'm done" — the user needs actionable next steps.
 
 ### 🛑 Pre-Implementation Self-Check (Tech Lead)
-Apply the canonical checklist in `agent-docs/roles/tech-lead.md` before any direct edits.
+Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct edits.
 - Summary rule: if any target file is feature code, delegate and enter Wait State.
 - This section intentionally avoids repeating the full checklist to prevent policy drift.
 

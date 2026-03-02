@@ -38,6 +38,7 @@ The Curator **does NOT**:
 - **Never write to `a-society/general/` unilaterally.** Draft and propose; the Owner approves before creation.
 - **Never modify another project's docs as part of an a-society change.** If an a-society structural change implies a corresponding change in `llm-journey/`, flag it — do not implement it inline.
 - **If a maintenance action implies a direction decision, stop and escalate to the Owner.**
+- **Never hardcode a file path in documentation you write or maintain.** If the file is in the index, use its `$VARIABLE_NAME`. If it is not yet indexed, add it to `indexes/main.md` first — then use the variable. Hardcoded paths bypass the index and create the exact drift the index is designed to prevent.
 
 ---
 
@@ -49,6 +50,7 @@ Before beginning any session as the A-Society Curator, read:
 2. [`$A_SOCIETY_VISION`] — what the framework is and where it is going
 3. [`$A_SOCIETY_STRUCTURE`] — why each folder exists and what belongs where
 4. [`$A_SOCIETY_INDEX`] — current file registry
+5. [`$A_SOCIETY_AGENT_DOCS_GUIDE`] — why each file in this project's agent-docs exists; read before maintaining any file
 
 Resolve `$VAR` references via `$A_SOCIETY_INDEX`.
 

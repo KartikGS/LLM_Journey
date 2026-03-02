@@ -209,7 +209,7 @@ Phase 2 synthesis reads this section only — not the full file.
 
 Synthesis requires editorial judgment without ownership bias over prior implementation decisions. The findings files carry sufficient context forward; the synthesis agent does not need to remember why decisions were made, only whether the doc gaps that caused friction should be fixed.
 
-**Synthesis owner:** Improvement Agent. The Improvement Agent's role definition and permitted change scope are in `agent-docs/roles/improvement.md`.
+**Synthesis owner:** Improvement Agent. The Improvement Agent's role definition and permitted change scope are in `$LLM_JOURNEY_ROLE_IMPROVEMENT`.
 
 **Standard session prompt (use verbatim when starting the synthesis session):**
 
@@ -222,7 +222,7 @@ Attached are per-agent findings files from a <CR-ID> meta-analysis:
 - [list findings files with paths]
 
 Follow Phase 2 of `agent-docs/coordination/meta-improvement-protocol.md`.
-Your synthesis responsibilities are defined in `agent-docs/roles/improvement.md`.
+Your synthesis responsibilities are defined in `$LLM_JOURNEY_ROLE_IMPROVEMENT`.
 ```
 
 **Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md`

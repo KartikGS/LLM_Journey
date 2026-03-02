@@ -78,7 +78,7 @@ If CR intent is architecture-only/refactor-only:
 <!--
 Canonical semantics source for the Documentation Impact field across all CR artifacts.
 Sub-agent handoff DoD items (TEMPLATE-tech-lead-to-*.md) and the BA closure checklist
-(agent-docs/roles/ba.md) reference this field's semantics as defined here.
+(`$LLM_JOURNEY_ROLE_BA`) reference this field's semantics as defined here.
 When the field definition changes, update this section first; consumers cross-reference it.
 Every CR must include an explicit documentation impact decision.
 -->

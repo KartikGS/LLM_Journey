@@ -71,7 +71,7 @@ The BA agent **MAY**:
 - Must NOT write or modify:
   - `agent-docs/decisions/**`
   - `agent-docs/development/**`
-  - `agent-docs/roles/**` (except this file, and ONLY during setup)
+  - `agent-docs/llm-journey/roles/**` (except this file, and ONLY during setup)
   - `agent-docs/technical-context.md`
   - `$TOOLING_STANDARD`
   - `README.md` (root)

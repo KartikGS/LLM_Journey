@@ -37,6 +37,7 @@ The Curator **does NOT**:
 - **Propose, never write to `general/` unilaterally.** A proposal to `a-society/general/` is a draft submitted for Owner review. It does not become part of the library until the Owner approves it.
 - **Maintenance changes within scope require no approval.** The Curator may fix, update, or reorganize agent-docs within its designated scope without pre-approval, provided no direction change is implied.
 - **If a maintenance change implies a direction decision, stop and escalate.** Clarification comes before action.
+- **Never hardcode a file path in documentation you write or maintain.** If the file is in the project index, use its `$VARIABLE_NAME`. If it is not yet indexed, add it to `indexes/main.md` first — then use the variable. Hardcoded paths bypass the index and create the exact drift the index is designed to prevent.
 
 ---
 
@@ -48,7 +49,8 @@ Before beginning any session as the Curator, read:
 2. The project vision document
 3. The project structure document
 4. The project index (`indexes/main.md`)
-5. [CUSTOMIZE: any project-specific context documents relevant to the current task]
+5. `agent-docs-guide.md` (`$[PROJECT]_AGENT_DOCS_GUIDE`) — why each file in this project's agent-docs exists; read before maintaining any file
+6. [CUSTOMIZE: any additional project-specific context documents relevant to the current task]
 
 Resolve `$VAR` references via the project index.
 

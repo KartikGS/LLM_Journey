@@ -20,3 +20,11 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_VISION` | `/agent-docs/llm-journey/project-information/vision.md` | Project mission, dual-audience definition (learner-user / developer-user), mental model, implementation strategy, and 10-stage roadmap |
 | `$LLM_JOURNEY_STRUCTURE` | `/agent-docs/llm-journey/project-information/structure.md` | Repository folder layout and key `agent-docs/` subdirectory reference |
 | `$LLM_JOURNEY_AGENTS` | `/agent-docs/llm-journey/agents.md` | Agent entry point for LLM Journey — universal standards, reading protocol, authority, and role index |
+| `$LLM_JOURNEY_ROLE_BA` | `/agent-docs/llm-journey/roles/ba.md` | Business Analyst role — requirements, scope, acceptance criteria, clarification, and closure |
+| `$LLM_JOURNEY_ROLE_TECH_LEAD` | `/agent-docs/llm-journey/roles/tech-lead.md` | Tech Lead role — planning, delegation, technical decisions, and CR execution model |
+| `$LLM_JOURNEY_ROLE_COORDINATOR` | `/agent-docs/llm-journey/roles/coordinator.md` | CR Coordinator role — adversarial review, quality gates, and sub-agent handoffs |
+| `$LLM_JOURNEY_ROLE_IMPROVEMENT` | `/agent-docs/llm-journey/roles/improvement.md` | Improvement Agent role — agent-docs system improvements only |
+| `$LLM_JOURNEY_ROLE_BACKEND` | `/agent-docs/llm-journey/roles/sub-agents/backend.md` | Backend Engineer sub-agent — API routes, security, and observability |
+| `$LLM_JOURNEY_ROLE_FRONTEND` | `/agent-docs/llm-journey/roles/sub-agents/frontend.md` | Frontend Engineer sub-agent — UI/UX, components, and accessibility |
+| `$LLM_JOURNEY_ROLE_INFRA` | `/agent-docs/llm-journey/roles/sub-agents/infra.md` | Infrastructure sub-agent — deployment, CI/CD, and global security |
+| `$LLM_JOURNEY_ROLE_TESTING` | `/agent-docs/llm-journey/roles/sub-agents/testing.md` | Testing sub-agent — E2E, contract assertions, and test infrastructure |

@@ -42,13 +42,13 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 - **How we work:** [Workflow](/agent-docs/workflow.md)
 
 ### Layer 2: Role-Specific Context (see your role file)
-- Business Analyst → [roles/ba.md](/agent-docs/roles/ba.md)
-- Tech Lead → [roles/tech-lead.md](/agent-docs/roles/tech-lead.md)
-- Frontend → [roles/sub-agents/frontend.md](/agent-docs/roles/sub-agents/frontend.md)
-- Backend → [roles/sub-agents/backend.md](/agent-docs/roles/sub-agents/backend.md)
-- Infra → [roles/sub-agents/infra.md](/agent-docs/roles/sub-agents/infra.md)
-- Testing → [roles/sub-agents/testing.md](/agent-docs/roles/sub-agents/testing.md)
-- Improvement → [roles/improvement.md](/agent-docs/roles/improvement.md)
+- Business Analyst → `$LLM_JOURNEY_ROLE_BA`
+- Tech Lead → `$LLM_JOURNEY_ROLE_TECH_LEAD`
+- Frontend → `$LLM_JOURNEY_ROLE_FRONTEND`
+- Backend → `$LLM_JOURNEY_ROLE_BACKEND`
+- Infra → `$LLM_JOURNEY_ROLE_INFRA`
+- Testing → `$LLM_JOURNEY_ROLE_TESTING`
+- Improvement → `$LLM_JOURNEY_ROLE_IMPROVEMENT`
 
 ## Interfaces & Contracts
 Failed coordination kills projects. Stick to these contracts:
@@ -119,5 +119,5 @@ If intent is unclear, stop and ask the user.
 Yes. For the purpose of authority:
 - **Requirements (`/agent-docs/requirements/`)**: Owned by **BA**.
 - **System Docs (`/README.md`, `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
-- **Role Docs (`/agent-docs/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
+- **Role Docs (`/agent-docs/llm-journey/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
 - **Process Docs (`/agent-docs/workflow.md`, `$LLM_JOURNEY_AGENTS`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.

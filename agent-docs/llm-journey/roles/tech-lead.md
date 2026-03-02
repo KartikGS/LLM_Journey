@@ -224,7 +224,7 @@ Before any code is modified or any terminal command is run (except for discovery
 -  **Use the Standard Plan Template**: [CR Plan Template](/agent-docs/plans/TEMPLATE.md).
 -  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
 -  **Determine Delegation**: 
-    - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/roles/sub-agents/`).
+    - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/llm-journey/roles/sub-agents/`).
     - Define the order of execution.
     - **MANDATORY**: Specify the Testing Sequence.
       - *Example*: (1) Testing Agent writes failing tests -> (2) Frontend Agent implements UI -> (3) Testing Agent verifies.
@@ -351,7 +351,7 @@ ADRs live in:
 
 ### CR Coordinator: Adversarial Review & Quality Gates
 
-> **The CR Coordinator's full operational spec lives in `agent-docs/roles/coordinator.md`.** The Tech Lead does not execute adversarial review or quality gate steps — the CR Coordinator does, one session per sub-agent round-trip. Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
+> **The CR Coordinator's full operational spec lives in `$LLM_JOURNEY_ROLE_COORDINATOR`.** The Tech Lead does not execute adversarial review or quality gate steps — the CR Coordinator does, one session per sub-agent round-trip. Tech Lead's role here is to receive the Coordinator's verified conclusion summary and author the BA handoff.
 
 The Coordinator's session entry, execution mode guidance, Bash-denied fallback protocol, pre-authored handoff issuance, adversarial review checklist, portable adversarial dimensions, deviation severity classification, and quality gate steps are all defined in `coordinator.md`. CR-specific adversarial check items (which testids to verify, which grep patterns to run) are authored by the Tech Lead in `TL-session-state.md` per CR and extend the portable dimensions.
 

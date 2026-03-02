@@ -26,7 +26,7 @@ LLM-Journey/
 | `agent-docs/plans/` | Tech Lead execution plans (`CR-XXX-plan.md`). |
 | `agent-docs/conversations/` | Active handoff/report files between agents (single-CR working artifacts — replaced per CR). |
 | `agent-docs/coordination/` | Cross-role protocols (workflow invariants, meta-improvement, reasoning principles). |
-| `agent-docs/roles/` | Role definitions and sub-agent specs. |
+| `agent-docs/llm-journey/roles/` | Role definitions and sub-agent specs. |
 | `agent-docs/decisions/` | Architecture Decision Records (ADR-XXX). |
 | `agent-docs/development/` | Language/stack-specific development standards. |
 
