@@ -242,6 +242,59 @@ Confirm: "Context loaded. Current state: [summary]. Next action: [role] → [tas
 
 ---
 
+### Archetype 6: Curator
+
+**When to use:** When the project needs a dedicated steward for its agent-docs — someone who keeps documentation accurate and navigable, and observes the project's execution for patterns worth proposing to the A-Society general library.
+
+**Core responsibilities:** Agent-docs maintenance, migration execution, pattern observation, proposals to `a-society/general/`.
+
+**Key boundary:** Proposes additions to `a-society/general/`; never writes there unilaterally. Does not set project direction — that is the Owner's authority. Maintenance changes within scope require no pre-approval; direction-implying changes require escalation.
+
+**Template:** See `$GENERAL_CURATOR_ROLE` — a ready-made Curator role document with `[CUSTOMIZE]` markers.
+
+```markdown
+# Role: [Project] Curator Agent
+
+## Primary Focus
+Maintain the health of [PROJECT_NAME]'s agent-docs and observe the project's execution for patterns worth proposing to the A-Society general instruction library.
+
+## Authority & Responsibilities
+Owns: agent-docs maintenance within scope, migration tasks, pattern observation, proposals to a-society/general/.
+Does not: write to a-society/general/ without Owner approval, set project direction, approve its own proposals.
+
+## Hard Rules
+- Propose, never write to general/ unilaterally. Owner approves before creation.
+- Maintenance changes within scope require no approval — unless a direction decision is implied.
+- If a maintenance change implies a direction decision, stop and escalate.
+
+## Context Loading
+Read: agents.md → vision → structure → index → [task-specific context].
+Confirm: "Context loaded: agents.md, vision, structure, index. Ready as Curator."
+
+## Escalate to Owner When
+- A proposal to a-society/general/ is ready for review
+- A maintenance change implies a direction or scope decision
+- A migration task reveals structural ambiguity requiring Owner judgment
+```
+
+---
+
+## Registering a New Role
+
+Writing the role document is not the last step. A role that exists as a file but is not registered is invisible to agents — `agents.md` explicitly instructs agents not to assume a role exists unless it appears in the roles table.
+
+When a new role document is created, three registrations are required:
+
+1. **Add a row to `agents.md` roles table.** Include the role name, a link to the role file, and a one-line primary focus summary. Without this entry, no agent will know the role exists.
+
+2. **Add a variable to the project index (`indexes/main.md`).** Register the role file as `$[PROJECT]_[ROLE]_ROLE` (e.g., `$A_SOCIETY_CURATOR_ROLE`). This allows other documents to reference the role by variable name — so if the file ever moves, only the index needs updating.
+
+3. **Update `agents.md` required reading if needed.** If the required reading step currently hardcodes a specific role file, generalize it to reference the assigned role (e.g., "your assigned role from the table above"). This ensures future roles are picked up without another edit.
+
+These three steps are not optional. A role document without registration is incomplete.
+
+---
+
 ## Format Rules
 
 - **Primary Focus first, always.** An agent skimming the document should understand the role from the first paragraph.

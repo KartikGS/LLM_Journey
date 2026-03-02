@@ -23,6 +23,7 @@ Key file locations are registered in [`a-society/indexes/main.md`](/agent-docs/a
 | Role | File | Primary Focus |
 |---|---|---|
 | **Owner** | [`roles/owner.md`](/agent-docs/a-society/roles/owner.md) | Vision keeper, quality gatekeeper, structure guardian for the A-Society framework |
+| **Curator** | [`roles/curator.md`](/agent-docs/a-society/roles/curator.md) | Agent-docs steward — maintenance, migration, and pattern distillation into `general/` |
 
 Additional roles will be added here as the project grows. Do not assume a role exists unless it appears in this table.
 
@@ -38,7 +39,7 @@ Load context in this order before beginning any session:
 2. **Index** — [`a-society/indexes/main.md`](/agent-docs/a-society/indexes/main.md) — read this second so all `$VAR` references below can be resolved
 3. **Vision** — `$A_SOCIETY_VISION` — what the framework is and where it is going
 4. **Structure** — `$A_SOCIETY_STRUCTURE` — why each folder exists and what belongs where
-5. **Role file** — `$A_SOCIETY_OWNER_ROLE` (Owner) — your behavioral contract, authority, and any additional required readings
+5. **Role file** — your assigned role from the table above (e.g., `$A_SOCIETY_OWNER_ROLE`, `$A_SOCIETY_CURATOR_ROLE`) — your behavioral contract, authority, and any additional required readings
 
 ---
 
