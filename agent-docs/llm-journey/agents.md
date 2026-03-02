@@ -38,7 +38,7 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 - **Project-Specific Principles (LLM Journey):** `$LLM_JOURNEY_PRINCIPLES`
 - **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
 - **Tooling & Environment:** `$TOOLING_STANDARD`
-- **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
+- **Technical Map:** `$LLM_JOURNEY_TECHNICAL_CONTEXT`
 - **How we work:** `$LLM_JOURNEY_WORKFLOW`
 
 ### Layer 2: Role-Specific Context (see your role file)
@@ -118,6 +118,6 @@ If intent is unclear, stop and ask the user.
 ### Is documentation considered a "technical asset"?
 Yes. For the purpose of authority:
 - **Requirements (`$LLM_JOURNEY_WORKFLOW_REQUIREMENTS`)**: Owned by **BA**.
-- **System Docs (`/README.md`, `$LLM_JOURNEY_ARCHITECTURE`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
+- **System Docs (`/README.md`, `$LLM_JOURNEY_ARCHITECTURE`, `$LLM_JOURNEY_TECHNICAL_CONTEXT`)**: Owned by **Tech Lead**.
 - **Role Docs (`/agent-docs/llm-journey/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
 - **Process Docs (`$LLM_JOURNEY_WORKFLOW`, `$LLM_JOURNEY_AGENTS`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.

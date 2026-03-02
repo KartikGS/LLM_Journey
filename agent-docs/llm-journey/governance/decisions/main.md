@@ -10,4 +10,4 @@ We use ADRs to document significant architectural decisions.
 -  **Consequences**
 
 ## Index
--   [ADR-0001: Telemetry Proxy](/agent-docs/decisions/ADR-0001-telemetry-proxy.md)
+-   [ADR-0001: Telemetry Proxy](/agent-docs/llm-journey/governance/decisions/ADR-0001-telemetry-proxy.md)

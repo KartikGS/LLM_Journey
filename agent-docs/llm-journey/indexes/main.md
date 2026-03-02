@@ -35,3 +35,14 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_WORKFLOW_PLANS` | `/agent-docs/llm-journey/workflow/plans/main.md` | Tech Lead execution plan template and historical CR plans |
 | `$LLM_JOURNEY_WORKFLOW_REPORTS` | `/agent-docs/llm-journey/workflow/reports/main.md` | Investigation report template, example, and historical reports |
 | `$LLM_JOURNEY_WORKFLOW_REQUIREMENTS` | `/agent-docs/llm-journey/workflow/requirements/main.md` | CR requirements template, directory guide, and historical CR artifacts |
+| `$LLM_JOURNEY_DEV` | `/agent-docs/llm-journey/development/main.md` | Development standards — general principles, project structure, API route requirements, code quality conventions |
+| `$LLM_JOURNEY_CONTRIBUTION` | `/agent-docs/llm-journey/development/contribution.md` | Contribution guidelines — branching strategy, commit message format, git hygiene |
+| `$LLM_JOURNEY_TECHNICAL_CONTEXT` | `/agent-docs/llm-journey/development/technical-context.md` | Technical configuration cheat sheet — endpoints, tooling, constraints, security context |
+| `$LLM_JOURNEY_TESTING` | `/agent-docs/llm-journey/development/testing/main.md` | Testing strategy — philosophy, tooling, E2E policy, coverage guarantees |
+| `$LLM_JOURNEY_TESTING_CONTRACTS` | `/agent-docs/llm-journey/development/testing/contract-registry.md` | Durable test contract registry — routes, selectors, and OTel metrics getter names |
+| `$LLM_JOURNEY_DESIGN_TOKENS` | `/agent-docs/llm-journey/development/frontend/main.md` | Design tokens and visual system — single source of truth for visual values |
+| `$LLM_JOURNEY_FRONTEND_REFACTOR` | `/agent-docs/llm-journey/development/frontend/refactor-checklist.md` | Frontend refactor checklist — safety steps for rendering-boundary and shared UI changes |
+| `$LLM_JOURNEY_GOVERNANCE` | `/agent-docs/llm-journey/governance/main.md` | Governance overview — entry point for API contracts and architectural decisions |
+| `$LLM_JOURNEY_GOVERNANCE_API` | `/agent-docs/llm-journey/governance/api/main.md` | API contract rules and contents index |
+| `$LLM_JOURNEY_GOVERNANCE_DECISIONS` | `/agent-docs/llm-journey/governance/decisions/main.md` | Architecture Decision Records index and ADR template |
+| `$LLM_JOURNEY_DEV_BACKEND` | `/agent-docs/llm-journey/development/backend.md` | Backend development standards — API routes, observability patterns, streaming, and SSE |

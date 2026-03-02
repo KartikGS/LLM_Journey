@@ -11,8 +11,8 @@
 -   Handle relevant HTTP status codes explicitly (for example `200`, `202`, `204`, `400`, `401`, `404`, `415`, `429`, `500`, `503`, `504`).
 -   Treat endpoint-level request hardening as backend scope: payload-size limits, `content-length` checks, and route-specific validation/auth controls where applicable.
 -   If a security change is global/platform-wide (middleware/header/runtime policy), coordinate via Infra ownership and explicit Tech Lead delegation.
--   Document new or changed route contracts in `/agent-docs/api/`.
--   Follow the [Development Standards](./development-standards.md).
+-   Document new or changed route contracts in `$LLM_JOURNEY_GOVERNANCE_API`.
+-   Follow the [Development Standards]($LLM_JOURNEY_DEV).
 -   When creating or modifying utilities in `lib/server/`, apply the Leaf Utility Isolation principle documented in Development Standards — keep them dependency-free.
 -   After any function extraction task, audit the source file for newly unused imports and constants and remove them before running lint.
 

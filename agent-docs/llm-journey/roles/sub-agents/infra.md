@@ -25,7 +25,7 @@ Development environment, deployment pipelines, and security.
 ### Role-Specific Readings (Infra)
 Before executing any task, also read:
 - **System design:** `$LLM_JOURNEY_ARCHITECTURE`
-- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Repo Standards:** `$LLM_JOURNEY_CONTRIBUTION`
 - **Task Instructions:** [Tech Lead To Infra](/agent-docs/conversations/tech-lead-to-infra.md)
 
 ## Execution Responsibilities

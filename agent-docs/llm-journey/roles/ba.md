@@ -72,7 +72,7 @@ The BA agent **MAY**:
   - `agent-docs/decisions/**`
   - `agent-docs/development/**`
   - `agent-docs/llm-journey/roles/**` (except this file, and ONLY during setup)
-  - `agent-docs/technical-context.md`
+  - `$LLM_JOURNEY_TECHNICAL_CONTEXT`
   - `$TOOLING_STANDARD`
   - `README.md` (root)
   - `$LLM_JOURNEY_ARCHITECTURE` (or any system-level documentation)
@@ -93,11 +93,11 @@ Before working on any CR, also read:
 - **Recent Changes:** `$LLM_JOURNEY_LOG`
 - **System Design:** `$LLM_JOURNEY_ARCHITECTURE`
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
-- **Architecture Context:** [Decisions](/agent-docs/decisions/)
+- **Architecture Context:** `$LLM_JOURNEY_GOVERNANCE_DECISIONS`
 
 ### Conditional Required Readings (BA)
 When the task is incident/regression/testing related (failing test, lint, build, runtime mismatch), BA must also read:
-- **Testing Policy & E2E Triage:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Testing Policy & E2E Triage:** `$LLM_JOURNEY_TESTING`
 - **Runner Contract (E2E only):** `/playwright.config.ts`
 
 ### Reading Confirmation Template

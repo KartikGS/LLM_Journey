@@ -35,3 +35,5 @@ To relocate a file: update the **Path** cell below, then grep for the variable n
 | `$INSTRUCTION_WORKFLOW_PLANS` | `/agent-docs/a-society/general/instructions/workflow/plans/main.md` | How to create a plans structure for any project |
 | `$INSTRUCTION_WORKFLOW_REPORTS` | `/agent-docs/a-society/general/instructions/workflow/reports/main.md` | How to create a reports structure for any project |
 | `$INSTRUCTION_WORKFLOW_REQUIREMENTS` | `/agent-docs/a-society/general/instructions/workflow/requirements/main.md` | How to create a requirements structure for any project |
+| `$INSTRUCTION_DEVELOPMENT` | `/agent-docs/a-society/general/instructions/development/main.md` | How to create a development folder for any project |
+| `$INSTRUCTION_GOVERNANCE` | `/agent-docs/a-society/general/instructions/governance/main.md` | How to create a governance folder for any project |

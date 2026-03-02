@@ -6,7 +6,7 @@ Ensuring system stability and preventing regression.
 
 ## Boundaries
 
--   **Owns**: `/__tests__/**`, `/agent-docs/testing-strategy.md`, `/playwright.config.ts`.
+-   **Owns**: `/__tests__/**`, `$LLM_JOURNEY_TESTING`, `/playwright.config.ts`.
 -   **READ-ONLY**: All application source code (e.g., `/app/**`, `/components/**`, `/lib/**`) and system configurations (e.g., `/next.config.ts`, `/package.json`, `/tailwind.config.js`).
 -   **Interfaces with**: All roles to ensure testability.
 -   **Authority**: Responsible for validating architectural assumptions via tests. 
@@ -23,9 +23,9 @@ Ensuring system stability and preventing regression.
 
 ### Role-Specific Readings (Testing)
 Before executing any task, also read:
-- **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
-- **Contract Baseline:** [Testing Contract Registry](/agent-docs/testing-contract-registry.md)
-- **Repo Standards:** [Contribution Guidelines](/agent-docs/development/contribution-guidelines.md)
+- **Test Approach:** `$LLM_JOURNEY_TESTING`
+- **Contract Baseline:** `$LLM_JOURNEY_TESTING_CONTRACTS`
+- **Repo Standards:** `$LLM_JOURNEY_CONTRIBUTION`
 - **Task Instructions:** [Tech Lead To Testing](/agent-docs/conversations/tech-lead-to-testing.md)
 
 ## Execution Responsibilities
@@ -73,7 +73,7 @@ Read `agent-docs/conversations/TEMPLATE-testing-to-tech-lead.md` before writing 
 ### Environmental & Tooling Quirks
 If tests fail due to the environment (e.g., Playwright version mismatch, CI vs local diffs):
 - Document the mismatch in the `/agent-docs/conversations/testing-to-tech-lead.md` report.
-- Update `/agent-docs/testing-strategy.md` if the quirk represents a permanent system constraint.
+- Update `$LLM_JOURNEY_TESTING` if the quirk represents a permanent system constraint.
 
 ### Runtime Preflight (Mandatory)
 - Run runtime preflight per `$TOOLING_STANDARD` Runtime Preflight (canonical source). Record the observed version in your report if it affects classification.

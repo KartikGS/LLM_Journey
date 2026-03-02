@@ -7,7 +7,7 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ## Boundaries
 
 -   **Owns**: `/app/ui/**` (shared components), `/app/[feature]/**` (feature pages), `/lib/hooks/**`.
--   **Interfaces with**: Backend via `/api/**` contracts defined in `/agent-docs/api/`.
+-   **Interfaces with**: Backend via `/api/**` contracts defined in `$LLM_JOURNEY_GOVERNANCE_API`.
 -   **Restricted**: 
     - Do not modify database schemas or infrastructure configuration without consulting Infra role.
     - **Folder Precedence**: Use `/app/ui/**` for shared UI. Only use `/components/` if the project layout explicitly dictates it over App Router patterns.
@@ -21,8 +21,8 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ### Role-Specific Readings (Frontend)
 Before executing any task, also read:
 - **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
-- **Visual System:** [Design Tokens](/agent-docs/design-tokens.md)
-- **Refactor Safety:** [Frontend Refactor Checklist](/agent-docs/frontend-refactor-checklist.md)
+- **Visual System:** $LLM_JOURNEY_DESIGN_TOKENS
+- **Refactor Safety:** $LLM_JOURNEY_FRONTEND_REFACTOR
 - **Task Instructions:** [Tech Lead To Frontend](/agent-docs/conversations/tech-lead-to-frontend.md)
 
 ## Execution Responsibilities
@@ -36,7 +36,7 @@ Before executing any task, also read:
 If the Tech Lead handoff marks a task as architecture-only/rendering-boundary:
 - Treat visual behavior, copy, route structure, and information architecture as frozen unless explicitly listed in scope.
 - Preserve all declared contracts (`routes`, `data-testid`, accessibility semantics).
-- Execute the [Frontend Refactor Checklist](/agent-docs/frontend-refactor-checklist.md) before reporting completion.
+- Execute the $LLM_JOURNEY_FRONTEND_REFACTOR before reporting completion.
 
 If preserving behavior requires changing any frozen area, mark `scope extension requested` and pause.
 
@@ -77,7 +77,7 @@ If preserving behavior requires changing any frozen area, mark `scope extension 
 - Use explicit `Variants` typing for variant objects passed to motion components.
 - Use literal transition typing (for example `type: 'spring' as const`) so Framer Motion transition unions resolve correctly.
 - Treat behavior-preserving type fixes as the default path; do not alter animation semantics unless the handoff explicitly requires it.
-- Canonical animation values live in [Design Tokens](/agent-docs/design-tokens.md); do not redefine timing scales in task-specific docs.
+- Canonical animation values live in $LLM_JOURNEY_DESIGN_TOKENS; do not redefine timing scales in task-specific docs.
 
 ---
 
@@ -88,7 +88,7 @@ If preserving behavior requires changing any frozen area, mark `scope extension 
 
 All user-facing changes must meet premium aesthetic standards. If the handoff from Tech Lead lacks visual specifications:
 1. Request clarification before implementing a minimal version
-2. If no response, apply premium defaults from [Design Tokens](/agent-docs/design-tokens.md)
+2. If no response, apply premium defaults from $LLM_JOURNEY_DESIGN_TOKENS
 3. Never settle for "works but looks basic"
 
 ### Aesthetic North Star
@@ -116,7 +116,7 @@ The visual bar is set by modern developer tools: [Linear](https://linear.app), [
 > - Surface hierarchy through subtle opacity differences, not color changes
 > - Backdrop blur for the same glass depth effect as dark mode
 >
-> Refer to [Design Tokens](/agent-docs/design-tokens.md) for the full color palette.
+> Refer to $LLM_JOURNEY_DESIGN_TOKENS for the full color palette.
 
 ### Accentuation & Effects
 
@@ -150,7 +150,7 @@ The visual bar is set by modern developer tools: [Linear](https://linear.app), [
 
 3. **GPU-only properties** — Only animate `transform` and `opacity`. Never animate `width`, `height`, `margin`, `padding`, or `box-shadow` directly.
 
-4. **Use design tokens** — All durations and spring configs come from [Design Tokens](/agent-docs/design-tokens.md). Do not invent ad-hoc timing values.
+4. **Use design tokens** — All durations and spring configs come from $LLM_JOURNEY_DESIGN_TOKENS. Do not invent ad-hoc timing values.
 
 ### The "Shaky Screen" Anti-Pattern
 
@@ -202,7 +202,7 @@ Before marking work complete:
 -   [ ] Are icons rendered inline with proper sizing?
 -   [ ] **Animation restraint**: Are there ≤1 prominent animations per viewport?
 -   [ ] **No shaky screen**: Do hover effects on grid/list items avoid scale/translate?
--   [ ] **Timing consistency**: Do all animations use [Design Token](/agent-docs/design-tokens.md) values?
+-   [ ] **Timing consistency**: Do all animations use `$LLM_JOURNEY_DESIGN_TOKENS` values?
 -   [ ] **Light mode parity**: Is light mode equally designed (not just "dark mode but white")?
 
 ## Verification & Reporting Protocol
@@ -214,7 +214,7 @@ Before marking work complete:
   1. `pnpm lint`
   2. `pnpm exec tsc --noEmit`
 - In the frontend handoff report, include raw pass/fail outcome for both commands in the same order.
-- Full pipeline verification order remains defined in `/agent-docs/testing-strategy.md` for Tech Lead closure (`test -> lint -> tsc -> build`).
+- Full pipeline verification order remains defined in `$LLM_JOURNEY_TESTING` for Tech Lead closure (`test -> lint -> tsc -> build`).
 - Include contract evidence using file references for: route contract checks, selector/accessibility contract checks, and shared-component blast-radius checks (when `app/ui/**` changed).
 - Add a behavioral sanity check section mapped to Tech Lead handoff DoD (for example open/close flow, reduced-motion behavior, or interaction semantics called out in DoD).
 - If a command fails due to a pre-existing issue, record it explicitly and stop scope expansion unless Tech Lead updates the handoff.

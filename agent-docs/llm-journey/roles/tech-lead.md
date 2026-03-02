@@ -157,12 +157,12 @@ For each file, ask: **"Is this feature code?"**
 > Below are **additional** Tech Lead-specific readings.
 
 ### First Time (Onboarding or New Session)
-- **Test Approach:** [Testing Strategy](/agent-docs/testing-strategy.md)
+- **Test Approach:** `$LLM_JOURNEY_TESTING`
 
 ### Every Task (Role-Specific)
 Before planning or executing ANY task, also read:
 - **Current State:** `$LLM_JOURNEY_LOG`
-- **Architecture Check:** `$LLM_JOURNEY_ARCHITECTURE` & [Decisions](/agent-docs/decisions/)
+- **Architecture Check:** `$LLM_JOURNEY_ARCHITECTURE` & `$LLM_JOURNEY_GOVERNANCE_DECISIONS`
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
@@ -187,7 +187,7 @@ Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead H
 **You cannot plan what you do not know.**
 - **Wildcard Resolution**: If a requirement is generic (e.g., "Install a UI library"), YOU must resolve it to specific packages/versions *before* planning.
 - **Probes**: Run `find`, `grep`, or check docs to validate assumptions.
-- **Constraints Check**: Verify new libs against `technical-context.md`.
+- **Constraints Check**: Verify new libs against `$LLM_JOURNEY_TECHNICAL_CONTEXT`.
 
 #### E2E-Sensitive Pre-Handoff Probes (Mandatory when CR affects routes/UI contracts)
 - Confirm canonical route targets from source (`app/` and current nav contracts).
@@ -345,7 +345,7 @@ An ADR **must** be created when:
 **Decision test**: Create an ADR when the change introduces a new top-level concept (provider type, auth mechanism, rendering boundary, observability contract). Do NOT create an ADR when the change extends an existing documented pattern (new value in an existing config enum, new route following an existing handler structure, or a format migration within an existing provider type where the provider-type token itself is unchanged).
 
 ADRs live in:
-`agent-docs/decisions/`
+`$LLM_JOURNEY_GOVERNANCE_DECISIONS`
 
 ---
 
@@ -356,7 +356,7 @@ ADRs live in:
 The Coordinator's session entry, execution mode guidance, Bash-denied fallback protocol, pre-authored handoff issuance, adversarial review checklist, portable adversarial dimensions, deviation severity classification, and quality gate steps are all defined in `coordinator.md`. CR-specific adversarial check items (which testids to verify, which grep patterns to run) are authored by the Tech Lead in `TL-session-state.md` per CR and extend the portable dimensions.
 
 **Tech Lead Session B steps (after receiving all Coordinator conclusion summaries):**
-- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`/agent-docs/decisions/` or `agent-docs/`) if they change system invariants.
+- [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`$LLM_JOURNEY_GOVERNANCE_DECISIONS` or `agent-docs/`) if they change system invariants.
 - [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision.
 - [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 

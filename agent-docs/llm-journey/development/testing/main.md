@@ -84,10 +84,10 @@ Configuration lives in:
 - Run critical E2E tests: `pnpm playwright test --grep @critical`
 - Run smoke E2E tests: `pnpm playwright test --grep @smoke`
 
-Note: `agent-docs/tooling-standard.md` includes a quick command canon, but this file is canonical for E2E triage/classification policy.
+Note: `$TOOLING_STANDARD` includes a quick command canon, but this file is canonical for E2E triage/classification policy.
 
 ### Runtime Preflight
-> **Canonical source:** `agent-docs/tooling-standard.md` — Runtime Preflight (Mandatory). Run preflight per that section before verification commands. If the runtime is below the documented minimum, classify as `environmental` in the role report — do not duplicate the protocol text here.
+> **Canonical source:** `$TOOLING_STANDARD` — Runtime Preflight (Mandatory). Run preflight per that section before verification commands. If the runtime is below the documented minimum, classify as `environmental` in the role report — do not duplicate the protocol text here.
 
 ### E2E Reproducibility Rule
 When reporting E2E outcomes for handoff evidence, always include:
@@ -140,7 +140,7 @@ Use the highest reliable contract available for assertions:
 If level 4 is used, report why levels 1-3 were unavailable in the testing handoff report.
 
 ### Contract Registry
-- Prefer documenting durable route/selector/semantic contracts in `agent-docs/testing-contract-registry.md` so CR handoffs can reference a stable baseline.
+- Prefer documenting durable route/selector/semantic contracts in `$LLM_JOURNEY_TESTING_CONTRACTS` so CR handoffs can reference a stable baseline.
 
 ### Prohibited Brittle Assertions (Default)
 - Hard dependency on transient loading copy (for example exact `"Generating..."` visibility windows) unless the CR explicitly defines that copy as product contract.
@@ -165,7 +165,7 @@ Reason: some projects include generated `.next/types` entries in `tsconfig` and 
 - `Conditionally required`:
   - `pnpm test:e2e` only when CR scope changes route/selector/semantic contracts, changes browser-sensitive behavior, or explicitly requests E2E evidence.
 - Source of truth for trigger decision:
-  - `agent-docs/workflow.md` -> `Testing Handoff Trigger Matrix (Mandatory)`.
+  - `$LLM_JOURNEY_WORKFLOW` -> `Testing Handoff Trigger Matrix (Mandatory)`.
 
 ### Command Evidence Standard (for handoff reports)
 When citing verification evidence, use this normalized format:

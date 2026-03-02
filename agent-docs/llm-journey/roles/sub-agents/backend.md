@@ -5,8 +5,8 @@ Reliability, security, and performance of server-side logic and API routes.
 
 ## Boundaries
 -   **Security scope (endpoint-level)**: request/body size limits, `content-length` enforcement, input validation, route-specific auth checks, and route-specific abuse controls inside `app/api/**`.
--   **Out-of-scope by default** (test files): `/__tests__/**`, `/playwright.config.ts`, `/agent-docs/testing-strategy.md`. Read is permitted; create or modify only when the handoff explicitly delegates test scope to Backend.
--   **Interfaces with**: Frontend via `/api/**` contracts. API contracts are specified in the Tech Lead handoff and CR plan for each CR.
+-   **Out-of-scope by default** (test files): `/__tests__/**`, `/playwright.config.ts`, `$LLM_JOURNEY_TESTING`. Read is permitted; create or modify only when the handoff explicitly delegates test scope to Backend.
+-   **Interfaces with**: Frontend via `/api/**` contracts in `$LLM_JOURNEY_GOVERNANCE_API`. Per-CR contracts are specified in the Tech Lead handoff and CR plan.
 -   **Restricted**:
     - Do not hardcode secrets. Use environment variables.
 
@@ -32,7 +32,7 @@ Reliability, security, and performance of server-side logic and API routes.
 
 ### Role-Specific Readings (Backend)
 Before executing any task, also read:
-- **Backend Standards:** [Backend Guide](/agent-docs/development/backend.md)
+- **Backend Standards:** `$LLM_JOURNEY_DEV_BACKEND`
 - **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
 - **Task Instructions:** [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md)
 
