@@ -47,8 +47,8 @@ Validation rules:
 ## Next Priorities
 -   [ ] [S] **OTel `require-in-the-middle` build warning** *(pre-existing, CR-021)*: `pnpm build` emits a critical dependency warning for `require-in-the-middle`. Pre-existing and unrelated to CR-021. Investigate and resolve.
 -   [ ] [S] **Worker-process teardown warning in `pnpm test`** *(pre-existing, CR-021)*: Non-blocking warning during test suite teardown. Pre-existing. Investigate root cause.
--   [ ] [S][DOC] **Foldering decision pending user (CR-020)**: Defer final decision until user confirms direction among Option D (index now), Option B (archive trigger >50), and Option C (long-term defer). Feasibility artifact: `agent-docs/plans/CR-020-foldering-feasibility.md`.
--   [ ] [S][DOC] **Option D follow-up (if approved): requirements index**: Create `agent-docs/requirements/INDEX.md`, backfill all CR entries, and add index-maintenance step to BA closure checklist.
+-   [ ] [S][DOC] **Foldering decision pending user (CR-020)**: Defer final decision until user confirms direction among Option D (index now), Option B (archive trigger >50), and Option C (long-term defer). Feasibility artifact: `agent-docs/llm-journey/workflow/plans/CR-020-foldering-feasibility.md`.
+-   [ ] [S][DOC] **Option D follow-up (if approved): requirements index**: Create `agent-docs/llm-journey/workflow/requirements/INDEX.md`, backfill all CR entries, and add index-maintenance step to BA closure checklist.
 -   [ ] [S][DOC] **Frontend handoff parity**: Evaluate optional execution-checklist section for `TEMPLATE-tech-lead-to-frontend.md` if friction appears.
 -   [ ] [S][DOC] **Parallel-CR git flow decision (deferred)**: One-branch-per-CR policy and CR-number collision strategy explicitly deferred pending later user decision.
 -   [ ] [S][DOC] **Quality-gate evidence consolidation** *(deferred from CR-018 meta L-02)*: Workflow audit to reduce duplicate command-evidence projection across TL handoff, CR AC lines, and post-fix snapshot. Requires redesign of the audit trail model — defer until the pattern causes a concrete acceptance error.

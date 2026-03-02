@@ -220,8 +220,8 @@ Do not issue the Backend handoff without resolving this — the DoD will require
 ### Technical Planning & Delegation
 Before any code is modified or any terminal command is run (except for discovery):
 
--  **Create the Technical Plan**: Create `/agent-docs/plans/CR-XXX-plan.md` (where XXX is the CR ID).
--  **Use the Standard Plan Template**: [CR Plan Template](/agent-docs/plans/TEMPLATE.md).
+-  **Create the Technical Plan**: Create `/agent-docs/llm-journey/workflow/plans/CR-XXX-plan.md` (where XXX is the CR ID).
+-  **Use the Standard Plan Template**: `$LLM_JOURNEY_WORKFLOW_PLANS`.
 -  **Review Invariants**: Verify the plan against `Architecture Invariants` and `Testing Strategy`.
 -  **Determine Delegation**: 
     - Identify required sub-agents (Frontend, Backend, Testing, etc. - see `/agent-docs/llm-journey/roles/sub-agents/`).
@@ -259,7 +259,7 @@ Present the **complete plan** to the USER, including:
 > If a sub-agent later identifies that a core planning assumption was wrong (e.g., "Webkit actually supports X"), the Tech Lead Agent MUST halt, inform the BA, and potentially return to **Validate & Internalize Phase** (Re-validation). Do NOT simply pivot implementation without re-analyzing the "Why".
 
 
-**Skip condition:** See `workflow.md` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here). Summary: skip only for `[S][DOC]` work, pure discovery sessions, or `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment.
+**Skip condition:** See `$LLM_JOURNEY_WORKFLOW` Technical Planning Phase step 5 for the precise exception criteria (canonical source — do not duplicate here). Summary: skip only for `[S][DOC]` work, pure discovery sessions, or `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment.
 
 ---
 
@@ -282,7 +282,7 @@ Present the **complete plan** to the USER, including:
 
 **Session count model:** For N sub-agents, plan 2 Tech Lead sessions (Session A: plan + direct changes; Session B: BA handoff authoring) + N CR Coordinator sessions (one per sub-agent). A 3-sub-agent CR (Backend, Frontend, Testing) requires 5 sessions in sequential mode. A single-sub-agent `[S]` CR requires 3 sessions: TL Session A, 1 CR Coordinator session, TL Session B. There is no single-session exception for `[S]` CRs — the Coordinator model applies to all CRs regardless of sub-agent count. Parallel Coordinator cycles reduce wall-clock time but not session count.
 
-**Direct-execution CR (N=0 sub-agents):** When all CR changes fall within the Tech Lead's permitted direct zones and no sub-agent delegation is required, Session A and Session B collapse into a single session — 0 CR Coordinator sessions exist, 1 combined TL session total. Canonical spec for this path: `workflow.md` Session Scope Management step 8. Three specific behaviors apply in this case:
+**Direct-execution CR (N=0 sub-agents):** When all CR changes fall within the Tech Lead's permitted direct zones and no sub-agent delegation is required, Session A and Session B collapse into a single session — 0 CR Coordinator sessions exist, 1 combined TL session total. Canonical spec for this path: `$LLM_JOURNEY_WORKFLOW` Session Scope Management step 8. Three specific behaviors apply in this case:
 1. `TL-session-state.md` is still written as an internal record; Coordinator-targeted sections (per-sub-agent entry instructions, Coordinator conclusion summaries) will be empty — this is expected behavior, not a compliance gap.
 2. The Wait State exits directly to BA handoff authoring; Wait State output items 2 (sub-agent roles) and 3 (handoff file locations) report "none."
 3. The Go/No-Go skip in step 5(a) applies — no Go/No-Go is required for a strictly `[S][DOC]` direct-execution CR.
@@ -301,7 +301,7 @@ Present the **complete plan** to the USER, including:
 
 ### Execution & Coordination
 Once approved:
--  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
+-  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
 -  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
    - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.

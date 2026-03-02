@@ -21,9 +21,9 @@ LLM-Journey/
 | Directory | Purpose |
 | :--- | :--- |
 | `agent-docs/meta/` | Multi-agent meta-analysis artifacts: per-role findings files (`META-YYYYMMDD-<CR-ID>-<role>-findings.md`) and synthesis docs (`META-YYYYMMDD-<CR-ID>-synthesis.md`). See `coordination/meta-improvement-protocol.md`. |
-| `agent-docs/reports/` | Investigation reports (`INVESTIGATION-XXX.md`) and ad-hoc analysis artifacts. Not for meta-analysis files — those belong in `meta/`. |
-| `agent-docs/requirements/` | CR requirement documents (`CR-XXX-<slug>.md`). Owned by BA. |
-| `agent-docs/plans/` | Tech Lead execution plans (`CR-XXX-plan.md`). |
+| `agent-docs/llm-journey/workflow/reports/` | Investigation reports (`INVESTIGATION-XXX.md`) and ad-hoc analysis artifacts. Not for meta-analysis files — those belong in `meta/`. |
+| `agent-docs/llm-journey/workflow/requirements/` | CR requirement documents (`CR-XXX-<slug>.md`). Owned by BA. |
+| `agent-docs/llm-journey/workflow/plans/` | Tech Lead execution plans (`CR-XXX-plan.md`). |
 | `agent-docs/conversations/` | Active handoff/report files between agents (single-CR working artifacts — replaced per CR). |
 | `agent-docs/coordination/` | Cross-role protocols (workflow invariants, meta-improvement, reasoning principles). |
 | `agent-docs/llm-journey/roles/` | Role definitions and sub-agent specs. |

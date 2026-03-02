@@ -31,3 +31,7 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_ARCHITECTURE` | `/agent-docs/llm-journey/project-information/architecture.md` | System overview, high-level components, data flow, and architectural invariants |
 | `$LLM_JOURNEY_LOG` | `/agent-docs/llm-journey/project-information/log.md` | Current state, recent focus, next priorities, and archive |
 | `$LLM_JOURNEY_PRINCIPLES` | `/agent-docs/llm-journey/project-information/principles.md` | Project-specific product and UX principles for LLM Journey |
+| `$LLM_JOURNEY_WORKFLOW` | `/agent-docs/llm-journey/workflow/main.md` | Agent execution loop — phases, handoff protocols, invariants, and escalation rules |
+| `$LLM_JOURNEY_WORKFLOW_PLANS` | `/agent-docs/llm-journey/workflow/plans/main.md` | Tech Lead execution plan template and historical CR plans |
+| `$LLM_JOURNEY_WORKFLOW_REPORTS` | `/agent-docs/llm-journey/workflow/reports/main.md` | Investigation report template, example, and historical reports |
+| `$LLM_JOURNEY_WORKFLOW_REQUIREMENTS` | `/agent-docs/llm-journey/workflow/requirements/main.md` | CR requirements template, directory guide, and historical CR artifacts |

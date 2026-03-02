@@ -15,7 +15,7 @@
 5. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
 6. BA creates structured requirement document.
 7. BA assesses business complexity.
-8. **Output:** `/agent-docs/requirements/CR-XXX-<slug>.md` + prompt for Tech Lead.
+8. **Output:** `/agent-docs/llm-journey/workflow/requirements/CR-XXX-<slug>.md` + prompt for Tech Lead.
 9. BA reports back to Human User for review and approval.
 10. Human User approves or requests changes.
 11. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the Human User, and issue a revised handoff.
@@ -24,7 +24,7 @@
 1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
 2. Tech Lead assesses technical complexity and identifies required sub-agents.
 3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
-4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `/agent-docs/plans/TEMPLATE.md`.
+4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/llm-journey/workflow/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `$LLM_JOURNEY_WORKFLOW_PLANS`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
    - **Exception:** Skip explicit Go/No-Go for: (a) strictly `[S][DOC]` work or pure discovery sessions where no sub-agent delegation handoff will be issued — direct Tech Lead execution of permitted changes does not disqualify from this skip; or (b) `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment — i.e., every technical choice is fully determined by the BA spec and no tradeoff is left open.
 6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
@@ -66,8 +66,8 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - For a new CR, agents MUST **replace file contents** with the current CR context. Do not append historical CR logs.
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
-- Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `$LLM_JOURNEY_LOG`), not in accumulated conversation transcripts.
-- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's work is archived in a non-conversation artifact. **Non-circular evidence only** — do not cite the outgoing conversation file itself as evidence (it is the artifact being replaced). Minimum evidence: (a) `plans/CR-XXX-plan.md` exists, AND (b) `requirements/CR-XXX-<slug>.md` shows `status: Done` or equivalent closure signal. Do not replace until both are confirmed.
+- Historical traceability belongs in CR artifacts (`$LLM_JOURNEY_WORKFLOW_REQUIREMENTS`, `$LLM_JOURNEY_WORKFLOW_PLANS`, `$LLM_JOURNEY_WORKFLOW_REPORTS`, `$LLM_JOURNEY_LOG`), not in accumulated conversation transcripts.
+- **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's work is archived in a non-conversation artifact. **Non-circular evidence only** — do not cite the outgoing conversation file itself as evidence (it is the artifact being replaced). Minimum evidence: (a) `/agent-docs/llm-journey/workflow/plans/[prior CR-ID]-plan.md` exists, AND (b) `/agent-docs/llm-journey/workflow/requirements/[prior CR-ID]-[slug].md` shows `status: Done` or equivalent closure signal. Do not replace until both are confirmed.
 - **Trust model (sub-agent attestation)**: If the incoming handoff (`tech-lead-to-<role>.md`) already contains a completed Pre-Replacement Check stub at the top, the sub-agent receiving the handoff may trust this attestation without independently re-verifying plan artifacts or CR status. The Tech Lead's (or CR Coordinator's) check satisfies the gate for that sub-agent. Sub-agents still complete their own Pre-Replacement Check when replacing their own outgoing report file (e.g., `backend-to-tech-lead.md`).
 - **Same-session shortcut**: When the replacing agent directly annotated the prior CR's status as Done in the current session (for example, the BA completing acceptance closure before writing the next BA handoff in the same session), both Evidence 1 and Evidence 2 are satisfied by a single attestation line: `"Same-session: [prior CR-ID] annotated Done during [phase] in this session."` Independent re-reading of the plan artifact or requirements artifact is redundant and may be omitted. The Write-Before-Read tool constraint is unaffected — the outgoing conversation file must still be Read before the Write call.
 
@@ -83,11 +83,11 @@ To reduce ceremony at CR boundaries, pre-populate the check at the top of the in
 
     ## Pre-Replacement Check (Conversation Freshness)
     - Prior outgoing [role] handoff context: `[prior CR-ID]`
-    - Evidence 1 (plan artifact exists): `agent-docs/plans/[prior CR-ID]-plan.md`
-    - Evidence 2 (prior CR closed): `agent-docs/requirements/[prior CR-ID]-[slug].md` status is `Done`
+    - Evidence 1 (plan artifact exists): `agent-docs/llm-journey/workflow/plans/[prior CR-ID]-plan.md`
+    - Evidence 2 (prior CR closed): `agent-docs/llm-journey/workflow/requirements/[prior CR-ID]-[slug].md` status is `Done`
     - Result: replacement allowed for new CR context.
 
-The gate is not weakened — Evidence 2 requires reading the prior CR requirement artifact (`requirements/CR-XXX-<slug>.md`), not the outgoing conversation file. The stub removes formatting ceremony, not the verification step. Citing the outgoing conversation file as Evidence 2 is not permitted (circular).
+The gate is not weakened — Evidence 2 requires reading the prior CR requirement artifact, not the outgoing conversation file. The stub removes formatting ceremony, not the verification step. Citing the outgoing conversation file as Evidence 2 is not permitted (circular).
 
 #### Delegation Mode Rules
 - **Parallel Mode**
@@ -106,7 +106,7 @@ The gate is not weakened — Evidence 2 requires reading the prior CR requiremen
 - **The "Wait" State**:
   - **Parallel Mode**: Once all permitted direct changes (e.g., `.env.example`, config files) and the full planned handoff batch are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User. Permitted direct changes do not require a separate Wait State — they may be completed in the same turn as handoff issuance.
   - **Sequential Mode**: Once permitted direct changes and the current step handoff are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User.
-- **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Tech Lead Agent. 
+- **No Self-Implementation**: Do NOT attempt to perform the sub-agent's task in the same turn or session while claiming to be the Tech Lead Agent.
 - **The "Shift" Refusal**: If you feel the urge to "just do it" to be efficient, you are violating the Tech Lead role. Stop. Wait for the User to either:
   1. Approve the handoff for a sub-agent execution.
   2. Explicitly ask you to switch roles.
@@ -197,7 +197,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
    - **Additive changes** (new components, copy changes, dark mode, UI layout): trust the Tech Lead's citation with a brief source audit note.
    Do not bulk-accept all ACs with a single pass. Each AC must have a distinct evidence reference.
 3. **Assumed Gate Fallback (Mandatory)**: If `tech-lead-to-ba.md` marks any verification gate result as "assumed" (rather than confirmed with a specific command output), those "assumed" citations are not sufficient for BA acceptance. The BA must rerun the specific assumed gates directly and include the result in the AC evidence annotation. An "assumed" gate citation from the Tech Lead handoff does not satisfy AC evidence for the corresponding acceptance criterion.
-   - **Runtime mismatch clarification**: If an AC requires verification gates to pass "under compliant runtime" and the BA is running on a non-compliant runtime, this does not automatically constitute AC failure. If the runtime mismatch is pre-existing and already tracked in `project-log.md`, the BA may proceed using the proceed-and-classify exception per `tooling-standard.md` (Runtime Preflight section). The BA must document the exception in the AC evidence annotation (e.g., "runtime mismatch pre-existing per project-log; proceed-and-classify exception applied per `tooling-standard.md`"). A new, untracked runtime mismatch is not covered by this exception.
+   - **Runtime mismatch clarification**: If an AC requires verification gates to pass "under compliant runtime" and the BA is running on a non-compliant runtime, this does not automatically constitute AC failure. If the runtime mismatch is pre-existing and already tracked in `$LLM_JOURNEY_LOG`, the BA may proceed using the proceed-and-classify exception per `tooling-standard.md` (Runtime Preflight section). The BA must document the exception in the AC evidence annotation (e.g., "runtime mismatch pre-existing per project-log; proceed-and-classify exception applied per `tooling-standard.md`"). A new, untracked runtime mismatch is not covered by this exception.
 4. **CR Immutability Rule (Historical Integrity):**
    - Once a CR is marked `Done`, treat it as a historical record.
    - Do **not** rewrite closed CRs to match newer templates or style conventions.
@@ -211,7 +211,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
    - **Minor deviations**: Log acceptance in the CR's "Deviations Accepted" section.
    - **Major deviations**: Escalate to Human User before closing the CR.
 7. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `$LLM_JOURNEY_LOG` with a follow-up CR recommendation.
-8. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
+8. BA updates requirement status in `/agent-docs/llm-journey/workflow/requirements/CR-XXX-<slug>.md`.
 9. BA updates `$LLM_JOURNEY_LOG` with the final entry.
 10. BA notifies the human of completion.
 11. **Output:** Closed CR, updated project log.
@@ -237,7 +237,7 @@ If uncertain between minor and major, treat as major and escalate.
 ## General Invariants
 
 ### 1. Traceability Invariant
-Every ID mentioned in the `$LLM_JOURNEY_LOG` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
+Every ID mentioned in the `$LLM_JOURNEY_LOG` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`$LLM_JOURNEY_WORKFLOW_REQUIREMENTS`, `$LLM_JOURNEY_WORKFLOW_PLANS`, `$LLM_JOURNEY_WORKFLOW_REPORTS`, `agent-docs/decisions/`). Do not reference identifiers that do not exist as files.
 
 ### 2. E2E Selector Invariant
 When a CR modifies **routes**, **`data-testid` attributes**, or **accessibility/semantic contracts**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. For pure page structure/class refactors with unchanged contracts, a Testing handoff is optional only if contract stability evidence is documented per the Testing Handoff Trigger Matrix.
@@ -249,7 +249,7 @@ Closed CRs are immutable records and must not be normalized retroactively.
 - Legacy format variance across older CRs is acceptable.
 - Standardization requirements apply to new CRs going forward.
 - If historical evidence needs clarification, append an amendment note or create a linked follow-up artifact rather than rewriting intent/history.
-- **Retention policy**: Closed CR artifacts in `requirements/`, `plans/`, and `reports/` are **retained, not deleted**. Archive/index strategies (moving older artifacts to a subdirectory, creating a searchable index) are permitted for organizational improvement. Deletion of closed CR artifacts requires explicit Human User authorization and is out of scope for any standard CR.
+- **Retention policy**: Closed CR artifacts in `$LLM_JOURNEY_WORKFLOW_REQUIREMENTS`, `$LLM_JOURNEY_WORKFLOW_PLANS`, and `$LLM_JOURNEY_WORKFLOW_REPORTS` are **retained, not deleted**. Archive/index strategies (moving older artifacts to a subdirectory, creating a searchable index) are permitted for organizational improvement. Deletion of closed CR artifacts requires explicit Human User authorization and is out of scope for any standard CR.
 
 ### 4. Scope Extension Invariant
 When execution feedback expands work beyond the approved handoff (for example touching additional routes, introducing shared abstractions, or changing ownership boundaries), implementation must pause until `scope extension approved` is explicitly recorded by the decision owner (Tech Lead for technical scope, User for direct override).

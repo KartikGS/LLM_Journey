@@ -39,7 +39,7 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 - **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
 - **Tooling & Environment:** `$TOOLING_STANDARD`
 - **Technical Map:** [Technical Context](/agent-docs/technical-context.md)
-- **How we work:** [Workflow](/agent-docs/workflow.md)
+- **How we work:** `$LLM_JOURNEY_WORKFLOW`
 
 ### Layer 2: Role-Specific Context (see your role file)
 - Business Analyst → `$LLM_JOURNEY_ROLE_BA`
@@ -53,13 +53,13 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 ## Interfaces & Contracts
 Failed coordination kills projects. Stick to these contracts:
 ### Process & Workflow
-- **How we work:** [Workflow](/agent-docs/workflow.md)
+- **How we work:** `$LLM_JOURNEY_WORKFLOW`
 - **Meta Improvements:** [Meta Improvement Protocol](/agent-docs/coordination/meta-improvement-protocol.md)
 **Constraint:**
 - Do not invent policies, standards, or requirements
 - If a rule is not written in `agent-docs/`, assume it does not exist
 - Ask the user before proceeding when intent is ambiguous
-- Treat closed CRs in `/agent-docs/requirements/` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
+- Treat closed CRs in `$LLM_JOURNEY_WORKFLOW_REQUIREMENTS` as historical artifacts (immutable by default). Do not rewrite old CRs only to match newer templates.
 - Agents may propose process improvements. Process/policy changes become effective when either:
   - Tech Lead verification is recorded, or
   - The Human User explicitly approves an override in-session.
@@ -117,7 +117,7 @@ If intent is unclear, stop and ask the user.
 
 ### Is documentation considered a "technical asset"?
 Yes. For the purpose of authority:
-- **Requirements (`/agent-docs/requirements/`)**: Owned by **BA**.
+- **Requirements (`$LLM_JOURNEY_WORKFLOW_REQUIREMENTS`)**: Owned by **BA**.
 - **System Docs (`/README.md`, `$LLM_JOURNEY_ARCHITECTURE`, `/agent-docs/technical-context.md`)**: Owned by **Tech Lead**.
 - **Role Docs (`/agent-docs/llm-journey/roles/`)**: Owned by the respective role (initially) and **Tech Lead**.
-- **Process Docs (`/agent-docs/workflow.md`, `$LLM_JOURNEY_AGENTS`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.
+- **Process Docs (`$LLM_JOURNEY_WORKFLOW`, `$LLM_JOURNEY_AGENTS`)**: Shared. Modifications require **Tech Lead** verification unless the Human User explicitly authorizes immediate change in-session.

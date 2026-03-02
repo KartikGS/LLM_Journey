@@ -34,7 +34,7 @@ Before executing any task, also read:
 - Make a report for the Tech Lead agent in the [Testing To Tech Lead Handoff](/agent-docs/conversations/testing-to-tech-lead.md)
 
 ### Preflight Communication (Mandatory)
-**Pre-Replacement Check (mandatory):** Before replacing `testing-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+**Pre-Replacement Check (mandatory):** Before replacing `testing-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW`. Do not write until prior CR closure is confirmed.
 
 Before writing or modifying tests, publish a short **Preflight** note in `/agent-docs/conversations/testing-to-tech-lead.md` with:
 - **Assumptions I'm making**

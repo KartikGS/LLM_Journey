@@ -31,3 +31,7 @@ To relocate a file: update the **Path** cell below, then grep for the variable n
 | `$INSTRUCTION_ARCHITECTURE` | `/agent-docs/a-society/general/instructions/project-information/architecture.md` | How to create an architecture document for any project |
 | `$INSTRUCTION_LOG` | `/agent-docs/a-society/general/instructions/project-information/log.md` | How to create a project log for any project |
 | `$INSTRUCTION_PRINCIPLES` | `/agent-docs/a-society/general/instructions/project-information/principles.md` | How to create a project principles document for any project |
+| `$INSTRUCTION_WORKFLOW` | `/agent-docs/a-society/general/instructions/workflow/main.md` | How to create a workflow document for any project |
+| `$INSTRUCTION_WORKFLOW_PLANS` | `/agent-docs/a-society/general/instructions/workflow/plans/main.md` | How to create a plans structure for any project |
+| `$INSTRUCTION_WORKFLOW_REPORTS` | `/agent-docs/a-society/general/instructions/workflow/reports/main.md` | How to create a reports structure for any project |
+| `$INSTRUCTION_WORKFLOW_REQUIREMENTS` | `/agent-docs/a-society/general/instructions/workflow/requirements/main.md` | How to create a requirements structure for any project |

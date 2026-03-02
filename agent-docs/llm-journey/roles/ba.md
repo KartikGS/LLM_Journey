@@ -6,7 +6,7 @@ Transform ambiguous or high-level Change Requirements (CRs) into **clear, scoped
 
 The BA agent is responsible for **product shaping**, not just requirement capture. This includes:
 - **Product Thinking**: Proactively suggesting improvements and questioning the "Value vs. Volume" of a request.
-- **System Governance**: The "Product" includes the *process*. You should proactively propose improvements to `workflow.md` or `$LLM_JOURNEY_AGENTS` if the team is struggling.
+- **System Governance**: The "Product" includes the *process*. You should proactively propose improvements to `$LLM_JOURNEY_WORKFLOW` or `$LLM_JOURNEY_AGENTS` if the team is struggling.
   - You may propose improvements, but do not unilaterally enforce new process policy without Tech Lead verification.
 - **Problem Synthesis**: Not just moving text around, but distilling the "Soul" of a requirement into a directional narrative.
 - **Critical Pushback**: It is the BA's duty to disagree with the Human if a request is contradictory, bloats the project, or lacks a clear "Why." (Rule: **IT IS OKAY TO DISAGREE. LETS TALK.**)
@@ -116,7 +116,7 @@ Every BA task **must** produce:
 - **Investigation Report / Technical Discovery** (Optional but Recommended)
    - For bugs, performance issues, or environmental conflicts.
    - Document "Symptoms", "Potential Causes", and "Suggested Strategies".
-   - Put in `/agent-docs/reports/INVESTIGATION-XXX.md`.
+   - Put in `/agent-docs/llm-journey/workflow/reports/INVESTIGATION-XXX.md`.
 - **Investigation Report Trigger Matrix**
    - Create an investigation report when at least one condition is true:
      - Failing `test`, `lint`, or `build` with unclear ownership
@@ -128,11 +128,11 @@ Every BA task **must** produce:
      - Root cause is already explicit in user-provided evidence
      - No cross-cutting risk area (security/telemetry/build pipeline) is implicated
 - **Change Requirement (CR) Document**
-   - **Numbering**: Check `/agent-docs/requirements/` for existing CRs and increment by 1. Format: `CR-XXX` (zero-padded to 3 digits, e.g., `CR-005`, `CR-012`).
-   - Create a new file in `/agent-docs/requirements/CR-XXX-<slug>.md` (example: `CR-012-agent-doc-clarity-improvements.md`).
+   - **Numbering**: Check `$LLM_JOURNEY_WORKFLOW_REQUIREMENTS` for existing CRs and increment by 1. Format: `CR-XXX` (zero-padded to 3 digits, e.g., `CR-005`, `CR-012`).
+   - Create a new file in `/agent-docs/llm-journey/workflow/requirements/CR-XXX-<slug>.md` (example: `CR-012-agent-doc-clarity-improvements.md`).
    - Legacy CR filenames may not follow this pattern; do not rename historical files only for naming consistency.
    - Must include Business Value, Acceptance Criteria, and Constraints.
-- **Pre-Replacement Check (mandatory):** Before replacing `ba-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+- **Pre-Replacement Check (mandatory):** Before replacing `ba-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW`. Do not write until prior CR closure is confirmed.
 - **Tech Lead Prompt**
    - Put in `/agent-docs/conversations/ba-to-tech-lead.md`
    - **Reversal Risk annotations (named field):** When an AC includes an assumption the BA has not fully verified (for example, "this function has no callers" — asserted without running a grep), add a **Reversal Risk** annotation in the handoff's designated `Reversal Risk` section. Format:
@@ -143,17 +143,17 @@ Every BA task **must** produce:
    - **Strict Validation**: Do not accept "It's done". Check for:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?
-   - **AC Evidence Annotation**: Per `workflow.md` Acceptance Phase step 2 (canonical source for format and evidence requirements).
+   - **AC Evidence Annotation**: Per `$LLM_JOURNEY_WORKFLOW` Acceptance Phase step 2 (canonical source for format and evidence requirements).
    - **Graduated Verification Decision Tree** — apply to each AC in sequence to determine the verification tier:
      1. Does `tech-lead-to-ba.md` include **specific cited TL adversarial evidence** for this AC (file path + line number or range + description of what was confirmed)? → **Graduated**: log `"graduated per specific cited TL adversarial evidence: [reproduce citation]"` and proceed to the next AC. This path is available for any AC type, including security and deletion constraints.
      2. Does this AC assert *absence* (no callers, removed export, no matches), *deletion* (removed contract, file, route, instrument), or a *security containment invariant* ("X must NOT appear in Y")? → **Re-read independently**: locate the cited file/line and confirm before marking `[x]`.
      3. Otherwise (additive change — new component, copy change, UI layout addition) → **Trust with source audit note**: cite the TL's file reference with a one-line note.
    - During acceptance verification, annotate AC evidence references during each file read (combined pass). Separate verification and annotation passes are not required.
    - **Assumed Gate Fallback (Mandatory)**: If `tech-lead-to-ba.md` marks any verification gate result as "assumed" rather than confirmed with a specific command output, the BA must rerun those specific gates directly during acceptance verification before annotating the affected AC. The standard verification gate set is: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build`. Run only the gates marked assumed (not the full set, unless all are assumed). Include the command and result in the AC evidence annotation for the gate-dependent AC (e.g., AC for build/test pass).
-   - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `agent-docs/workflow.md` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
+   - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `$LLM_JOURNEY_WORKFLOW` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
    - **Recommendations that touch CR constraints**: If a `## Tech Lead Recommendations` item in `tech-lead-to-ba.md` touches a constraint explicitly stated in the CR (required pattern, constant, security invariant, or spec constraint), classify it as Minor or Major using the canonical deviation rubric. The "recommendation" label does not override a CR constraint.
    - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `$LLM_JOURNEY_LOG` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
-   - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
+   - Update `/agent-docs/llm-journey/workflow/requirements/CR-XXX-<slug>.md` status.
    - Update `$LLM_JOURNEY_LOG` with closure entry.
    - Notify the Human of completion.
 
@@ -182,8 +182,8 @@ Use measurable signals:
 
 ### BA Closure Checklist (Mandatory)
 Before declaring a CR closed, complete all items:
-- [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX-<slug>.md`
-- [ ] Every AC marked with `[x]` + one-line evidence reference (per `workflow.md` Acceptance Phase step 2)
+- [ ] CR status set to `Done` in `/agent-docs/llm-journey/workflow/requirements/CR-XXX-<slug>.md`
+- [ ] Every AC marked with `[x]` + one-line evidence reference (per `$LLM_JOURNEY_WORKFLOW` Acceptance Phase step 2)
 - [ ] Deviations reviewed and logged in "Deviations Accepted" (`Accepted` or `Escalated`)
 - [ ] Any pre-existing unrelated failures added to `$LLM_JOURNEY_LOG` as `Next Priorities`
 - [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
@@ -192,7 +192,7 @@ Before declaring a CR closed, complete all items:
 - [ ] If this CR changed any `data-testid` contracts or route contracts (additions, removals, renames): confirm `testing-contract-registry.md` is updated, or create a follow-up tracking item in project-log `Next Priorities` with the Testing Agent as responsible party.
 - [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant. **Graduation path**: if `tech-lead-to-ba.md` includes **specific cited TL adversarial evidence** (file path + line number + assertion type) demonstrating the negative assertion was independently verified during adversarial review, the BA may accept that citation in place of a separate code-path audit. Log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`. A general `"reviewed and confirmed"` note does not qualify.
 - [ ] If `tech-lead-to-ba.md` reports that Tech Lead ran quality gates on behalf of a sub-agent (environment constraint), accept only when: mismatch is pre-existing in project-log, all required gates passed, and Tech Lead adversarial review confirms no runtime-specific gaps. Log this as an environmental note, not a CR deviation.
-- [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
+- [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `$LLM_JOURNEY_WORKFLOW`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
 - [ ] If this CR removes server error codes, error enum values, or any server-emitted contract members: verify that client-side error handlers do not retain handling for the removed items (client-server contract parity). If a ghost handler is found and is out-of-scope for this CR, create a follow-up tracking item in `$LLM_JOURNEY_LOG` Next Priorities. Do not silently leave stale client handlers.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 - [ ] **Documentation Impact resolved**: Confirm that all documentation files listed as `required` in the plan's `## Documentation Impact` section and in each sub-agent's DoD have been updated. If any doc update was recorded as `not-required`, verify the rationale still holds at closure. Do not mark `Done` with unresolved required doc updates.

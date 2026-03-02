@@ -207,7 +207,7 @@ Before marking work complete:
 
 ## Verification & Reporting Protocol
 
-**Pre-Replacement Check (mandatory):** Before replacing `frontend-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `workflow.md`. Do not write until prior CR closure is confirmed.
+**Pre-Replacement Check (mandatory):** Before replacing `frontend-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW`. Do not write until prior CR closure is confirmed.
 
 - Run runtime preflight per `$TOOLING_STANDARD` Runtime Preflight (canonical source). If below the minimum version, classify as `environmental` in the report before running any verification commands.
 - Run verification commands in this exact order:

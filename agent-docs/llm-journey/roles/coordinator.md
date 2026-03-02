@@ -28,7 +28,7 @@ At each coordinator session start, load **only**:
 2. The sub-agent's completion report (`conversations/<role>-to-tech-lead.md`).
 3. The files the sub-agent modified.
 
-Do **not** reload Layer 1/2 project standards ($LLM_JOURNEY_AGENTS, workflow.md, role docs) — they are not needed for adversarial review and consume context budget. If context saturation is experienced during a session, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing.
+Do **not** reload Layer 1/2 project standards ($LLM_JOURNEY_AGENTS, $LLM_JOURNEY_WORKFLOW, role docs) — they are not needed for adversarial review and consume context budget. If context saturation is experienced during a session, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing.
 
 ---
 
@@ -82,7 +82,7 @@ Complete this checklist before returning a conclusion summary to the Tech Lead.
 
 ### Pre-Read
 - [ ] Read sub-agent report (`conversations/<role>-to-tech-lead.md`).
-- [ ] Confirm pre-replacement check was completed, or confirm the CR ID in the `Subject` field matches the active CR (trust attestation path per `workflow.md`).
+- [ ] Confirm pre-replacement check was completed, or confirm the CR ID in the `Subject` field matches the active CR (trust attestation path per `$LLM_JOURNEY_WORKFLOW`).
 
 ### Adversarial Diff Review
 - [ ] Read actual modified files line-by-line against the CR's Acceptance Criteria.
@@ -164,7 +164,7 @@ Use this library to select the relevant domain checks for a given CR type. Recor
 
 ### Quality Gates
 - [ ] Run quality gates in sequence per the Tech Lead Verification Matrix in `testing-strategy.md`. (Canonical command list and conditionality rules live there.)
-- [ ] Evaluate E2E requirement using `workflow.md` Testing Handoff Trigger Matrix.
+- [ ] Evaluate E2E requirement using `$LLM_JOURNEY_WORKFLOW` Testing Handoff Trigger Matrix.
 - [ ] If E2E is required: run `pnpm test:e2e` and classify failures as CR-related vs. pre-existing.
 - [ ] For global/browser-sensitive changes with E2E scope: ensure cross-browser coverage (`chromium`, `firefox`, `webkit`) unless CR explicitly narrows scope.
 - [ ] If UI was changed: verify Light/Dark mode rendering.
