@@ -19,7 +19,7 @@ This document defines the mandatory tools and environment configurations for thi
 
 - Run `node -v` once per execution session before verification commands.
 - If runtime is below the documented minimum, classify as an **environmental mismatch** in the role report instead of silently downgrading requirements.
-- If the mismatch is pre-existing and already tracked in `project-log.md`, proceed and document it in the active report.
+- If the mismatch is pre-existing and already tracked in `$LLM_JOURNEY_LOG`, proceed and document it in the active report.
 - If the mismatch is new and below the documented minimum, halt and report to Tech Lead before running verification commands.
 - **Recovery path**: To activate the documented runtime version, run the full nvm sourcing sequence — `nvm use` alone silently fails in non-interactive shells without the sourcing step:
   ```sh

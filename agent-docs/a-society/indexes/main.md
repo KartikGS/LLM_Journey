@@ -28,3 +28,6 @@ To relocate a file: update the **Path** cell below, then grep for the variable n
 | `$INSTRUCTION_AGENT_DOCS_GUIDE` | `/agent-docs/a-society/general/instructions/agent-docs-guide.md` | How to create an agent-docs guide for any project |
 | `$INSTRUCTION_AGENTS` | `/agent-docs/a-society/general/instructions/agents.md` | How to create an agents.md for any project |
 | `$INSTRUCTION_ROLES` | `/agent-docs/a-society/general/instructions/roles/main.md` | How to create role documents — archetypes and templates |
+| `$INSTRUCTION_ARCHITECTURE` | `/agent-docs/a-society/general/instructions/project-information/architecture.md` | How to create an architecture document for any project |
+| `$INSTRUCTION_LOG` | `/agent-docs/a-society/general/instructions/project-information/log.md` | How to create a project log for any project |
+| `$INSTRUCTION_PRINCIPLES` | `/agent-docs/a-society/general/instructions/project-information/principles.md` | How to create a project principles document for any project |

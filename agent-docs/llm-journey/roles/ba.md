@@ -75,7 +75,7 @@ The BA agent **MAY**:
   - `agent-docs/technical-context.md`
   - `$TOOLING_STANDARD`
   - `README.md` (root)
-  - `agent-docs/architecture.md` (or any system-level documentation)
+  - `$LLM_JOURNEY_ARCHITECTURE` (or any system-level documentation)
 - Must NOT introduce new system constraints directly. All constraints must be verified by a Tech Lead Agent.
 
 If a new architectural constraint is required:
@@ -90,8 +90,8 @@ If a new architectural constraint is required:
 ### Role-Specific Readings (BA)
 Before working on any CR, also read:
 - **High-Level Goals:** `$LLM_JOURNEY_VISION`
-- **Recent Changes:** [Project Log](/agent-docs/project-log.md)
-- **System Design:** [Architecture](/agent-docs/architecture.md)
+- **Recent Changes:** `$LLM_JOURNEY_LOG`
+- **System Design:** `$LLM_JOURNEY_ARCHITECTURE`
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 - **Architecture Context:** [Decisions](/agent-docs/decisions/)
 
@@ -152,9 +152,9 @@ Every BA task **must** produce:
    - **Assumed Gate Fallback (Mandatory)**: If `tech-lead-to-ba.md` marks any verification gate result as "assumed" rather than confirmed with a specific command output, the BA must rerun those specific gates directly during acceptance verification before annotating the affected AC. The standard verification gate set is: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm build`. Run only the gates marked assumed (not the full set, unless all are assumed). Include the command and result in the AC evidence annotation for the gate-dependent AC (e.g., AC for build/test pass).
    - **Deviation Review**: Explicitly acknowledge deviations reported in the Tech Lead's handoff. Classify severity using the canonical rubric in `agent-docs/workflow.md` (`Acceptance Phase` -> `Deviation Severity Rubric (Canonical)`). For minor deviations, log acceptance in the CR's "Deviations Accepted" section. For major deviations, escalate to the Human User before closing.
    - **Recommendations that touch CR constraints**: If a `## Tech Lead Recommendations` item in `tech-lead-to-ba.md` touches a constraint explicitly stated in the CR (required pattern, constant, security invariant, or spec constraint), classify it as Minor or Major using the canonical deviation rubric. The "recommendation" label does not override a CR constraint.
-   - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `project-log.md` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
+   - **Pre-Existing Failure Escalation**: If the Tech Lead reports pre-existing test failures unrelated to the CR, the BA MUST log them as a `Next Priority` item in `$LLM_JOURNEY_LOG` with a recommendation for a follow-up CR. Do not let unrelated failures go untracked.
    - Update `/agent-docs/requirements/CR-XXX-<slug>.md` status.
-   - Update `/agent-docs/project-log.md` with closure entry.
+   - Update `$LLM_JOURNEY_LOG` with closure entry.
    - Notify the Human of completion.
 
 ### BA Decision Matrix (Mandatory)
@@ -185,7 +185,7 @@ Before declaring a CR closed, complete all items:
 - [ ] CR status set to `Done` in `/agent-docs/requirements/CR-XXX-<slug>.md`
 - [ ] Every AC marked with `[x]` + one-line evidence reference (per `workflow.md` Acceptance Phase step 2)
 - [ ] Deviations reviewed and logged in "Deviations Accepted" (`Accepted` or `Escalated`)
-- [ ] Any pre-existing unrelated failures added to `project-log.md` as `Next Priorities`
+- [ ] Any pre-existing unrelated failures added to `$LLM_JOURNEY_LOG` as `Next Priorities`
 - [ ] Project log lifecycle updated with exactly one `Recent Focus`, up to three `Previous`, older entries moved to `Archive`
 - [ ] Human-facing closure note sent with outcome + residual risks (if any)
 - [ ] No debug artifacts spotted in verified production code paths. If found after TL verification: flag in CR Notes, notify user directly. Does not block closure.
@@ -193,7 +193,7 @@ Before declaring a CR closed, complete all items:
 - [ ] For security constraints of the form "X must NOT appear in Y": verify a test or explicit code-path audit covers the negative assertion. A passing positive test alone does not satisfy a containment invariant. **Graduation path**: if `tech-lead-to-ba.md` includes **specific cited TL adversarial evidence** (file path + line number + assertion type) demonstrating the negative assertion was independently verified during adversarial review, the BA may accept that citation in place of a separate code-path audit. Log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`. A general `"reviewed and confirmed"` note does not qualify.
 - [ ] If `tech-lead-to-ba.md` reports that Tech Lead ran quality gates on behalf of a sub-agent (environment constraint), accept only when: mismatch is pre-existing in project-log, all required gates passed, and Tech Lead adversarial review confirms no runtime-specific gaps. Log this as an environmental note, not a CR deviation.
 - [ ] Review `## Tech Lead Recommendations` in `tech-lead-to-ba.md` (if populated): if an item touches an explicit CR constraint, classify it via the canonical deviation rubric in `workflow.md`; otherwise decide follow-up CR / add to project-log `Next Priority` / reject with rationale.
-- [ ] If this CR removes server error codes, error enum values, or any server-emitted contract members: verify that client-side error handlers do not retain handling for the removed items (client-server contract parity). If a ghost handler is found and is out-of-scope for this CR, create a follow-up tracking item in `project-log.md` Next Priorities. Do not silently leave stale client handlers.
+- [ ] If this CR removes server error codes, error enum values, or any server-emitted contract members: verify that client-side error handlers do not retain handling for the removed items (client-server contract parity). If a ghost handler is found and is out-of-scope for this CR, create a follow-up tracking item in `$LLM_JOURNEY_LOG` Next Priorities. Do not silently leave stale client handlers.
 - [ ] Review `keep-in-mind.md`: promote or retire any content/product entries whose root causes are resolved by this CR.
 - [ ] **Documentation Impact resolved**: Confirm that all documentation files listed as `required` in the plan's `## Documentation Impact` section and in each sub-agent's DoD have been updated. If any doc update was recorded as `not-required`, verify the rationale still holds at closure. Do not mark `Done` with unresolved required doc updates.
 

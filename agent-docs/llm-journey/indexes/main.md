@@ -28,3 +28,6 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_ROLE_FRONTEND` | `/agent-docs/llm-journey/roles/sub-agents/frontend.md` | Frontend Engineer sub-agent — UI/UX, components, and accessibility |
 | `$LLM_JOURNEY_ROLE_INFRA` | `/agent-docs/llm-journey/roles/sub-agents/infra.md` | Infrastructure sub-agent — deployment, CI/CD, and global security |
 | `$LLM_JOURNEY_ROLE_TESTING` | `/agent-docs/llm-journey/roles/sub-agents/testing.md` | Testing sub-agent — E2E, contract assertions, and test infrastructure |
+| `$LLM_JOURNEY_ARCHITECTURE` | `/agent-docs/llm-journey/project-information/architecture.md` | System overview, high-level components, data flow, and architectural invariants |
+| `$LLM_JOURNEY_LOG` | `/agent-docs/llm-journey/project-information/log.md` | Current state, recent focus, next priorities, and archive |
+| `$LLM_JOURNEY_PRINCIPLES` | `/agent-docs/llm-journey/project-information/principles.md` | Project-specific product and UX principles for LLM Journey |

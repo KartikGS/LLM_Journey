@@ -11,7 +11,7 @@
    - Human User intent (session-level request),
    - Product End User audience (website learner/persona),
    - expected learner or product outcome.
-4. **Technical Sanity Check**: BA consults `/agent-docs/architecture.md`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
+4. **Technical Sanity Check**: BA consults `$LLM_JOURNEY_ARCHITECTURE`, `/agent-docs/technical-context.md`, and ADRs in `/agent-docs/decisions/` to identify potential conflicts or opportunities for "Product Shaping" (e.g., suggesting a fallback UI for a known browser constraint).
 5. **Testing Incident Check (Conditional)**: If the task involves failing tests/lint/build or environment-specific runtime mismatches, BA must load `/agent-docs/testing-strategy.md` and collect at least one command-based baseline (`exact command + result`) before finalizing CR scope.
 6. BA creates structured requirement document.
 7. BA assesses business complexity.
@@ -66,7 +66,7 @@ Canonical rule: this matrix is the source of truth for Testing handoff decisions
 - For a new CR, agents MUST **replace file contents** with the current CR context. Do not append historical CR logs.
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
-- Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `project-log.md`), not in accumulated conversation transcripts.
+- Historical traceability belongs in CR artifacts (`requirements/`, `plans/`, `reports/`, `$LLM_JOURNEY_LOG`), not in accumulated conversation transcripts.
 - **Pre-Replacement Check (Mandatory)**: Before replacing a conversation file for a new CR, confirm the prior CR's work is archived in a non-conversation artifact. **Non-circular evidence only** — do not cite the outgoing conversation file itself as evidence (it is the artifact being replaced). Minimum evidence: (a) `plans/CR-XXX-plan.md` exists, AND (b) `requirements/CR-XXX-<slug>.md` shows `status: Done` or equivalent closure signal. Do not replace until both are confirmed.
 - **Trust model (sub-agent attestation)**: If the incoming handoff (`tech-lead-to-<role>.md`) already contains a completed Pre-Replacement Check stub at the top, the sub-agent receiving the handoff may trust this attestation without independently re-verifying plan artifacts or CR status. The Tech Lead's (or CR Coordinator's) check satisfies the gate for that sub-agent. Sub-agents still complete their own Pre-Replacement Check when replacing their own outgoing report file (e.g., `backend-to-tech-lead.md`).
 - **Same-session shortcut**: When the replacing agent directly annotated the prior CR's status as Done in the current session (for example, the BA completing acceptance closure before writing the next BA handoff in the same session), both Evidence 1 and Evidence 2 are satisfied by a single attestation line: `"Same-session: [prior CR-ID] annotated Done during [phase] in this session."` Independent re-reading of the plan artifact or requirements artifact is redundant and may be omitted. The Write-Before-Read tool constraint is unaffected — the outgoing conversation file must still be Read before the Write call.
@@ -129,7 +129,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 
 ### Code & Git Standards
 - All contributions must follow the rules defined in `agent-docs/development/contribution-guidelines.md`.
-- **Parallel-CR branch strategy (deferred policy decision)**: One-branch-per-CR policy and CR-number collision strategy for concurrent CR execution are explicitly deferred as a pending Human User policy decision. Do not implement without explicit user authorization. Current working assumption: single active feature branch per session. See `project-log.md` Next Priorities.
+- **Parallel-CR branch strategy (deferred policy decision)**: One-branch-per-CR policy and CR-number collision strategy for concurrent CR execution are explicitly deferred as a pending Human User policy decision. Do not implement without explicit user authorization. Current working assumption: single active feature branch per session. See `$LLM_JOURNEY_LOG` Next Priorities.
 
 
 
@@ -210,9 +210,9 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
    - Classify each deviation using the **Deviation Severity Rubric (Canonical)** below.
    - **Minor deviations**: Log acceptance in the CR's "Deviations Accepted" section.
    - **Major deviations**: Escalate to Human User before closing the CR.
-7. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `project-log.md` with a follow-up CR recommendation.
+7. **Pre-Existing Failure Tracking**: If the Tech Lead reports pre-existing test failures unrelated to the CR, BA logs them as a `Next Priority` in `$LLM_JOURNEY_LOG` with a follow-up CR recommendation.
 8. BA updates requirement status in `agent-docs/requirements/CR-XXX-<slug>.md`.
-9. BA updates `agent-docs/project-log.md` with the final entry.
+9. BA updates `$LLM_JOURNEY_LOG` with the final entry.
 10. BA notifies the human of completion.
 11. **Output:** Closed CR, updated project log.
 
@@ -237,7 +237,7 @@ If uncertain between minor and major, treat as major and escalate.
 ## General Invariants
 
 ### 1. Traceability Invariant
-Every ID mentioned in the `agent-docs/project-log.md` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
+Every ID mentioned in the `$LLM_JOURNEY_LOG` (e.g., `CR-XXX`, `ADR-XXX`) **MUST** have a corresponding artifact in the relevant directory (`requirements/`, `decisions/`, `plans/`, `reports/`). Do not reference identifiers that do not exist as files.
 
 ### 2. E2E Selector Invariant
 When a CR modifies **routes**, **`data-testid` attributes**, or **accessibility/semantic contracts**, the Tech Lead **MUST** include a Testing Agent task to update affected E2E tests. For pure page structure/class refactors with unchanged contracts, a Testing handoff is optional only if contract stability evidence is documented per the Testing Handoff Trigger Matrix.

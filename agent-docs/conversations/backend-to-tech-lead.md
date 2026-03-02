@@ -117,7 +117,7 @@
 
 ## [Failure Classification]
 - `CR-related`: none.
-- `pre-existing`: Worker-process teardown warning during test suite teardown (project-log.md, CR-021). `require-in-the-middle` critical dependency warning in `pnpm build` (project-log.md, CR-021). Deprecation warning for `next lint` CLI (pre-existing, CR-021).
+- `pre-existing`: Worker-process teardown warning during test suite teardown (`$LLM_JOURNEY_LOG`, CR-021). `require-in-the-middle` critical dependency warning in `pnpm build` (`$LLM_JOURNEY_LOG`, CR-021). Deprecation warning for `next lint` CLI (pre-existing, CR-021).
 - `environmental`: Node.js runtime was v16.20.1 on session start (same as CR-023); resolved via nvm. Pre-existing condition, not newly tracked.
 - `non-blocking warning`: none.
 
@@ -129,4 +129,4 @@
 `yes`
 
 ## [Follow-up Recommendations]
-- **nvm sourcing (environmental)**: Shell profile does not auto-source nvm (same condition as CR-023). nvm init should be added to `.bashrc`/`.zshrc`. Recommend adding as `[S]` Next Priority in `project-log.md` if not already tracked.
+- **nvm sourcing (environmental)**: Shell profile does not auto-source nvm (same condition as CR-023). nvm init should be added to `.bashrc`/`.zshrc`. Recommend adding as `[S]` Next Priority in `$LLM_JOURNEY_LOG` if not already tracked.

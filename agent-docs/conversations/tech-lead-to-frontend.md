@@ -117,7 +117,7 @@ Must visibly cover all four points (AC-1 requirement):
 3. Knowledge cutoff — base models cannot learn from recent events without adaptation.
 4. Output format control — production applications need predictable, structured output that base models don't guarantee.
 
-Use your judgment on the exact wording within these constraints. Educational clarity (project-principles.md) takes priority over brevity.
+Use your judgment on the exact wording within these constraints. Educational clarity (`$LLM_JOURNEY_PRINCIPLES`) takes priority over brevity.
 
 **"Limitations & What's Next" section** (`data-testid="adaptation-limitations"`):
 Must visibly cover (AC-2 and AC-3 requirements):

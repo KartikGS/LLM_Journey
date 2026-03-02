@@ -87,7 +87,7 @@ Protocol requirements:
     - [Deployment Notes]
     - [Link to Updated Docs]
 - **AC-ID alignment requirement (Mandatory)**: AC identifiers and text in `tech-lead-to-ba.md` must match the corresponding AC IDs and text in the CR document exactly. If the Tech Lead references a subset of ACs, they must be quoted verbatim from the CR — paraphrasing or renumbering is not permitted. Mismatched numbering forces the BA to manually crosswalk evidence by meaning and creates acceptance verification risk.
-- **Protocol**: Tech Lead MUST NOT update `project-log.md`. This is reserved for the BA Agent in Acceptance Phase.
+- **Protocol**: Tech Lead MUST NOT update `$LLM_JOURNEY_LOG`. This is reserved for the BA Agent in Acceptance Phase.
 
 ## Failure Classification Rules (MANDATORY)
 When reporting failures or warnings, classify each item exactly once:
@@ -115,5 +115,5 @@ If approved directly by the Human User, include the exact marker: `scope extensi
 - **Trigger**: Acceptance Phase (Acceptance) complete.
 - **Protocol**:
     1. Update `agent-docs/requirements/CR-XXX.md` status to `Done` (or legacy-equivalent mapping where applicable).
-    2. Update `agent-docs/project-log.md` with the closure entry.
+    2. Update `$LLM_JOURNEY_LOG` with the closure entry.
     3. Notify User of completion with a summary of the value delivered.

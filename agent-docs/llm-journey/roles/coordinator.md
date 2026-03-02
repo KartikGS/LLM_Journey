@@ -55,7 +55,7 @@ If a sub-agent cannot run required quality gates because Bash is denied or the r
 2. In the coordinator conclusion summary, document:
    - the exact commands run by the Coordinator,
    - the runtime/environment used, and
-   - whether any mismatch is pre-existing (tracked in `project-log.md`) or introduced by this CR.
+   - whether any mismatch is pre-existing (tracked in `$LLM_JOURNEY_LOG`) or introduced by this CR.
 3. If the sub-agent was a background Task and the preflight write is absent, the Coordinator confirms reading independently via the adversarial diff review — treat missing preflight as a process-only finding, not an AC-blocking one.
 
 ---

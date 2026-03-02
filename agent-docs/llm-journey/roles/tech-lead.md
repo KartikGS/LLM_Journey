@@ -161,8 +161,8 @@ For each file, ask: **"Is this feature code?"**
 
 ### Every Task (Role-Specific)
 Before planning or executing ANY task, also read:
-- **Current State:** [Project Log](/agent-docs/project-log.md)
-- **Architecture Check:** [Architecture](/agent-docs/architecture.md) & [Decisions](/agent-docs/decisions/)
+- **Current State:** `$LLM_JOURNEY_LOG`
+- **Architecture Check:** `$LLM_JOURNEY_ARCHITECTURE` & [Decisions](/agent-docs/decisions/)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
@@ -368,7 +368,7 @@ If tests fail for reasons **unrelated** to the current CR:
 - **Do** clearly distinguish CR-related failures (which block completion) from pre-existing failures (which do not)
 
 > [!CAUTION]
-> **Do NOT update `agent-docs/project-log.md`**. Final status updates and user notification are the responsibility of the BA Agent.
+> **Do NOT update `$LLM_JOURNEY_LOG`**. Final status updates and user notification are the responsibility of the BA Agent.
 
 ---
 

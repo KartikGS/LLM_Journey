@@ -5,7 +5,7 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 > [!NOTE]
 > Principle layering:
 > - Cross-project principles: `/agent-docs/coordination/general-principles.md`
-> - LLM Journey-specific principles: `/agent-docs/project-principles.md`
+> - LLM Journey-specific principles: `$LLM_JOURNEY_PRINCIPLES`
 > - This file: execution-time reasoning behavior for agent decision-making.
 
 ## 🛑 IT IS OKAY TO DISAGREE (The "Talk Back" Rule)
@@ -37,7 +37,7 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 
 ## Intent Verification
 *   **Read for Design, Not Just Syntax**: Before proposing a change, read the surrounding comments and documentation to understand the author's intent.
-*   **Contextual Cross-Referencing**: Check `agent-docs/decisions/` and `agent-docs/architecture.md` before touching sensitive areas like security, telemetry, or core data flow.
+*   **Contextual Cross-Referencing**: Check `agent-docs/decisions/` and `$LLM_JOURNEY_ARCHITECTURE` before touching sensitive areas like security, telemetry, or core data flow.
 
 ## The "Second-Order Effects" Check
 *   Before finalizing a requirement or plan, ask:

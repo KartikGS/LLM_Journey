@@ -276,8 +276,8 @@ Items requiring Human User input before proceeding.
    - Do not batch unrelated fixes into one large doc sweep if they can ship independently.
    - **Wording is written here, not in Phase 2**: The implementing agent reads the target doc section and proposes before/after wording at the time of implementation. The synthesis doc identifies *what* to fix and *where*; the implementing CR defines *how*.
 3. BA validates closure if changes touch requirement templates, workflow phase definitions, or role authority boundaries.
-4. Implemented changes are logged in `agent-docs/project-log.md`.
-5. If approved items exceed one chunk, schedule the remaining approved chunks in `project-log.md` `Next Priorities` so evolution continues without blocking feature CR throughput.
+4. Implemented changes are logged in `$LLM_JOURNEY_LOG`.
+5. If approved items exceed one chunk, schedule the remaining approved chunks in `$LLM_JOURNEY_LOG` `Next Priorities` so evolution continues without blocking feature CR throughput.
 
 ---
 
@@ -309,7 +309,7 @@ Output:
 Execute chunk plans one at a time.
 - Keep each chunk small and independently reviewable.
 - Re-run lens check during closure to confirm the change actually improved portability/collaboration/evolvability.
-- Record residual items in `project-log.md` `Next Priorities`.
+- Record residual items in `$LLM_JOURNEY_LOG` `Next Priorities`.
 
 This mode is intended to run in parallel with feature CRs without forcing a full meta chain on every CR.
 

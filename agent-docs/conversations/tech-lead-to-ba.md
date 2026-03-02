@@ -114,7 +114,7 @@ CR-025 is a pure `[S][DOC]` CR. All changes are in the Tech Lead permitted direc
 - Port 3001 explicit in both dev server instruction and E2E note.
 - Node >=20.x explicit in prerequisites.
 - Route roadmap matches `project-vision.md` stage/route map exactly.
-- Architecture diagram structure consistent with `architecture.md` and ADR-0001 OTel proxy pattern.
+- Architecture diagram structure consistent with `$LLM_JOURNEY_ARCHITECTURE` and ADR-0001 OTel proxy pattern.
 - `human-docs/` included in documentation map — confirmed 4 files exist there.
 - No residual stale references found.
 

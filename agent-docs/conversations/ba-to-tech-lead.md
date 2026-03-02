@@ -51,7 +51,7 @@ Use canonical truth sources while rewriting:
 - `agent-docs/tooling-standard.md`
 - `agent-docs/technical-context.md`
 - `agent-docs/project-vision.md`
-- `agent-docs/architecture.md`
+- `$LLM_JOURNEY_ARCHITECTURE`
 - `agent-docs/workflow.md`
 - `agent-docs/decisions/ADR-0001-telemetry-proxy.md`
 
