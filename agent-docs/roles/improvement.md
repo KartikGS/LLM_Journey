@@ -27,7 +27,7 @@ The Improvement Agent does **NOT**:
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, reasoning, tooling).
+> You inherit **Universal Standards** from `$LLM_JOURNEY_AGENTS` (general principles, reasoning, tooling).
 > Below are **additional** Improvement Agent-specific readings.
 
 ### Role-Specific Readings

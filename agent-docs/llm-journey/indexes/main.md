@@ -17,3 +17,6 @@ When a file moves, update **only this table**. All docs reference the variable n
 | Variable | Current Path | Description |
 |---|---|---|
 | `$TOOLING_STANDARD` | `/agent-docs/llm-journey/project-tooling/standard.md` | Package manager (pnpm), Node.js version, testing stack (Jest/Playwright), linting (ESLint/Prettier), E2E command canon, targeted lint rules |
+| `$LLM_JOURNEY_VISION` | `/agent-docs/llm-journey/project-information/vision.md` | Project mission, dual-audience definition (learner-user / developer-user), mental model, implementation strategy, and 10-stage roadmap |
+| `$LLM_JOURNEY_STRUCTURE` | `/agent-docs/llm-journey/project-information/structure.md` | Repository folder layout and key `agent-docs/` subdirectory reference |
+| `$LLM_JOURNEY_AGENTS` | `/agent-docs/llm-journey/agents.md` | Agent entry point for LLM Journey — universal standards, reading protocol, authority, and role index |

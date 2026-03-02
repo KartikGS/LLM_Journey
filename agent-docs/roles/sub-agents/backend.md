@@ -27,13 +27,13 @@ Reliability, security, and performance of server-side logic and API routes.
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `llm-journey/agents.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Backend-specific readings.
 
 ### Role-Specific Readings (Backend)
 Before executing any task, also read:
 - **Backend Standards:** [Backend Guide](/agent-docs/development/backend.md)
-- **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
+- **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
 - **Task Instructions:** [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md)
 
 ## Execution Responsibilities

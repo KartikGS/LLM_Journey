@@ -28,7 +28,7 @@ At each coordinator session start, load **only**:
 2. The sub-agent's completion report (`conversations/<role>-to-tech-lead.md`).
 3. The files the sub-agent modified.
 
-Do **not** reload Layer 1/2 project standards (AGENTS.md, workflow.md, role docs) — they are not needed for adversarial review and consume context budget. If context saturation is experienced during a session, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing.
+Do **not** reload Layer 1/2 project standards ($LLM_JOURNEY_AGENTS, workflow.md, role docs) — they are not needed for adversarial review and consume context budget. If context saturation is experienced during a session, record it in the `## Workflow Health Signal` field of `TL-session-state.md` before closing.
 
 ---
 

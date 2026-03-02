@@ -3,7 +3,7 @@
 > "Instead of teaching APIs, LLM Journey teaches the architectural ideas that led from transformers to agents."
 
 ## 🚀 The Mission
-LLM Journey is a systems-level exploration designed to turn **software engineers with basic ML familiarity** from model consumers into system architects. 
+LLM Journey is a systems-level exploration designed to turn **software engineers with basic ML familiarity** from model consumers into system architects.
 
 Most resources treat Large Language Models as oracle-like black boxes. In this project, we treat them as probabilistic components within a larger, deterministic software system. We emphasize **mechanics, trade-offs, and failure modes** because that is where real engineering happens.
 

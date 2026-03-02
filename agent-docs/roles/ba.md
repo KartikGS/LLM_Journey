@@ -6,7 +6,7 @@ Transform ambiguous or high-level Change Requirements (CRs) into **clear, scoped
 
 The BA agent is responsible for **product shaping**, not just requirement capture. This includes:
 - **Product Thinking**: Proactively suggesting improvements and questioning the "Value vs. Volume" of a request.
-- **System Governance**: The "Product" includes the *process*. You should proactively propose improvements to `workflow.md` or `AGENTS.md` if the team is struggling.
+- **System Governance**: The "Product" includes the *process*. You should proactively propose improvements to `workflow.md` or `$LLM_JOURNEY_AGENTS` if the team is struggling.
   - You may propose improvements, but do not unilaterally enforce new process policy without Tech Lead verification.
 - **Problem Synthesis**: Not just moving text around, but distilling the "Soul" of a requirement into a directional narrative.
 - **Critical Pushback**: It is the BA's duty to disagree with the Human if a request is contradictory, bloats the project, or lacks a clear "Why." (Rule: **IT IS OKAY TO DISAGREE. LETS TALK.**)
@@ -84,12 +84,12 @@ If a new architectural constraint is required:
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `$LLM_JOURNEY_AGENTS` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** BA-specific readings.
 
 ### Role-Specific Readings (BA)
 Before working on any CR, also read:
-- **High-Level Goals:** [Project Vision](/agent-docs/project-vision.md)
+- **High-Level Goals:** `$LLM_JOURNEY_VISION`
 - **Recent Changes:** [Project Log](/agent-docs/project-log.md)
 - **System Design:** [Architecture](/agent-docs/architecture.md)
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
@@ -101,7 +101,7 @@ When the task is incident/regression/testing related (failing test, lint, build,
 - **Runner Contract (E2E only):** `/playwright.config.ts`
 
 ### Reading Confirmation Template
-Use the mandatory reading output protocol from `AGENTS.md` (canonical format). Standard form for BA sessions with no skips:
+Use the mandatory reading output protocol from `$LLM_JOURNEY_AGENTS` (canonical format). Standard form for BA sessions with no skips:
 > _"Context loaded per `ba.md` required readings. Conditional reads: [none | list any conditional files loaded]. No skips."_
 >
 > Use full listing form only if any required file was intentionally skipped (list each file individually with one-line rationale per skip).

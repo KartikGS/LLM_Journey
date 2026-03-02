@@ -17,7 +17,7 @@ Before getting into specifics, internalize this layered structure. Every file in
 | Layer | What It Captures | Decay Rate | Examples |
 |---|---|---|---|
 | **Principles** | How to think and work — cross-project | Very slow | `general-principles.md`, `reasoning-principles.md` |
-| **Vision & Architecture** | Why this exists, what it does, what must never break | Slow | `project-vision.md`, `architecture.md` |
+| **Vision & Architecture** | Why this exists, what it does, what must never break | Slow | `llm-journey/project-information/vision.md`, `architecture.md` |
 | **Decisions** | Why specific choices were made | Frozen (immutable) | `decisions/ADR-001-*.md` |
 | **Change History** | What changed, when, and why | Frozen after closed | `requirements/CR-001-*.md` |
 | **Current State** | What's alive right now | Fast (updated every CR) | `project-log.md` |

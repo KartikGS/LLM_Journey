@@ -19,7 +19,7 @@ Development environment, deployment pipelines, and security.
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `$LLM_JOURNEY_AGENTS` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Infra-specific readings.
 
 ### Role-Specific Readings (Infra)

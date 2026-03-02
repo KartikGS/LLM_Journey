@@ -39,7 +39,7 @@ If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they 
 
 ## Helpful Refusals
 
-"Helpfulness does NOT override Authority." (AGENTS.md)
+"Helpfulness does NOT override Authority." ($LLM_JOURNEY_AGENTS)
 
 It is MORE helpful to point out a mistake that improves the system's long-term health than to silently work around it to meet a short-term "Definition of Done."
 

@@ -49,7 +49,7 @@ Organize `agent-docs/` so that:
 
 **When a doc references another file, that file is required reading — not optional context.**
 
-Agents load their required reading list from `AGENTS.md` and their role doc. But those docs will contain cross-references (links to observability.md, testing-strategy.md, etc.). These references are not decorative — they point to the authoritative source for a specific topic.
+Agents load their required reading list from `$LLM_JOURNEY_AGENTS` and their role doc. But those docs will contain cross-references (links to observability.md, testing-strategy.md, etc.). These references are not decorative — they point to the authoritative source for a specific topic.
 
 **Rule for agents:** If a loaded document contains a cross-reference to another file in `agent-docs/`, treat that referenced file as required reading for any task that touches the referenced topic. Do not rely only on the summary or inline description — follow the link to the source file.
 

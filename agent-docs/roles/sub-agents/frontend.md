@@ -15,12 +15,12 @@ Delivering a "wow" user experience, ensuring responsiveness, and handling client
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `llm-journey/agents.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Frontend-specific readings.
 
 ### Role-Specific Readings (Frontend)
 Before executing any task, also read:
-- **Project Setup:** [Folder Structure](/agent-docs/folder-structure.md)
+- **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
 - **Visual System:** [Design Tokens](/agent-docs/design-tokens.md)
 - **Refactor Safety:** [Frontend Refactor Checklist](/agent-docs/frontend-refactor-checklist.md)
 - **Task Instructions:** [Tech Lead To Frontend](/agent-docs/conversations/tech-lead-to-frontend.md)

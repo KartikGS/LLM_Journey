@@ -18,7 +18,7 @@ Ensuring system stability and preventing regression.
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `$LLM_JOURNEY_AGENTS` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Testing-specific readings.
 
 ### Role-Specific Readings (Testing)

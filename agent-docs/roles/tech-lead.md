@@ -153,7 +153,7 @@ For each file, ask: **"Is this feature code?"**
 ## Context Loading
 
 > [!NOTE]
-> You inherit **Universal Standards** from `AGENTS.md` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
+> You inherit **Universal Standards** from `$LLM_JOURNEY_AGENTS` (general principles, project principles, reasoning, tooling, technical-context, workflow).  
 > Below are **additional** Tech Lead-specific readings.
 
 ### First Time (Onboarding or New Session)
@@ -167,7 +167,7 @@ Before planning or executing ANY task, also read:
 - **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
-Use the mandatory reading output protocol from `AGENTS.md` (canonical format). Standard form for Tech Lead sessions with no skips:
+Use the mandatory reading output protocol from `$LLM_JOURNEY_AGENTS` (canonical format). Standard form for Tech Lead sessions with no skips:
 > _"Context loaded per `tech-lead.md` required readings. Conditional reads: [none | list any conditional files loaded]. No skips."_
 >
 > Use full listing form only if any required file was intentionally skipped (list each file individually with one-line rationale per skip).
