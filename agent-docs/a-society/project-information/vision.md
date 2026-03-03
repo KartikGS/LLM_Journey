@@ -61,31 +61,41 @@ The instructions live under `a-society/general/instructions/`. As the library gr
 
 ---
 
-## The Relationship to LLM Journey
+## How A-Society Is Distributed
 
-LLM Journey (`agent-docs/llm-journey/`) is the first project this framework is being built alongside and refined against. It is the proving ground — not the definition.
+A-Society is a **standalone repository** that users pull alongside their projects. It is not embedded inside a project — it is a peer to it.
 
-Patterns that emerge from LLM Journey execution get abstracted into A-Society general instructions when they prove reusable. Patterns that are LLM Journey-specific stay in `agent-docs/llm-journey/`.
+A project adopting the framework places its code in its own folder and runs an initialization process that creates an `a-docs/` folder inside it. That `a-docs/` folder is the project's instantiation of the framework — containing the agents.md, roles, indexes, and project-specific documentation that agents need to operate.
 
-The separation is intentional:
-- `a-society/` holds what is true of all projects
-- `llm-journey/` holds what is true of this project
+The result is a clean separation at the filesystem level:
 
-When a future project is created, it inherits from `a-society/` and adds its own project-specific layer — without modifying the general framework.
+```
+a-society/          ← the framework (pulled from this repo)
+  general/          ← reusable instructions, templates, archetypes
+  a-docs/           ← a-society's own project documentation
+
+my-project/         ← the user's project
+  [project code]
+  a-docs/           ← the project's agent documentation (initialized from a-society)
+```
+
+A-Society applies this pattern to itself: `general/` holds the distributable framework; `a-docs/` holds a-society's own agent documentation — the same structure every adopting project uses.
 
 ---
 
-## What Already Exists
+## The Relationship to LLM Journey
 
-| Artifact | Purpose |
-|---|---|
-| `a-society/project-information/vision.md` | This file — the project vision |
-| `a-society/project-information/structure.md` | Why each folder in a-society exists |
-| `a-society/general/instructions/tooling.md` | How to create a tooling document for any project |
-| `a-society/general/instructions/project-information/vision.md` | How to create a vision document for any project |
-| `a-society/general/instructions/project-information/structure.md` | How to create a structure document for any project |
-| `llm-journey/project-tooling/standard.md` | LLM Journey's tooling document (first application of the pattern) |
-| `llm-journey/indexes/main.md` | LLM Journey's file path index (single source of truth for file locations) |
+LLM Journey is the first project this framework is being built alongside and refined against. It is the proving ground — not the definition.
+
+Patterns that emerge from LLM Journey execution get abstracted into `a-society/general/` when they prove reusable across project types. Patterns that are LLM Journey-specific stay in LLM Journey's own `a-docs/`.
+
+When a future project is created, it pulls a-society, initializes its own `a-docs/`, and adds its project-specific layer — without modifying the framework.
+
+---
+
+## What Exists in This Repo
+
+The current state of the framework is tracked in the project index. Consult `$A_SOCIETY_INDEX` for the authoritative list of files and their locations.
 
 ---
 
@@ -93,6 +103,6 @@ When a future project is created, it inherits from `a-society/` and adds its own
 
 If you are an agent reading this document, your job is to extend the framework — not to build features.
 
-When you encounter a pattern in this project that would benefit any project, not just this one: propose it as an addition to `a-society/general/instructions/`. When you encounter a decision that is LLM Journey-specific: keep it in `llm-journey/`. When you are unsure which layer something belongs to: ask.
+When you encounter a pattern that would benefit any project: propose it as an addition to `a-society/general/`. When you encounter a decision that is project-specific: keep it in that project's `a-docs/`. When you are unsure which layer something belongs to: ask.
 
 The framework grows by abstraction, not accumulation. Every addition should make the next project easier to set up — not just this one better documented.
