@@ -152,7 +152,7 @@ No adaptation E2E spec exists. **Create** `__tests__/e2e/adaptation.spec.ts`.
 
 ## Clarification Loop
 
-Post preflight concerns to `agent-docs/conversations/testing-to-tech-lead.md`. Tech Lead responds in the same file.
+Post preflight concerns to `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md`. Tech Lead responds in the same file.
 
 ---
 
@@ -179,6 +179,6 @@ If any feedback expands implementation beyond this handoff scope, mark it `scope
 
 ## Report Back
 
-Write completion report to `agent-docs/conversations/testing-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-testing-to-tech-lead.md`.
+Write completion report to `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md` using `agent-docs/llm-journey/communication/conversations/TEMPLATE-testing-to-tech-lead.md`.
 
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

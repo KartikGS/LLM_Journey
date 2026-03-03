@@ -21,7 +21,7 @@
 - `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 
 ## [Scope Check]
-- Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Handoff source: `agent-docs/llm-journey/communication/conversations/tech-lead-to-frontend.md`
 - Files modified:
   - `path/to/file.tsx`
 - Scope compliance:

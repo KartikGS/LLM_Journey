@@ -9,8 +9,8 @@
 ## Exact Artifact Paths (Mandatory)
 - Requirement: `agent-docs/requirements/[CR-ID]-[slug].md`
 - Plan: `agent-docs/plans/[CR-ID]-plan.md`
-- Upstream report (if sequential): `agent-docs/conversations/[upstream-role]-to-tech-lead.md`
-- Report back to: `agent-docs/conversations/backend-to-tech-lead.md`
+- Upstream report (if sequential): `agent-docs/llm-journey/communication/conversations/[upstream-role]-to-tech-lead.md`
+- Report back to: `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md`
 
 ## Objective
 [Outcome-focused backend objective.]
@@ -49,7 +49,7 @@
 - [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
-- Before implementation, Backend posts preflight concerns/questions in `agent-docs/conversations/backend-to-tech-lead.md`.
+- Before implementation, Backend posts preflight concerns/questions in `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md`.
 - Tech Lead responds in the same file.
 - Repeat until concerns are resolved or status becomes `blocked`.
 
@@ -71,8 +71,8 @@ Before reporting:
 - [ ] Completion report written to `backend-to-tech-lead.md` using the template.
 
 ## Report Back
-Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using:
-- `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`
+Write completion report to `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md` using:
+- `agent-docs/llm-journey/communication/conversations/TEMPLATE-backend-to-tech-lead.md`
 
 Status vocabulary for backend reports:
 - `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

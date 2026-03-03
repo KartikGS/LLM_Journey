@@ -53,7 +53,7 @@ Use this as a reference implementation of a full BA lifecycle from discovery to 
   - Closure evidence annotations per AC
 
 ### 3) BA -> Tech Lead Handoff
-- `agent-docs/conversations/ba-to-tech-lead.md`
+- `agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md`
 - Demonstrates:
   - Concise context and goal
   - Directives aligned to CR and workflow
@@ -61,10 +61,10 @@ Use this as a reference implementation of a full BA lifecycle from discovery to 
 
 ### 4) Tech Lead Plan + Sub-Agent Loop (Reference Inputs to BA Closure)
 - `agent-docs/llm-journey/workflow/plans/CR-007-plan.md`
-- `agent-docs/conversations/tech-lead-to-testing.md`
-- `agent-docs/conversations/testing-to-tech-lead.md`
-- `agent-docs/conversations/frontend-to-tech-lead.md`
-- `agent-docs/conversations/tech-lead-to-ba.md`
+- `agent-docs/llm-journey/communication/conversations/tech-lead-to-testing.md`
+- `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md`
+- `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md`
+- `agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md`
 
 ### 5) BA Closure + Portfolio Hygiene
 - `agent-docs/llm-journey/workflow/requirements/CR-007-pipeline-stabilization.md` (status `Done`, AC evidence, closure notes)

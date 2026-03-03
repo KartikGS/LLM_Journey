@@ -46,6 +46,9 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_GOVERNANCE_API` | `/agent-docs/llm-journey/governance/api/main.md` | API contract rules and contents index |
 | `$LLM_JOURNEY_GOVERNANCE_DECISIONS` | `/agent-docs/llm-journey/governance/decisions/main.md` | Architecture Decision Records index and ADR template |
 | `$LLM_JOURNEY_DEV_BACKEND` | `/agent-docs/llm-journey/development/backend.md` | Backend development standards — API routes, observability patterns, streaming, and SSE |
+| `$LLM_JOURNEY_COMMUNICATION` | `/agent-docs/llm-journey/communication/main.md` | Communication folder entry point — inter-agent handoffs (conversations) and standing protocols (coordination) |
+| `$LLM_JOURNEY_COMMUNICATION_CONVERSATIONS` | `/agent-docs/llm-journey/communication/conversations/main.md` | Active handoff/report files for the current CR and permanent templates governing their format |
+| `$LLM_JOURNEY_COMMUNICATION_COORDINATION` | `/agent-docs/llm-journey/communication/coordination/main.md` | Standing protocols — handoff protocol, feedback protocol, conflict resolution, TL session state |
 | `$LLM_JOURNEY_THINKING` | `/agent-docs/llm-journey/thinking/main.md` | General principles — cross-role operational rules for every agent |
 | `$LLM_JOURNEY_THINKING_REASONING` | `/agent-docs/llm-journey/thinking/reasoning.md` | Reasoning framework — cognitive heuristics and decision-making patterns for agents |
 | `$LLM_JOURNEY_THINKING_KEEP_IN_MIND` | `/agent-docs/llm-journey/thinking/keep-in-mind.md` | Operational reminders — hard stops and common failure modes every agent must check |

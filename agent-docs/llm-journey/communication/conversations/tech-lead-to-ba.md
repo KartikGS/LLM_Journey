@@ -61,7 +61,7 @@ CR-025 is a pure `[S][DOC]` CR. All changes are in the Tech Lead permitted direc
 
 - **AC-3 (Stale Content Removal):** Removed: "pnpm (or npm/yarn/bun)" prerequisite, stale project structure block (`app/base-llm/`, `app/fine-tuning/`, `app/rag/`, `app/tools/`, `app/mcps/`), "Key Components" section (listed non-existent components: `BaseLLMChat`, `InteractLLM`, `ChatInput`, `LoadButton`), incorrect clone directory `cd LLM-Journey`. Confirmed by diff review.
 
-- **AC-4 (CR Process Guardrail):** `agent-docs/plans/TEMPLATE.md` updated with `## Documentation Impact` section (planning artifact). All four sub-agent handoff templates (`TEMPLATE-tech-lead-to-frontend.md`, `TEMPLATE-tech-lead-to-backend.md`, `TEMPLATE-tech-lead-to-testing.md`, `TEMPLATE-tech-lead-to-infra.md`) updated with Documentation Impact DoD item (execution handoff templates). AC-4 requires "at least one planning artifact and one execution handoff template" — five artifacts updated (exceeds minimum). — `agent-docs/plans/TEMPLATE.md`, `agent-docs/conversations/TEMPLATE-tech-lead-to-*.md`.
+- **AC-4 (CR Process Guardrail):** `agent-docs/plans/TEMPLATE.md` updated with `## Documentation Impact` section (planning artifact). All four sub-agent handoff templates (`TEMPLATE-tech-lead-to-frontend.md`, `TEMPLATE-tech-lead-to-backend.md`, `TEMPLATE-tech-lead-to-testing.md`, `TEMPLATE-tech-lead-to-infra.md`) updated with Documentation Impact DoD item (execution handoff templates). AC-4 requires "at least one planning artifact and one execution handoff template" — five artifacts updated (exceeds minimum). — `agent-docs/plans/TEMPLATE.md`, `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-*.md`.
 
 - **AC-5 (Closure Guardrail):** `agent-docs/roles/ba.md` BA Closure Checklist updated with `Documentation Impact resolved` item — requires verifying all required doc updates are complete before marking `Done`. — `agent-docs/roles/ba.md` (last checklist item).
 
@@ -158,7 +158,7 @@ CR-025 is a pure `[S][DOC]` CR. All changes are in the Tech Lead permitted direc
 ## Link to Updated Docs
 - Requirement: `agent-docs/requirements/CR-025-readme-refresh-and-documentation-governance.md`
 - Plan: `agent-docs/plans/CR-025-plan.md`
-- Session state: `agent-docs/coordination/TL-session-state.md`
+- Session state: `agent-docs/llm-journey/communication/coordination/TL-session-state.md`
 
 ---
 

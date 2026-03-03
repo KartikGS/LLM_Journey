@@ -23,12 +23,12 @@ Before executing any task, also read:
 - **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
 - **Visual System:** $LLM_JOURNEY_DESIGN_TOKENS
 - **Refactor Safety:** $LLM_JOURNEY_FRONTEND_REFACTOR
-- **Task Instructions:** [Tech Lead To Frontend](/agent-docs/conversations/tech-lead-to-frontend.md)
+- **Task Instructions:** [Tech Lead To Frontend](/agent-docs/llm-journey/communication/conversations/tech-lead-to-frontend.md)
 
 ## Execution Responsibilities
 
-- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/conversations/tech-lead-to-frontend.md)
-- Use [Frontend To Tech Lead Report Template](/agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md) when drafting the active CR report in [Frontend To Tech Lead Report](/agent-docs/conversations/frontend-to-tech-lead.md)
+- Follow the instructions provided by the Tech Lead agent in the [Tech Lead To Frontend Instructions](/agent-docs/llm-journey/communication/conversations/tech-lead-to-frontend.md)
+- Use [Frontend To Tech Lead Report Template](/agent-docs/llm-journey/communication/conversations/TEMPLATE-frontend-to-tech-lead.md) when drafting the active CR report in [Frontend To Tech Lead Report](/agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md)
 - Treat instructional/content intent as BA-owned. If page narrative goals for Product End Users are unclear or conflicting, raise clarification before implementation.
 
 ## Architecture-Only Refactor Mode (Conditional)

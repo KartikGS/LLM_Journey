@@ -43,7 +43,7 @@
 ---
 
 ## [Scope Check]
-- Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
+- Handoff source: `agent-docs/llm-journey/communication/conversations/tech-lead-to-backend.md`
 - Files modified:
   - `app/api/frontier/base-generate/route.ts`
   - `app/api/adaptation/generate/route.ts`

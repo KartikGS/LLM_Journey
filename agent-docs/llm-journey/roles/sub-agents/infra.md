@@ -26,12 +26,12 @@ Development environment, deployment pipelines, and security.
 Before executing any task, also read:
 - **System design:** `$LLM_JOURNEY_ARCHITECTURE`
 - **Repo Standards:** `$LLM_JOURNEY_CONTRIBUTION`
-- **Task Instructions:** [Tech Lead To Infra](/agent-docs/conversations/tech-lead-to-infra.md)
+- **Task Instructions:** [Tech Lead To Infra](/agent-docs/llm-journey/communication/conversations/tech-lead-to-infra.md)
 
 ## Execution Responsibilities
 
-- **Execution input:** Before starting work, read and follow instructions from the Tech Lead agent in [Tech Lead → Infra Execution Guidance](/agent-docs/conversations/tech-lead-to-infra.md)
-- **Execution output:** After completing work, report findings, decisions, and blockers to the Tech Lead agent in [Infra → Tech Lead Report](/agent-docs/conversations/infra-to-tech-lead.md) using [Infra Report Template](/agent-docs/conversations/TEMPLATE-infra-to-tech-lead.md)
+- **Execution input:** Before starting work, read and follow instructions from the Tech Lead agent in [Tech Lead → Infra Execution Guidance](/agent-docs/llm-journey/communication/conversations/tech-lead-to-infra.md)
+- **Execution output:** After completing work, report findings, decisions, and blockers to the Tech Lead agent in [Infra → Tech Lead Report](/agent-docs/llm-journey/communication/conversations/infra-to-tech-lead.md) using [Infra Report Template](/agent-docs/llm-journey/communication/conversations/TEMPLATE-infra-to-tech-lead.md)
 
 ## Checklist
 

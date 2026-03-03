@@ -9,7 +9,7 @@
 ## Exact Artifact Paths (Mandatory)
 - Requirement: `agent-docs/requirements/[CR-ID]-[slug].md`
 - Plan: `agent-docs/plans/[CR-ID]-plan.md`
-- Report back to: `agent-docs/conversations/frontend-to-tech-lead.md`
+- Report back to: `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md`
 
 ## Execution Mode (Mandatory)
 `feature-ui` | `architecture-only`
@@ -74,7 +74,7 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 - [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
-- Frontend posts preflight concerns/questions in `agent-docs/conversations/frontend-to-tech-lead.md`.
+- Frontend posts preflight concerns/questions in `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md`.
 - Tech Lead responds in the same file.
 - Repeat until concerns are resolved or status becomes `blocked`.
 
@@ -86,7 +86,7 @@ If `architecture-only`, include freeze constraints (`no visual redesign`, `no co
 - Wait for explicit `scope extension approved` from Tech Lead (or User override) before implementing expanded work.
 
 ## Report Back
-Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`.
+Write completion report to `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md` using `agent-docs/llm-journey/communication/conversations/TEMPLATE-frontend-to-tech-lead.md`.
 
 Status vocabulary for frontend reports:
 - `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

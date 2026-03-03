@@ -29,7 +29,7 @@
 - `completed`
 
 ## [Scope Check]
-- Handoff source: `agent-docs/conversations/tech-lead-to-frontend.md`
+- Handoff source: `agent-docs/llm-journey/communication/conversations/tech-lead-to-frontend.md`
 - Files to be modified:
   - `app/models/adaptation/page.tsx`
   - `app/models/adaptation/components/AdaptationChat.tsx`

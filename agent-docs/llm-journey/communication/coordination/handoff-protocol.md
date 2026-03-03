@@ -25,12 +25,12 @@ Protocol requirements:
 - If a concern changes scope/intent, escalate to BA (or user if still unresolved).
 - If a concern changes technical feasibility only, Tech Lead resolves and records rationale.
 - Keep all rounds in the relevant conversation file to preserve traceability.
-- Optional structure: `agent-docs/conversations/TEMPLATE-ba-tech-lead-clarification.md`.
+- Optional structure: `agent-docs/llm-journey/communication/conversations/TEMPLATE-ba-tech-lead-clarification.md`.
 
 ## BA → Tech Lead (Requirement Handoff)
-- **File**: `agent-docs/conversations/ba-to-tech-lead.md`
+- **File**: `agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md`
 - **Trigger**: CR is "Clarified" and approved by User.
-- **Template (Mandatory)**: `agent-docs/conversations/TEMPLATE-ba-to-tech-lead.md`
+- **Template (Mandatory)**: `agent-docs/llm-journey/communication/conversations/TEMPLATE-ba-to-tech-lead.md`
 - **Content**:
     - [Status] (`issued`, `in_progress`, `blocked`, or `completed`)
     - [Objective]
@@ -43,7 +43,7 @@ Protocol requirements:
 - **Protocol**: Tech Lead MUST acknowledge the handoff and confirm the task is well-defined before planning.
 
 ## Tech Lead → Sub-Agent (Task Delegation)
-- **File**: `agent-docs/conversations/tech-lead-to-<role>.md`
+- **File**: `agent-docs/llm-journey/communication/conversations/tech-lead-to-<role>.md`
 - **Trigger**: Planning Gate is complete and User has given "Go".
 - **Content**:
     - [Status] (`issued`)
@@ -54,11 +54,11 @@ Protocol requirements:
     - [Definition of Done]
     - [Reference Files]
 - **Protocol**: Sub-agent MUST review the prompt and the linked Plan (`agent-docs/plans/CR-XXX-plan.md`) before implementation.
-  - **Template**: Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+  - **Template**: Use role-specific templates in `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-<role>.md`.
   - **Inline snippet size:** Snippets ≤ ~30 lines (e.g., a single mock pattern or stub) may be inlined in the handoff file. Larger specs must be placed in a separate file at `agent-docs/specs/CR-XXX-test-spec.md`; the handoff links to it. See `tech-lead.md` (Execution & Coordination → Formalize Handoffs) for the canonical size guidance.
 
 ## Sub-Agent → Tech Lead (Execution Report)
-- **File**: `agent-docs/conversations/<role>-to-tech-lead.md`
+- **File**: `agent-docs/llm-journey/communication/conversations/<role>-to-tech-lead.md`
 - **Trigger**: Implementation and local verification are complete.
 - **Content**:
     - [Status] (`in_progress`, `completed`, `blocked`, `partial`, or `needs_environment_verification`)
@@ -72,7 +72,7 @@ Protocol requirements:
 - **Protocol**: Tech Lead MUST review this report and verify integration before Verification Phase completion.
 
 ## Tech Lead → BA Agent (Verification Completion)
-- **File**: `agent-docs/conversations/tech-lead-to-ba.md`
+- **File**: `agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md`
 - **Trigger**: Integration and verification for CR scope are complete.
 - **Required completion condition**:
     - CR-related failures are resolved.

@@ -34,12 +34,12 @@ Reliability, security, and performance of server-side logic and API routes.
 Before executing any task, also read:
 - **Backend Standards:** `$LLM_JOURNEY_DEV_BACKEND`
 - **Project Setup:** `$LLM_JOURNEY_STRUCTURE`
-- **Task Instructions:** [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md)
+- **Task Instructions:** [Tech Lead To Backend](/agent-docs/llm-journey/communication/conversations/tech-lead-to-backend.md)
 
 ## Execution Responsibilities
 
-- Read the handoff at [Tech Lead To Backend](/agent-docs/conversations/tech-lead-to-backend.md) and implement per its scope.
-- Write the completion report at [Backend To Tech Lead](/agent-docs/conversations/backend-to-tech-lead.md) using the [report template](/agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md).
+- Read the handoff at [Tech Lead To Backend](/agent-docs/llm-journey/communication/conversations/tech-lead-to-backend.md) and implement per its scope.
+- Write the completion report at [Backend To Tech Lead](/agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md) using the [report template](/agent-docs/llm-journey/communication/conversations/TEMPLATE-backend-to-tech-lead.md).
 - **Engineering constraints (Backend-specific)**:
   - Do not install new npm packages. If a new dependency is required, flag it in the preflight note and request Tech Lead approval.
   - Verification scope: **check the handoff DoD first.** If the DoD specifies `pnpm test` (full suite), run full suite — the DoD takes precedence over this default. Otherwise, run only the scoped spec file (`pnpm test <spec-file>`). Full-suite verification is the Tech Lead's responsibility unless the DoD explicitly delegates it to Backend.

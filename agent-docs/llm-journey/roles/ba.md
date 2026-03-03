@@ -134,12 +134,12 @@ Every BA task **must** produce:
    - Must include Business Value, Acceptance Criteria, and Constraints.
 - **Pre-Replacement Check (mandatory):** Before replacing `ba-to-tech-lead.md`, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW`. Do not write until prior CR closure is confirmed.
 - **Tech Lead Prompt**
-   - Put in `/agent-docs/conversations/ba-to-tech-lead.md`
+   - Put in `/agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md`
    - **Reversal Risk annotations (named field):** When an AC includes an assumption the BA has not fully verified (for example, "this function has no callers" — asserted without running a grep), add a **Reversal Risk** annotation in the handoff's designated `Reversal Risk` section. Format:
      > `Reversal Risk — AC-X: Before implementing, run [exact verification command]. If [condition that invalidates the AC], stop and contact BA before proceeding.`
    - A Reversal Risk annotation is distinct from general Risk Notes. It names a specific pre-implementation verification step and a stop condition tied to a specific AC. The Tech Lead is expected to execute the named command before acting on the AC; if the condition triggers, the stop is non-negotiable. Use this annotation whenever BA has reasonable doubt about a factual claim in an AC — it is not a sign of weakness, it is the mechanism that prevents TL re-work.
 - **Acceptance Verification & Closure**
-   - Review `/agent-docs/conversations/tech-lead-to-ba.md` report.
+   - Review `/agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md` report.
    - **Strict Validation**: Do not accept "It's done". Check for:
      - "Evidence": Did the build pass? Are the files there?
      - "Contract": Does the output match the `CR-XXX-<slug>.md` AC?

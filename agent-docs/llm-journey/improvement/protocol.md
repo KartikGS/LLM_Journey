@@ -337,7 +337,7 @@ This mode is intended to run in parallel with feature CRs without forcing a full
 
 Workflows accumulate responsibilities over time. Use these signals to detect when a role or workflow phase has grown beyond what a single session can hold effectively.
 
-**Primary input surface:** The `## Workflow Health Signal` section of `agent-docs/coordination/TL-session-state.md` (populated per-session during CR execution). Secondary input: the Workflow Health Signal section of the lightweight meta pass (post-CR synthesis). Together these give both real-time and post-hoc health data per CR.
+**Primary input surface:** The `## Workflow Health Signal` section of `agent-docs/llm-journey/communication/coordination/TL-session-state.md` (populated per-session during CR execution). Secondary input: the Workflow Health Signal section of the lightweight meta pass (post-CR synthesis). Together these give both real-time and post-hoc health data per CR.
 
 ### Threshold Definitions
 

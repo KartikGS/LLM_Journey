@@ -39,7 +39,7 @@ The Tech Lead Agent does **not**:
 
 If scope, intent, or technical assumptions are unclear:
 → **STOP IMMEDIATELY**.
-→ Trigger the **BA → Tech Lead Feedback Protocol** to re-evaluate requirements. Read [Feedback Protocol](/agent-docs/coordination/feedback-protocol.md) for more details.
+→ Trigger the **BA → Tech Lead Feedback Protocol** to re-evaluate requirements. Read [Feedback Protocol](/agent-docs/llm-journey/communication/coordination/feedback-protocol.md) for more details.
 → Do NOT attempt to "patch" a faulty requirement with a technical workaround without BA alignment.
 
 ---
@@ -76,7 +76,7 @@ Dependency installation approval and execution is Tech Lead-owned. Sub-agents mu
 
 If your planned change touches **any** file not in the permitted list above:
 1. **STOP** before making the change
-2. Create a handoff in `agent-docs/conversations/tech-lead-to-<role>.md`
+2. Create a handoff in `agent-docs/llm-journey/communication/conversations/tech-lead-to-<role>.md`
 3. Wait for sub-agent execution
 
 ### The "Just Do It" Trap
@@ -164,7 +164,7 @@ Before planning or executing ANY task, also read:
 - **Current State:** `$LLM_JOURNEY_LOG`
 - **Architecture Check:** `$LLM_JOURNEY_ARCHITECTURE` & `$LLM_JOURNEY_GOVERNANCE_DECISIONS`
 - **Recent Gotchas:** [Keep in Mind](/agent-docs/keep-in-mind.md)
-- **Handoff Contracts:** [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md)
+- **Handoff Contracts:** [Handoff Protocol](/agent-docs/llm-journey/communication/coordination/handoff-protocol.md)
 
 ### Reading Confirmation Template
 Use the mandatory reading output protocol from `$LLM_JOURNEY_AGENTS` (canonical format). Standard form for Tech Lead sessions with no skips:
@@ -177,7 +177,7 @@ Use the mandatory reading output protocol from `$LLM_JOURNEY_AGENTS` (canonical 
 You must follow these steps in sequence for every Change Requirement (CR).
 
 ### Validate & Internalize
-Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead Handoff](/agent-docs/conversations/ba-to-tech-lead.md).
+Before any planning, explicitly verify the handoff from BA in [BA To Tech Lead Handoff](/agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md).
 - [ ] **Acceptance Criteria**: Are they testable?
 - [ ] **Constraints**: Are they compatible with current architecture?
 - [ ] **Scope**: Is the boundary clearly defined (what is NOT included)?
@@ -293,7 +293,7 @@ Present the **complete plan** to the USER, including:
 **Parallel execution model (when sub-agents are independent):**
 - TL Session A → [CR Coordinator ↔ Backend] + [CR Coordinator ↔ Frontend] → CR Coordinator ↔ Testing → TL Session B → BA
 
-**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions (empty for direct-execution CRs with N=0 — expected), (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state. For direct-execution CRs, Session B does not exist as a separate session; BA handoff authoring occurs at the end of the single combined session.
+**TL-session-state.md protocol:** Before closing Session A, write `agent-docs/llm-journey/communication/coordination/TL-session-state.md` with: (1) CR ID, (2) plan decisions and direct-change outcomes, (3) per-sub-agent CR Coordinator session entry instructions (empty for direct-execution CRs with N=0 — expected), (4) a `## Workflow Health Signal` field — populate with `none` or a brief description of any context saturation observed (which session, which phase). The CR Coordinator loads this file at session start — do NOT rely on session compressor summaries for handoff decisions. At Session B entry, the Tech Lead loads the Coordinator conclusion summaries, not raw session state. For direct-execution CRs, Session B does not exist as a separate session; BA handoff authoring occurs at the end of the single combined session.
 
 > **Note:** The two-session model from CR-018 was insufficient for 3-sub-agent CRs — CR-021 required four saturated sessions despite the two-session fix. The CR Coordinator model supersedes the two-session model and scales linearly to N sub-agents by narrowing each session's file-read scope to one sub-agent's work.
 
@@ -302,8 +302,8 @@ Present the **complete plan** to the USER, including:
 ### Execution & Coordination
 Once approved:
 -  **Pre-Replacement Check (mandatory before any handoff write):** For each `tech-lead-to-<role>.md` file, complete the Conversation File Freshness Pre-Replacement Check per `$LLM_JOURNEY_WORKFLOW` before replacing. If replacing multiple handoff files that all contain content from the same prior closed CR, one closure verification covers all.
--  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/conversations/tech-lead-to-<role>.md`.
-   - Use role-specific templates in `agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+-  **Formalize Handoffs**: Create sub-agent prompts in `agent-docs/llm-journey/communication/conversations/tech-lead-to-<role>.md`.
+   - Use role-specific templates in `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.
    - **Known Environmental Caveats (required section in every sub-agent handoff):** Include environment constraints known at handoff time (Node version, nvm path, pnpm requirements, unavailable tooling). All sub-agents face the same environment; populate once and include in all handoffs.
    - **Self-check before issuing**: If the handoff says "follow [pattern] exactly," verify no later spec item contradicts "exactly." Preferred framing: "Follow the structure and error-handling patterns of [pattern] — deviations are itemized below and take precedence."
@@ -358,7 +358,7 @@ The Coordinator's session entry, execution mode guidance, Bash-denied fallback p
 **Tech Lead Session B steps (after receiving all Coordinator conclusion summaries):**
 - [ ] **Artifact & ADR Update**: Promote successful solutions to permanent documentation (`$LLM_JOURNEY_GOVERNANCE_DECISIONS` or `agent-docs/`) if they change system invariants.
 - [ ] **Intentional Dead Code**: If this CR preserves or creates an intentionally dead code path (e.g., a format-flexibility branch frozen by handoff constraint), add a code comment at the call site referencing the intent (`// Intentionally preserved: see CR-XXX plan`) and create a follow-up CR candidate for deferred removal decision.
-- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+- [ ] **[Tech Lead Session B] Create Tech Lead → BA Handoff**: Write the completion report in `/agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md` following the [Handoff Protocol](/agent-docs/llm-journey/communication/coordination/handoff-protocol.md) and the role-specific handoff templates in `/agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 
 #### Pre-Existing Test Failures
 If tests fail for reasons **unrelated** to the current CR:

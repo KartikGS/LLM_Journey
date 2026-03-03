@@ -37,6 +37,9 @@ To relocate a file: update the **Path** cell below, then grep for the variable n
 | `$INSTRUCTION_WORKFLOW_REQUIREMENTS` | `/agent-docs/a-society/general/instructions/workflow/requirements/main.md` | How to create a requirements structure for any project |
 | `$INSTRUCTION_DEVELOPMENT` | `/agent-docs/a-society/general/instructions/development/main.md` | How to create a development folder for any project |
 | `$INSTRUCTION_GOVERNANCE` | `/agent-docs/a-society/general/instructions/governance/main.md` | How to create a governance folder for any project |
+| `$INSTRUCTION_COMMUNICATION` | `/agent-docs/a-society/general/instructions/communication/main.md` | How to create a communication folder for any project |
+| `$INSTRUCTION_COMMUNICATION_CONVERSATION` | `/agent-docs/a-society/general/instructions/communication/conversation/main.md` | How to create a conversation layer — artifact formats, templates, and lifecycle |
+| `$INSTRUCTION_COMMUNICATION_COORDINATION` | `/agent-docs/a-society/general/instructions/communication/coordination/main.md` | How to create coordination protocols — status models, handoff rules, feedback, and conflict resolution |
 | `$INSTRUCTION_THINKING` | `/agent-docs/a-society/general/instructions/thinking/main.md` | How to create a thinking/ folder for any project |
 | `$INSTRUCTION_IMPROVEMENT` | `/agent-docs/a-society/general/instructions/improvement/main.md` | How to create an improvement/ folder for any project |
 | `$GENERAL_THINKING` | `/agent-docs/a-society/general/thinking/main.md` | Ready-made general principles template — cross-role operational rules |

@@ -17,7 +17,7 @@
 ## Exact Artifact Paths (Mandatory)
 - Requirement: `agent-docs/requirements/CR-022-adaptation-page-upgrade-and-cleanup.md`
 - Plan: `agent-docs/plans/CR-022-plan.md`
-- Report back to: `agent-docs/conversations/frontend-to-tech-lead.md`
+- Report back to: `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md`
 
 ## Execution Mode
 `feature-ui`
@@ -214,7 +214,7 @@ Do not only verify the restriction — verify the base case still works.
 
 ## Clarification Loop (Mandatory)
 
-Frontend posts preflight concerns/questions in `agent-docs/conversations/frontend-to-tech-lead.md`. Tech Lead responds in the same file. Repeat until concerns are resolved or status becomes `blocked`.
+Frontend posts preflight concerns/questions in `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md`. Tech Lead responds in the same file. Repeat until concerns are resolved or status becomes `blocked`.
 
 ---
 
@@ -241,7 +241,7 @@ If any feedback expands implementation beyond this handoff scope, mark it `scope
 
 ## Report Back
 
-Write completion report to `agent-docs/conversations/frontend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-frontend-to-tech-lead.md`.
+Write completion report to `agent-docs/llm-journey/communication/conversations/frontend-to-tech-lead.md` using `agent-docs/llm-journey/communication/conversations/TEMPLATE-frontend-to-tech-lead.md`.
 
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
 

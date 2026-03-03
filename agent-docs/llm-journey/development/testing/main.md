@@ -259,7 +259,7 @@ If the test environment (network, ports, global headers, browser quirks) prevent
 - **Document the Evidence**: Capture logs, screenshots, or minimal reproduction cases.
 - **Consult Tooling Standard**: Check if the issue violates a fixed constraint (e.g., standard Port 3001).
 - **Escalate, Don't Fix**: The Testing Agent is NOT authorized to modify `/next.config.ts`, `/package.json`, or server-side infrastructure.
-- **Report**: Use `/agent-docs/conversations/testing-to-tech-lead.md` to request environment level changes.
+- **Report**: Use `/agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md` to request environment level changes.
 
 ---
 

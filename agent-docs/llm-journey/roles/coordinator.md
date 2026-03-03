@@ -24,7 +24,7 @@ The CR Coordinator does **not** make architecture decisions, modify the plan art
 ## Session Entry Protocol
 
 At each coordinator session start, load **only**:
-1. `agent-docs/coordination/TL-session-state.md` — carries all relevant plan decisions and per-coordinator entry instructions for this CR.
+1. `agent-docs/llm-journey/communication/coordination/TL-session-state.md` — carries all relevant plan decisions and per-coordinator entry instructions for this CR.
 2. The sub-agent's completion report (`conversations/<role>-to-tech-lead.md`).
 3. The files the sub-agent modified.
 

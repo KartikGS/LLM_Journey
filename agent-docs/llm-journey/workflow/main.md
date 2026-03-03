@@ -21,14 +21,14 @@
 11. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the Human User, and issue a revised handoff.
 
 ### Technical Planning & Delegation Phase (Tech Lead Agent)
-1. Tech Lead reads CR from BA. Read `/agent-docs/conversations/ba-to-tech-lead.md` for more details.
+1. Tech Lead reads CR from BA. Read `/agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md` for more details.
 2. Tech Lead assesses technical complexity and identifies required sub-agents.
-3. **Execution Audit**: Tech Lead audits existing `/agent-docs/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
+3. **Execution Audit**: Tech Lead audits existing `/agent-docs/llm-journey/communication/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
 4. **MANDATORY OUTPUT:** Tech Lead creates `/agent-docs/llm-journey/workflow/plans/CR-XXX-plan.md` using the Standard Plan Template defined in `$LLM_JOURNEY_WORKFLOW_PLANS`.
 5. **MANDATORY CHECK:** Tech Lead submits the COMPLETE plan (approach + delegation) to USER for "Go/No-Go" decision.
    - **Exception:** Skip explicit Go/No-Go for: (a) strictly `[S][DOC]` work or pure discovery sessions where no sub-agent delegation handoff will be issued — direct Tech Lead execution of permitted changes does not disqualify from this skip; or (b) `[S]` CRs where the plan contains no unresolved architectural decisions or option spaces requiring user judgment — i.e., every technical choice is fully determined by the BA spec and no tradeoff is left open.
-6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/conversations/tech-lead-to-<role>.md`.
-   - **Template Rule**: Use role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+6. **Execution Start:** Tech Lead formalizes task specifications + prompts for sub-agents in `/agent-docs/llm-journey/communication/conversations/tech-lead-to-<role>.md`.
+   - **Template Rule**: Use role-specific handoff templates in `/agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-<role>.md`.
    - **Requirement**: Tech Lead MUST include the "Rationale/Why" in the handoff to ensure sub-agents understand the intent, not just the action.
    - > [!WARNING] **Write-Before-Read constraint:** Before replacing any existing handoff file, you MUST read it first — even if the prior content will be entirely discarded. The Write tool requires a prior Read call for existing files; omitting this step causes a "File has not been read yet" error and a full retry cycle.
 7. **MANDATORY EXECUTION MODE DECISION:** Tech Lead MUST explicitly choose one mode in the plan:
@@ -62,7 +62,7 @@ Use this matrix to decide whether a Testing handoff is required in the same CR:
 Canonical rule: this matrix is the source of truth for Testing handoff decisions. If any other section conflicts, follow this matrix.
 
 #### Conversation File Freshness Rule (Mandatory)
-- Conversation handoff/report files under `agent-docs/conversations/` are **single-CR working artifacts**.
+- Conversation handoff/report files under `agent-docs/llm-journey/communication/conversations/` are **single-CR working artifacts**.
 - For a new CR, agents MUST **replace file contents** with the current CR context. Do not append historical CR logs.
 - Every conversation file MUST include the active CR ID in `Subject`.
 - Within the same CR, agents SHOULD keep preflight and completion updates in the same file as separate sections.
@@ -102,7 +102,7 @@ The gate is not weakened — Evidence 2 requires reading the prior CR requiremen
 - **Pre-authored `pending-issue` handoffs**: When a later-stage handoff (e.g., Testing) is fully determinable at plan time and does not depend on upstream sub-agent output decisions, the Tech Lead may write the handoff at Session A time and mark it `status: pending-issue` in the file header. The CR Coordinator validates applicability against upstream outputs and changes status to `status: issued` before forwarding — no re-transcription. This removes a full session boundary for handoffs that were already known at plan time.
 
 ### 🛑 The Delegation Invariant (Anti-Loop Measures)
-- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the role-specific handoff templates in `/agent-docs/conversations/TEMPLATE-tech-lead-to-<role>.md`.
+- **The Tech Lead writes the Handoff**: This is the final action of the Tech Lead Agent for a specific sub-task. Use the role-specific handoff templates in `/agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-<role>.md`.
 - **The "Wait" State**:
   - **Parallel Mode**: Once all permitted direct changes (e.g., `.env.example`, config files) and the full planned handoff batch are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User. Permitted direct changes do not require a separate Wait State — they may be completed in the same turn as handoff issuance.
   - **Sequential Mode**: Once permitted direct changes and the current step handoff are complete in the same execution turn, the Tech Lead Agent MUST stop and report back to the User.
@@ -115,7 +115,7 @@ The gate is not weakened — Evidence 2 requires reading the prior CR requiremen
 When entering the Wait State, the Tech Lead MUST inform the user:
 1. Execution mode selected (`Parallel` or `Sequential`)
 2. Which sub-agent role(s) need to execute next
-3. The handoff file location(s) (e.g., `agent-docs/conversations/tech-lead-to-frontend.md`)
+3. The handoff file location(s) (e.g., `agent-docs/llm-journey/communication/conversations/tech-lead-to-frontend.md`)
 4. Clear instruction — role-dependent:
    - **Sub-agent execution roles** (Backend, Frontend, Testing, Infra): *"Start a new session and assign the [Role] to execute this handoff."*
    - **BA acceptance** (after issuing `tech-lead-to-ba.md`): *"Resume the existing BA session that produced `ba-to-tech-lead.md` and provide `tech-lead-to-ba.md` as input. Do not start a new session — the BA's accumulated CR context is required for accurate acceptance verification."*
@@ -134,7 +134,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 
 
 ### Implementation Phase (Sub-Agents)
-1. Sub-agent receives task specification from Tech Lead Agent in `/agent-docs/conversations/tech-lead-to-<role>.md`
+1. Sub-agent receives task specification from Tech Lead Agent in `/agent-docs/llm-journey/communication/conversations/tech-lead-to-<role>.md`
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
 3. **Preflight Clarification (Mandatory)**: Before implementation, publish a concise preflight note to the role's `*-to-tech-lead.md` handoff including:
@@ -150,7 +150,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
    - **STOP** implementation of the affected part immediately.
    - **DO NOT** attempt to "fix" or "work around" an architectural or environmental assumption without consulting the Tech Lead Agent.
    - **Reproduce before classify**: For environment/E2E blockers, run at least one exact-command rerun and one explicit-target rerun (plus local-equivalent verification if constrained execution affects startup/runtime) before final blocker classification.
-   - Report the issue immediately via the `agent-docs/coordination/feedback-protocol.md`.
+   - Report the issue immediately via the `agent-docs/llm-journey/communication/coordination/feedback-protocol.md`.
    - Clearing the blocker OR re-validating the core requirement is a higher priority than completing the original task.
 6. Sub-agent executes within role boundaries.
    - If user or Tech Lead feedback introduces changes outside the approved handoff scope (for example cross-route refactors or shared component extraction), mark this as a **scope extension** and get explicit Tech Lead or user confirmation before implementing.
@@ -188,7 +188,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 4. **E2E Contract Closure Check (Conditional)**: For CRs touching routes/page structure/test IDs, Tech Lead verifies matching E2E assertion updates are present in the same CR (not deferred silently).
 5. Tech Lead updates architectural docs if needed
 6. **Post-Verification Drift Check (Mandatory):** Before issuing the BA handoff, confirm that feature files verified in steps 1–5 have not been modified after verification was recorded — whether by an agent or by the Human User directly. **Mechanism**: In synchronous single-session execution where verification and handoff issuance occur consecutively, this check is trivially satisfied — no drift is possible between sequential tool calls. In multi-session or async scenarios, re-read feature files or compare modification timestamps to confirm no intervening edits. If drift is detected, a re-verification pass is required. Note the drift in the BA handoff with the original and current file state.
-7. **Output:** Verified feature + completion report in `agent-docs/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/coordination/handoff-protocol.md`.
+7. **Output:** Verified feature + completion report in `agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md` following Handoff Protocol in `agent-docs/llm-journey/communication/coordination/handoff-protocol.md`.
 
 ### Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.

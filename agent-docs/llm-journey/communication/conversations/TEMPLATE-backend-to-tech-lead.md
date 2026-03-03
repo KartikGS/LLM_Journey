@@ -21,7 +21,7 @@
 - `clear-to-implement` | `blocked`
 
 ## [Scope Check]
-- Handoff source: `agent-docs/conversations/tech-lead-to-backend.md`
+- Handoff source: `agent-docs/llm-journey/communication/conversations/tech-lead-to-backend.md`
 - Files modified:
   - `path/to/file.ext`
 - Scope compliance:

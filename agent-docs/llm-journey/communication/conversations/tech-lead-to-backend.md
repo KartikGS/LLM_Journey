@@ -18,7 +18,7 @@
 - Requirement: `agent-docs/requirements/CR-024-generation-route-body-size-enforcement.md`
 - Plan: `agent-docs/plans/CR-024-plan.md`
 - Upstream report (if sequential): N/A — single agent
-- Report back to: `agent-docs/conversations/backend-to-tech-lead.md`
+- Report back to: `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md`
 
 ---
 
@@ -239,7 +239,7 @@ it('returns 413 for body exceeding 8192 bytes with no Content-Length header', as
 
 ## Clarification Loop (Mandatory)
 
-Before implementation, Backend posts preflight note to `agent-docs/conversations/backend-to-tech-lead.md` covering:
+Before implementation, Backend posts preflight note to `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md` covering:
 - Assumptions confirmed or invalidated
 - Any adjacent risks discovered
 - Open questions (if non-trivial — pause and await TL response before implementing)
@@ -295,6 +295,6 @@ If any feedback expands implementation beyond this handoff scope, mark it `scope
 
 ## Report Back
 
-Write completion report to `agent-docs/conversations/backend-to-tech-lead.md` using `agent-docs/conversations/TEMPLATE-backend-to-tech-lead.md`.
+Write completion report to `agent-docs/llm-journey/communication/conversations/backend-to-tech-lead.md` using `agent-docs/llm-journey/communication/conversations/TEMPLATE-backend-to-tech-lead.md`.
 
 Status vocabulary: `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

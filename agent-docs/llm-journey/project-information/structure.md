@@ -24,11 +24,9 @@ LLM-Journey/
 | `agent-docs/llm-journey/workflow/reports/` | Investigation reports (`INVESTIGATION-XXX.md`) and ad-hoc analysis artifacts. Not for meta-analysis files — those belong in `$LLM_JOURNEY_IMPROVEMENT_REPORTS`. |
 | `agent-docs/llm-journey/workflow/requirements/` | CR requirement documents (`CR-XXX-<slug>.md`). Owned by BA. |
 | `agent-docs/llm-journey/workflow/plans/` | Tech Lead execution plans (`CR-XXX-plan.md`). |
-| `agent-docs/conversations/` | Active handoff/report files between agents (single-CR working artifacts — replaced per CR). |
-| `agent-docs/coordination/` | Cross-role protocols (handoff, feedback, conflict resolution). |
+| `agent-docs/llm-journey/communication/conversations/` | Active handoff/report files between agents (single-CR working artifacts — replaced per CR) and permanent templates. See `$LLM_JOURNEY_COMMUNICATION_CONVERSATIONS`. |
+| `agent-docs/llm-journey/communication/coordination/` | Cross-role protocols (handoff, feedback, conflict resolution, TL session state). See `$LLM_JOURNEY_COMMUNICATION_COORDINATION`. |
 | `agent-docs/llm-journey/roles/` | Role definitions and sub-agent specs. |
-| `agent-docs/decisions/` | Architecture Decision Records (ADR-XXX). |
-| `agent-docs/development/` | Language/stack-specific development standards. |
 
 ## Rules
 -   **Colocation**: Keep styles and tests near the component if specific.

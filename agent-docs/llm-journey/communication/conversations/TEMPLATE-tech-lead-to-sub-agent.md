@@ -2,10 +2,10 @@
 
 Use role-specific templates instead of one generic handoff:
 
-- Frontend: `agent-docs/conversations/TEMPLATE-tech-lead-to-frontend.md`
-- Backend: `agent-docs/conversations/TEMPLATE-tech-lead-to-backend.md`
-- Testing: `agent-docs/conversations/TEMPLATE-tech-lead-to-testing.md`
-- Infra: `agent-docs/conversations/TEMPLATE-tech-lead-to-infra.md`
+- Frontend: `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-frontend.md`
+- Backend: `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-backend.md`
+- Testing: `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-testing.md`
+- Infra: `agent-docs/llm-journey/communication/conversations/TEMPLATE-tech-lead-to-infra.md`
 
 ## Clarification Loop Requirement (All Roles)
 Every handoff created from role-specific templates must support iterative clarification:

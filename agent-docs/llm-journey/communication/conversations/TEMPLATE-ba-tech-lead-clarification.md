@@ -1,6 +1,6 @@
 # Template: BA <-> Tech Lead Clarification Loop
 
-Use this structure inside `agent-docs/conversations/ba-to-tech-lead.md` or `agent-docs/conversations/tech-lead-to-ba.md` when iterative clarification is needed.
+Use this structure inside `agent-docs/llm-journey/communication/conversations/ba-to-tech-lead.md` or `agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md` when iterative clarification is needed.
 
 ## Clarification Round [N]
 ### Trigger

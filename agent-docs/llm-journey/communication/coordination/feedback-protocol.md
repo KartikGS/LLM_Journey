@@ -16,7 +16,7 @@ If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they 
 - **When**: A sub-agent finds a flaw in the plan or a missing dependency in the codebase.
 - **Action**: 
     1. Stop implementation of the affected part.
-    2. Document the issue in `agent-docs/conversations/<role>-to-tech-lead.md` under a `## BLOCKER / FEEDBACK` section.
+    2. Document the issue in `agent-docs/llm-journey/communication/conversations/<role>-to-tech-lead.md` under a `## BLOCKER / FEEDBACK` section.
     3. Clearly state:
         - What was expected (per plan).
         - What was found (reality).
@@ -27,7 +27,7 @@ If an agent (BA, Tech Lead, or Sub-Agent) identifies one of the following, they 
 ### Tech Lead → BA Agent
 - **When**: The plan reveals a requirement is unfeasible or based on wrong business logic.
 - **Action**:
-    1. Update `agent-docs/conversations/tech-lead-to-ba.md` with a `## REQUIREMENT FEEDBACK` section.
+    1. Update `agent-docs/llm-journey/communication/conversations/tech-lead-to-ba.md` with a `## REQUIREMENT FEEDBACK` section.
     2. Propose a technical alternative or request requirement clarification.
 
 ## Resolution Protocol

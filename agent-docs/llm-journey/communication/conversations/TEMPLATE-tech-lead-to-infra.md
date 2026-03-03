@@ -39,7 +39,7 @@
 - [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
-- Infra posts preflight concerns/questions in `agent-docs/conversations/infra-to-tech-lead.md`.
+- Infra posts preflight concerns/questions in `agent-docs/llm-journey/communication/conversations/infra-to-tech-lead.md`.
 - Tech Lead responds in the same file.
 - Repeat until concerns are resolved or status becomes `blocked`.
 
@@ -47,8 +47,8 @@
 [Exact commands and negative-space checks.]
 
 ## Report Back
-Write completion report to `agent-docs/conversations/infra-to-tech-lead.md` using:
-- `agent-docs/conversations/TEMPLATE-infra-to-tech-lead.md`
+Write completion report to `agent-docs/llm-journey/communication/conversations/infra-to-tech-lead.md` using:
+- `agent-docs/llm-journey/communication/conversations/TEMPLATE-infra-to-tech-lead.md`
 
 Status vocabulary for infra reports:
 - `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`

@@ -9,8 +9,8 @@
 ## Exact Artifact Paths (Mandatory)
 - Requirement: `agent-docs/requirements/[CR-ID]-[slug].md`
 - Plan: `agent-docs/plans/[CR-ID]-plan.md`
-- Upstream report (if sequential): `agent-docs/conversations/[upstream-role]-to-tech-lead.md`
-- Report back to: `agent-docs/conversations/testing-to-tech-lead.md`
+- Upstream report (if sequential): `agent-docs/llm-journey/communication/conversations/[upstream-role]-to-tech-lead.md`
+- Report back to: `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md`
 
 ## Objective
 [Outcome-focused testing objective.]
@@ -84,7 +84,7 @@ Use this table for any coverage or timeout decision that has a conditional dimen
 - [ ] **Documentation Impact**: `required — [list files updated]` | `not-required — [rationale]`
 
 ## Clarification Loop (Mandatory)
-- Testing posts preflight concerns/questions in `agent-docs/conversations/testing-to-tech-lead.md`.
+- Testing posts preflight concerns/questions in `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md`.
 - Tech Lead responds in the same file.
 - Repeat until concerns are resolved or status becomes `blocked`.
 
@@ -107,7 +107,7 @@ Before reporting:
 - [ ] Completion report written to `testing-to-tech-lead.md` using the template.
 
 ## Report Back
-Write completion report to `agent-docs/conversations/testing-to-tech-lead.md`.
+Write completion report to `agent-docs/llm-journey/communication/conversations/testing-to-tech-lead.md`.
 
 Status vocabulary for testing reports:
 - `in_progress` | `completed` | `blocked` | `partial` | `needs_environment_verification`
