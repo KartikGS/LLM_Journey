@@ -20,12 +20,12 @@ LLM-Journey/
 
 | Directory | Purpose |
 | :--- | :--- |
-| `agent-docs/meta/` | Multi-agent meta-analysis artifacts: per-role findings files (`META-YYYYMMDD-<CR-ID>-<role>-findings.md`) and synthesis docs (`META-YYYYMMDD-<CR-ID>-synthesis.md`). See `coordination/meta-improvement-protocol.md`. |
-| `agent-docs/llm-journey/workflow/reports/` | Investigation reports (`INVESTIGATION-XXX.md`) and ad-hoc analysis artifacts. Not for meta-analysis files — those belong in `meta/`. |
+| `agent-docs/llm-journey/improvement/reports/` | Meta-analysis artifacts: per-role findings files, synthesis docs, alignment backlogs. See `$LLM_JOURNEY_IMPROVEMENT_REPORTS`. |
+| `agent-docs/llm-journey/workflow/reports/` | Investigation reports (`INVESTIGATION-XXX.md`) and ad-hoc analysis artifacts. Not for meta-analysis files — those belong in `$LLM_JOURNEY_IMPROVEMENT_REPORTS`. |
 | `agent-docs/llm-journey/workflow/requirements/` | CR requirement documents (`CR-XXX-<slug>.md`). Owned by BA. |
 | `agent-docs/llm-journey/workflow/plans/` | Tech Lead execution plans (`CR-XXX-plan.md`). |
 | `agent-docs/conversations/` | Active handoff/report files between agents (single-CR working artifacts — replaced per CR). |
-| `agent-docs/coordination/` | Cross-role protocols (workflow invariants, meta-improvement, reasoning principles). |
+| `agent-docs/coordination/` | Cross-role protocols (handoff, feedback, conflict resolution). |
 | `agent-docs/llm-journey/roles/` | Role definitions and sub-agent specs. |
 | `agent-docs/decisions/` | Architecture Decision Records (ADR-XXX). |
 | `agent-docs/development/` | Language/stack-specific development standards. |

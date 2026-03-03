@@ -53,7 +53,7 @@
 - `non-blocking warning`:
 
 ## [Deviations]
-- `none` OR list deviations with rationale per `agent-docs/coordination/reasoning-principles.md`.
+- `none` OR list deviations with rationale per `$LLM_JOURNEY_THINKING_REASONING`.
 
 ## [Ready for Next Agent]
 - `yes` | `no`

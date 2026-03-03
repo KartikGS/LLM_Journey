@@ -4,7 +4,7 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 
 > [!NOTE]
 > Principle layering:
-> - Cross-project principles: `/agent-docs/coordination/general-principles.md`
+> - General principles: `$LLM_JOURNEY_THINKING`
 > - LLM Journey-specific principles: `$LLM_JOURNEY_PRINCIPLES`
 > - This file: execution-time reasoning behavior for agent decision-making.
 
@@ -37,7 +37,7 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 
 ## Intent Verification
 *   **Read for Design, Not Just Syntax**: Before proposing a change, read the surrounding comments and documentation to understand the author's intent.
-*   **Contextual Cross-Referencing**: Check `agent-docs/decisions/` and `$LLM_JOURNEY_ARCHITECTURE` before touching sensitive areas like security, telemetry, or core data flow.
+*   **Contextual Cross-Referencing**: Check `$LLM_JOURNEY_GOVERNANCE_DECISIONS` and `$LLM_JOURNEY_ARCHITECTURE` before touching sensitive areas like security, telemetry, or core data flow.
 
 ## The "Second-Order Effects" Check
 *   Before finalizing a requirement or plan, ask:
@@ -53,8 +53,8 @@ This document outlines the cognitive framework agents must use to ensure high-qu
 *   If you find yourself designing implementation details as a BA, **STOP** and refocus on the problem statement.
 
 ## Logic Loop Prevention (Meta-Analysis)
-*   **Identity Integrity**: If you find yourself arguing with a documented role constraint (e.g., "I should delegate, but I'll do it anyway"), you are entering a logic loop. 
-*   **The "Abort-and-Report"**: If your reasoning steps start to repeat, you become stuck in a cycle of "self-correction" without change, or you feel uncertain about whether you are a "Manager" or a "Doer," stop immediately. Summarize the conflict to the User and ask for a status reset. 
+*   **Identity Integrity**: If you find yourself arguing with a documented role constraint (e.g., "I should delegate, but I'll do it anyway"), you are entering a logic loop.
+*   **The "Abort-and-Report"**: If your reasoning steps start to repeat, you become stuck in a cycle of "self-correction" without change, or you feel uncertain about whether you are a "Manager" or a "Doer," stop immediately. Summarize the conflict to the User and ask for a status reset.
 *   **Contextual Honesty**: Documentation exists to constrain your behavior for the sake of system quality. Bypassing a process "to be fast" is a failure of Tech Lead-level reasoning.
 
 ## The Deviation Protocol (How to Improve)

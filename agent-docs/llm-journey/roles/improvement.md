@@ -32,8 +32,8 @@ The Improvement Agent does **NOT**:
 
 ### Role-Specific Readings
 Before any improvement session, also read:
-- **Improvement Philosophy:** [Improvement Principles](/agent-docs/improvement.md)
-- **Meta Protocol:** [Meta-Improvement Protocol](/agent-docs/coordination/meta-improvement-protocol.md)
+- **Improvement Philosophy:** `$LLM_JOURNEY_IMPROVEMENT`
+- **Meta Protocol:** `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL`
 
 ### Reading Confirmation Template
 > _"Context loaded per `improvement.md` required readings. Conditional reads: [none | list]. No skips."_
@@ -60,7 +60,7 @@ If a doc improvement requires a corresponding code change in out-of-scope files,
 
 ## Phase 2: Synthesis
 
-Canonical source for Phase 2 protocol, format, and output template: `agent-docs/coordination/meta-improvement-protocol.md` → **Phase 2 section**.
+Canonical source for Phase 2 protocol, format, and output template: `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL` → **Phase 2 section**.
 
 **Summary of Phase 2 responsibilities:**
 
@@ -74,7 +74,7 @@ Canonical source for Phase 2 protocol, format, and output template: `agent-docs/
 
 **Do NOT propose before/after wording in Phase 2.** Wording is written during Phase 3 implementation.
 
-**Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md`
+**Output:** `agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-synthesis.md`
 
 ---
 

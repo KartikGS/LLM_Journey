@@ -35,13 +35,13 @@ Avoid adding new principled content as a section inside an existing large file. 
 **Separate project-specific content from cross-project agent infrastructure.**
 
 Organize `agent-docs/` so that:
-- Cross-project agent standards live at the root or in named cross-project directories (e.g., `coordination/`, `roles/`)
+- Cross-project agent standards live in named cross-project directories (e.g., `coordination/`)
 - Project-specific content lives under a named project subfolder (e.g., `llm-journey/`)
-- Each project subfolder can contain its own `project-principles/`, `decisions/`, or domain-specific docs
+- Each project subfolder contains its own domain-scoped folders (`thinking/`, `improvement/`, `project-principles/`, etc.)
 
-**Why this matters:** As more projects are added, cross-project agent infrastructure (workflow, roles, meta-improvement protocol) remains reusable without modification. Project-specific principles (observability design for LLM Journey vs. a different stack for another project) do not bleed into the cross-project layer.
+**Why this matters:** As more projects are added, cross-project agent infrastructure remains reusable without modification. Project-specific principles do not bleed into the cross-project layer.
 
-**Naming convention:** Use the project name as the subfolder key under `agent-docs/` (e.g., `agent-docs/llm-journey/`). Within each project folder, use domain-scoped subfolders (`project-principles/`, `decisions/`, `reports/`).
+**Naming convention:** Use the project name as the subfolder key under `agent-docs/` (e.g., `agent-docs/llm-journey/`). Within each project folder, use domain-scoped subfolders (`thinking/`, `improvement/`, `project-principles/`, `governance/`).
 
 ---
 
@@ -49,11 +49,11 @@ Organize `agent-docs/` so that:
 
 **When a doc references another file, that file is required reading — not optional context.**
 
-Agents load their required reading list from `$LLM_JOURNEY_AGENTS` and their role doc. But those docs will contain cross-references (links to observability.md, testing-strategy.md, etc.). These references are not decorative — they point to the authoritative source for a specific topic.
+Agents load their required reading list from `$LLM_JOURNEY_AGENTS` and their role doc. But those docs will contain cross-references (links to observability.md, testing strategy, etc.). These references are not decorative — they point to the authoritative source for a specific topic.
 
 **Rule for agents:** If a loaded document contains a cross-reference to another file in `agent-docs/`, treat that referenced file as required reading for any task that touches the referenced topic. Do not rely only on the summary or inline description — follow the link to the source file.
 
-**Rule for doc authors:** Cross-references should be explicit file paths, not prose descriptions. Use markdown links with relative paths so agents can follow them unambiguously. Avoid repeating content from the referenced file in the referencing doc — duplication creates drift.
+**Rule for doc authors:** Cross-references should be explicit file paths via `$VARIABLE_NAME`, not prose descriptions. Use variables so agents can follow them unambiguously. Avoid repeating content from the referenced file in the referencing doc — duplication creates drift.
 
 ---
 
@@ -91,5 +91,5 @@ When evaluating a proposed fix during meta-synthesis:
 
 1. **Before deciding "add to X"** — ask whether X is the right home. Would a new dedicated file serve the atomic change site principle better?
 2. **Before deciding "add a new protocol"** — ask whether user consultation adequately handles the edge case. Reject the protocol if the informal path is sufficient.
-3. **Before deciding "add a cross-reference"** — ensure the cross-reference is a file path, not a prose description. The implementing agent must be able to follow it without interpretation.
+3. **Before deciding "add a cross-reference"** — ensure the cross-reference uses a `$VARIABLE_NAME`, not a hardcoded path. The implementing agent must be able to follow it without interpretation.
 4. **When creating new content** — decide first whether it is project-specific or cross-project. Place it accordingly (`llm-journey/` vs. root `agent-docs/`).

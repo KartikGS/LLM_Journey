@@ -37,3 +37,15 @@ To relocate a file: update the **Path** cell below, then grep for the variable n
 | `$INSTRUCTION_WORKFLOW_REQUIREMENTS` | `/agent-docs/a-society/general/instructions/workflow/requirements/main.md` | How to create a requirements structure for any project |
 | `$INSTRUCTION_DEVELOPMENT` | `/agent-docs/a-society/general/instructions/development/main.md` | How to create a development folder for any project |
 | `$INSTRUCTION_GOVERNANCE` | `/agent-docs/a-society/general/instructions/governance/main.md` | How to create a governance folder for any project |
+| `$INSTRUCTION_THINKING` | `/agent-docs/a-society/general/instructions/thinking/main.md` | How to create a thinking/ folder for any project |
+| `$INSTRUCTION_IMPROVEMENT` | `/agent-docs/a-society/general/instructions/improvement/main.md` | How to create an improvement/ folder for any project |
+| `$GENERAL_THINKING` | `/agent-docs/a-society/general/thinking/main.md` | Ready-made general principles template — cross-role operational rules |
+| `$GENERAL_THINKING_REASONING` | `/agent-docs/a-society/general/thinking/reasoning.md` | Ready-made reasoning framework template — cognitive heuristics for agents |
+| `$GENERAL_THINKING_KEEP_IN_MIND` | `/agent-docs/a-society/general/thinking/keep-in-mind.md` | Ready-made keep-in-mind template — operational reminders and hard stops |
+| `$GENERAL_IMPROVEMENT` | `/agent-docs/a-society/general/improvement/main.md` | Ready-made improvement philosophy template — principles for doc improvement decisions |
+| `$GENERAL_IMPROVEMENT_PROTOCOL` | `/agent-docs/a-society/general/improvement/protocol.md` | Ready-made improvement protocol template — meta-analysis phases and guardrails |
+| `$GENERAL_IMPROVEMENT_REPORTS` | `/agent-docs/a-society/general/improvement/reports/main.md` | Ready-made improvement reports index template |
+| `$GENERAL_IMPROVEMENT_TEMPLATE_LIGHTWEIGHT` | `/agent-docs/a-society/general/improvement/reports/template-lightweight.md` | Lightweight synthesis report template |
+| `$GENERAL_IMPROVEMENT_TEMPLATE_FINDINGS` | `/agent-docs/a-society/general/improvement/reports/template-findings.md` | Per-agent findings report template |
+| `$GENERAL_IMPROVEMENT_TEMPLATE_SYNTHESIS` | `/agent-docs/a-society/general/improvement/reports/template-synthesis.md` | Synthesis report template |
+| `$GENERAL_IMPROVEMENT_TEMPLATE_BACKLOG` | `/agent-docs/a-society/general/improvement/reports/template-backlog.md` | Alignment backlog template |

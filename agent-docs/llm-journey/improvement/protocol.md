@@ -15,7 +15,7 @@ Use this protocol when the user asks for:
 **"Completed CR" definition for meta timing:**
 - **Tech Lead meta pass:** can run after TL verification is recorded (Tech Lead Session B complete and `tech-lead-to-ba.md` issued). Does not require prior BA closure.
 - **BA meta pass:** can run once TL verification is recorded. Does not require prior BA closure — the BA meta pass is typically the BA's last action before or during closure, not after it.
-- **Improvement Agent (Phase 2):** can run as soon as all required per-agent findings files are present in `agent-docs/meta/`. CR closure state is not a prerequisite.
+- **Improvement Agent (Phase 2):** can run as soon as all required per-agent findings files are present in `$LLM_JOURNEY_IMPROVEMENT_REPORTS`. CR closure state is not a prerequisite.
 
 ---
 
@@ -73,8 +73,8 @@ Every Mode A and Mode B finding must be assessed through these three lenses:
 
 When full three-phase analysis is not triggered, produce a lightweight synthesis note:
 - **Owner:** Tech Lead (default) or BA when requirement/template clarity is primary.
-- **Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-lightweight.md`
-- **Template:** `agent-docs/coordination/TEMPLATE-meta-lightweight.md`
+- **Output:** `agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-lightweight.md`
+- **Template:** `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_LIGHTWEIGHT`
 - **Required contents:**
   - top 1-5 findings,
   - lens impact summary (portability/collaboration/evolvability),
@@ -98,7 +98,7 @@ For CR-triggered meta-analysis, the typical order is:
 
 This layered approach means upstream agents (Tech Lead, BA) do not need to re-discover what downstream agents already found — they evaluate and build on it.
 
-**BA entry-point check**: If prior findings files are already provided as session context, this check is satisfied and BA may proceed directly to findings production. Otherwise, before beginning BA findings, verify that Backend (or other downstream sub-agent) and Tech Lead findings files exist for this CR in `agent-docs/meta/`. If they do not exist, pause and request the missing agent meta sessions before proceeding. BA findings without carry-forward context are incomplete per this protocol.
+**BA entry-point check**: If prior findings files are already provided as session context, this check is satisfied and BA may proceed directly to findings production. Otherwise, before beginning BA findings, verify that Backend (or other downstream sub-agent) and Tech Lead findings files exist for this CR in `$LLM_JOURNEY_IMPROVEMENT_REPORTS`. If they do not exist, pause and request the missing agent meta sessions before proceeding. BA findings without carry-forward context are incomplete per this protocol.
 
 **Standard session prompt (use verbatim when starting each Phase 1 agent session):**
 
@@ -108,14 +108,14 @@ You are a <Role> Agent operating in meta-improvement mode for the LLM Journey pr
 This is a resumed session. You have full context of your <CR-ID> execution.
 
 Your task: produce your findings file at:
-`agent-docs/meta/META-YYYYMMDD-<CR-ID>-<role>-findings.md`
+`agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-<role>-findings.md`
 
-Follow Phase 1 of `agent-docs/coordination/meta-improvement-protocol.md` for the required
-file format. Create the `agent-docs/meta/` directory if it does not yet exist.
+Follow Phase 1 of `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL` for the required
+file format. Create the reports directory if it does not yet exist.
 
 [Include the following block for every agent except the first:]
 Prior findings to review and assess (carry-forward — mandatory):
-- @agent-docs/meta/META-YYYYMMDD-<CR-ID>-<prior-role>-findings.md
+- @agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-<prior-role>-findings.md
 [Add one line per prior findings file in execution order]
 
 Use these 8 categories to guide your analysis:
@@ -143,10 +143,12 @@ Phase 2 synthesis reads this section only — not the full file.
 ```
 
 **Output per agent:**
-`agent-docs/meta/META-YYYYMMDD-<CR-ID>-<role>-findings.md`
-> Note: Create the `agent-docs/meta/` directory if it does not yet exist before writing findings files.
+`agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-<role>-findings.md`
+> Note: Create the `agent-docs/llm-journey/improvement/reports/` directory if it does not yet exist before writing findings files.
 
 #### Per-Agent Findings File Format
+
+Use template: `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_FINDINGS`
 
 ```markdown
 # Meta Findings: <Role> — <CR-ID>
@@ -221,13 +223,15 @@ Read Agents.md
 Attached are per-agent findings files from a <CR-ID> meta-analysis:
 - [list findings files with paths]
 
-Follow Phase 2 of `agent-docs/coordination/meta-improvement-protocol.md`.
+Follow Phase 2 of `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL`.
 Your synthesis responsibilities are defined in `$LLM_JOURNEY_ROLE_IMPROVEMENT`.
 ```
 
-**Output:** `agent-docs/meta/META-YYYYMMDD-<CR-ID>-synthesis.md`
+**Output:** `agent-docs/llm-journey/improvement/reports/META-YYYYMMDD-<CR-ID>-synthesis.md`
 
 #### Synthesis File Format
+
+Use template: `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_SYNTHESIS`
 
 ```markdown
 # Meta Synthesis: <CR-ID>
@@ -292,8 +296,8 @@ Inputs:
 - recurring friction from role sessions.
 
 Output:
-- `agent-docs/meta/ALIGN-YYYYMMDD-backlog.md` with entries tagged by lens (`portability`, `collaboration`, `evolvability`).
-- Recommended template: `agent-docs/coordination/TEMPLATE-align-backlog.md`.
+- `agent-docs/llm-journey/improvement/reports/ALIGN-YYYYMMDD-backlog.md` with entries tagged by lens (`portability`, `collaboration`, `evolvability`).
+- Recommended template: `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_BACKLOG`.
 
 ### Alignment Phase B — Chunk Planning
 For each selected alignment item, define:

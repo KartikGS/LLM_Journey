@@ -34,9 +34,9 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 > **Reference following (mandatory):** When a document you load contains a cross-reference (markdown link) to another file within `agent-docs/`, treat that referenced file as required reading for any task that touches the referenced topic. Do not treat cross-references as optional context — follow the link to the source file before proceeding. Cross-references point to the authoritative source for a specific topic; the inline description in the referencing doc is a summary only.
 
 ### Layer 1: Universal Standards (ALL agents)
-- **General Engineering Principles (cross-project):** [General Principles](/agent-docs/coordination/general-principles.md)
+- **General Engineering Principles:** `$LLM_JOURNEY_THINKING`
 - **Project-Specific Principles (LLM Journey):** `$LLM_JOURNEY_PRINCIPLES`
-- **Execution Reasoning:** [Reasoning Principles](/agent-docs/coordination/reasoning-principles.md)
+- **Execution Reasoning:** `$LLM_JOURNEY_THINKING_REASONING`
 - **Tooling & Environment:** `$TOOLING_STANDARD`
 - **Technical Map:** `$LLM_JOURNEY_TECHNICAL_CONTEXT`
 - **How we work:** `$LLM_JOURNEY_WORKFLOW`
@@ -54,7 +54,7 @@ Key file locations are registered in [`agent-docs/llm-journey/indexes/main.md`](
 Failed coordination kills projects. Stick to these contracts:
 ### Process & Workflow
 - **How we work:** `$LLM_JOURNEY_WORKFLOW`
-- **Meta Improvements:** [Meta Improvement Protocol](/agent-docs/coordination/meta-improvement-protocol.md)
+- **Meta Improvements:** `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL`
 **Constraint:**
 - Do not invent policies, standards, or requirements
 - If a rule is not written in `agent-docs/`, assume it does not exist

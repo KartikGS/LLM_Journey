@@ -2,7 +2,7 @@
 
 **Date:** YYYY-MM-DD
 **CR Reference:** <CR-ID>
-**Owner:** [Tech Lead | BA]
+**Owner:** [Synthesis Owner Role]
 
 ---
 
@@ -16,7 +16,7 @@
 
 ## Workflow Health Signal
 - Context saturation experienced: [Planning phase | Verification phase | neither]
-- Role docs that felt unwieldy to hold in context during this CR: [list or "none"]
+- Role docs that felt unwieldy to hold in context during this task: [list or "none"]
 - Findings repeated from a prior meta analysis (unfixed carry-forwards): [list or "none"]
 
 ## Recommendation
@@ -26,4 +26,3 @@
 
 ### Trigger Rationale (required if escalated)
 - [blocking contradiction | security/contract risk | 3+ distinct findings | periodic checkpoint | role health threshold crossed]
-

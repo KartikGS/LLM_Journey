@@ -1,8 +1,8 @@
 # Agent Docs Alignment Backlog
 
 **Date:** YYYY-MM-DD
-**Scope Window:** [e.g., CR-015 to CR-018]
-**Maintainer:** [Tech Lead | BA | Joint]
+**Scope Window:** [e.g., Task-015 to Task-018]
+**Maintainer:** [Role or Joint]
 
 ---
 
@@ -21,4 +21,3 @@
 
 ## Carry-Forward
 - Deferred items for next cycle:
-

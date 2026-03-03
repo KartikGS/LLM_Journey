@@ -1,6 +1,6 @@
 # Workflow (The Agent Loop)
 
-**Core Guidance**: Before starting any task, review `/agent-docs/coordination/reasoning-principles.md`.
+**Core Guidance**: Before starting any task, review `$LLM_JOURNEY_THINKING_REASONING`.
 
 ## Multi-Agent Workflow
 
@@ -217,7 +217,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 11. **Output:** Closed CR, updated project log.
 
 ### Post-CR Meta Improvement Cadence (Conditional)
-- Canonical procedure: `agent-docs/coordination/meta-improvement-protocol.md`.
+- Canonical procedure: `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL`.
 - Default after each completed CR: run Mode A lightweight meta pass.
 - Escalate to full Mode A three-phase chain only when trigger conditions in the meta protocol are met.
 - For structural doc evolution (portability split, collaboration throughput, doc maintainability), use Mode B alignment flow and implement in small `[S][DOC][ALIGN]` chunks.

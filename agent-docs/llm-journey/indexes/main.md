@@ -46,3 +46,13 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_GOVERNANCE_API` | `/agent-docs/llm-journey/governance/api/main.md` | API contract rules and contents index |
 | `$LLM_JOURNEY_GOVERNANCE_DECISIONS` | `/agent-docs/llm-journey/governance/decisions/main.md` | Architecture Decision Records index and ADR template |
 | `$LLM_JOURNEY_DEV_BACKEND` | `/agent-docs/llm-journey/development/backend.md` | Backend development standards — API routes, observability patterns, streaming, and SSE |
+| `$LLM_JOURNEY_THINKING` | `/agent-docs/llm-journey/thinking/main.md` | General principles — cross-role operational rules for every agent |
+| `$LLM_JOURNEY_THINKING_REASONING` | `/agent-docs/llm-journey/thinking/reasoning.md` | Reasoning framework — cognitive heuristics and decision-making patterns for agents |
+| `$LLM_JOURNEY_THINKING_KEEP_IN_MIND` | `/agent-docs/llm-journey/thinking/keep-in-mind.md` | Operational reminders — hard stops and common failure modes every agent must check |
+| `$LLM_JOURNEY_IMPROVEMENT` | `/agent-docs/llm-journey/improvement/main.md` | Improvement philosophy — principles for evaluating and implementing doc improvements |
+| `$LLM_JOURNEY_IMPROVEMENT_PROTOCOL` | `/agent-docs/llm-journey/improvement/protocol.md` | Meta improvement protocol — phases, roles, and guardrails for meta-analysis cycles |
+| `$LLM_JOURNEY_IMPROVEMENT_REPORTS` | `/agent-docs/llm-journey/improvement/reports/main.md` | Improvement reports index — naming conventions and links to report template files |
+| `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_LIGHTWEIGHT` | `/agent-docs/a-society/general/improvement/reports/template-lightweight.md` | Lightweight synthesis report template |
+| `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_FINDINGS` | `/agent-docs/a-society/general/improvement/reports/template-findings.md` | Per-agent findings report template |
+| `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_SYNTHESIS` | `/agent-docs/a-society/general/improvement/reports/template-synthesis.md` | Synthesis report template |
+| `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_BACKLOG` | `/agent-docs/a-society/general/improvement/reports/template-backlog.md` | Alignment backlog template |

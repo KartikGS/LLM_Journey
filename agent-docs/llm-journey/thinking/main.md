@@ -1,6 +1,6 @@
-# General Principles (Cross-Project)
+# General Principles
 
-These principles are intended to work across projects, not just LLM Journey.
+These principles apply to every agent working on this project. They complement the reasoning framework (`$LLM_JOURNEY_THINKING_REASONING`) and the operational reminders (`$LLM_JOURNEY_THINKING_KEEP_IN_MIND`).
 
 ## 1) Clarify Before Building
 - Resolve ambiguity before implementation.
