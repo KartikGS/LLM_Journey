@@ -20,6 +20,9 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_VISION` | `/LLM_Journey/a-docs/project-information/vision.md` | Project mission, dual-audience definition (learner-user / developer-user), mental model, implementation strategy, and 10-stage roadmap |
 | `$LLM_JOURNEY_STRUCTURE` | `/LLM_Journey/a-docs/project-information/structure.md` | Repository folder layout and key `a-docs/` subdirectory reference |
 | `$LLM_JOURNEY_AGENTS` | `/LLM_Journey/a-docs/agents.md` | Agent entry point for LLM Journey — universal standards, reading protocol, authority, and role index |
+| `$LLM_JOURNEY_ROLE_OWNER` | `/LLM_Journey/a-docs/roles/owner.md` | Owner role — project direction, vision alignment, and workflow routing |
+| `$LLM_JOURNEY_ROLE_CURATOR` | `/LLM_Journey/a-docs/roles/curator.md` | Curator role — agent-docs maintenance, structural health, and a-society pattern proposals |
+| `$LLM_JOURNEY_AGENT_DOCS_GUIDE` | `/LLM_Journey/a-docs/a-docs-guide.md` | Rationale for each file and folder in this project's a-docs (to be created by Curator) |
 | `$LLM_JOURNEY_ROLE_BA` | `/LLM_Journey/a-docs/roles/ba.md` | Business Analyst role — requirements, scope, acceptance criteria, clarification, and closure |
 | `$LLM_JOURNEY_ROLE_TECH_LEAD` | `/LLM_Journey/a-docs/roles/tech-lead.md` | Tech Lead role — planning, delegation, technical decisions, and CR execution model |
 | `$LLM_JOURNEY_ROLE_COORDINATOR` | `/LLM_Journey/a-docs/roles/coordinator.md` | CR Coordinator role — adversarial review, quality gates, and sub-agent handoffs |
@@ -59,3 +62,4 @@ When a file moves, update **only this table**. All docs reference the variable n
 | `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_FINDINGS` | `/a-society/general/improvement/reports/template-findings.md` | Per-agent findings report template |
 | `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_SYNTHESIS` | `/a-society/general/improvement/reports/template-synthesis.md` | Synthesis report template |
 | `$LLM_JOURNEY_IMPROVEMENT_TEMPLATE_BACKLOG` | `/a-society/general/improvement/reports/template-backlog.md` | Alignment backlog template |
+| `$LLM_JOURNEY_OBSERVABILITY` | `/LLM_Journey/a-docs/project-principles/observability.md` | Observability architecture, stack, design principles, and the Purposeful Observability Principle |

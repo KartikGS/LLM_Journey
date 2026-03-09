@@ -42,6 +42,8 @@ Key file locations are registered in [`a-docs/indexes/main.md`](/LLM_Journey/a-d
 - **How we work:** `$LLM_JOURNEY_WORKFLOW`
 
 ### Layer 2: Role-Specific Context (see your role file)
+- Owner → `$LLM_JOURNEY_ROLE_OWNER`
+- Curator → `$LLM_JOURNEY_ROLE_CURATOR`
 - Business Analyst → `$LLM_JOURNEY_ROLE_BA`
 - Tech Lead → `$LLM_JOURNEY_ROLE_TECH_LEAD`
 - Frontend → `$LLM_JOURNEY_ROLE_FRONTEND`
