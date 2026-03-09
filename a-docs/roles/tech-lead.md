@@ -403,3 +403,15 @@ Before declaring success:
 - [ ] Did I delegate appropriately (no feature code written directly)?
 
 If any answer is "no" → the task is not done.
+
+## Input Validation
+
+- **Expected Input**: `CR-XXX-<slug>.md` requirements document, `ba-to-tech-lead.md` handoff, or `<role>-to-tech-lead.md` conclusion summary.
+- **Action on Invalid Input**: If the requirement lacks clear acceptance criteria or the handoff format is incorrect, flag the discrepancy to the BA, Coordinator, or User before proceeding. Do not silently guess the scope.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Start a new session for sub-agents (or resume existing Coordinator session), or resume existing BA session for completion.
+2. **Next actor:** CR Coordinator, Sub-agent, or BA.
+3. **Required reading:** `tech-lead-to-<role>.md` or `TL-session-state.md`.

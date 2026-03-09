@@ -1,10 +1,39 @@
 # Workflow (The Agent Loop)
 
+**Summary:** The core models for execution (graphs & sessions) and the distinct workflows that implement them.
+
 **Core Guidance**: Before starting any task, review `$LLM_JOURNEY_THINKING_REASONING`.
 
-## Multi-Agent Workflow
+## The Workflow as a Graph
 
-### Requirement Analysis Phase (BA Agent)
+Workflows are modeled as a graph:
+- **Nodes** are the phases (role executions with specific input/output contracts).
+- **Edges** are the transitions (handoff protocols) between them.
+- **Instances** are concurrent traversals of the graph scoped by a unique Unit-of-Work ID (e.g., `CR-001`, `update001`).
+
+## Sessions and the Human Orchestrator
+
+Workflows are executed through **sessions** — continuous interactions between the human and an agent that can be paused and resumed.
+- **Session Reuse**: Resuming an existing session is preferred over starting new ones unless context isolation is explicitly required.
+- **Human Orchestrator**: The human user orchestrates the workflow by carrying artifacts between sessions. Agents MUST tell the human what to do at each pause point (whether to start/resume, who acts next, what to read).
+
+## 5. Session Model
+
+The project uses discrete agent sessions managed by the human orchestrator:
+- **Owner Session**: Universal entry point for routing.
+- **BA Session**: Scope clarification and CR definition.
+- **Tech Lead Session A**: Technical planning and direct non-feature changes.
+- **CR Coordinator Session**: One sub-agent round-trip (handoff, execution, verification).
+- **Tech Lead Session B**: Wait state evaluation and completion reporting.
+
+---
+
+## Workflow 1: The Core CR Graph (Multi-Agent Workflow)
+
+**Summary:** The standard pipeline for translating user intent into tested, verified system changes (Change Requirements).
+
+
+### Node 1: Requirement Analysis Phase (BA Agent)
 1. Human User provides rough CR.
 2. BA clarifies through Q&A.
 3. **Audience & Outcome Check (Mandatory):** BA explicitly identifies:
@@ -20,7 +49,7 @@
 10. Human User approves or requests changes.
 11. **Pivot Loop**: If during Phase 2 the Tech Lead identifies a fundamental assumption error (e.g., "Safari actually supports X"), the BA must pivot the CR, re-clarify with the Human User, and issue a revised handoff.
 
-### Technical Planning & Delegation Phase (Tech Lead Agent)
+### Node 2: Technical Planning & Delegation Phase (Tech Lead Agent)
 1. Tech Lead reads CR from BA. Read `/LLM_Journey/a-docs/communication/conversations/ba-to-tech-lead.md` for more details.
 2. Tech Lead assesses technical complexity and identifies required sub-agents.
 3. **Execution Audit**: Tech Lead audits existing `/LLM_Journey/a-docs/communication/conversations/` to ensure stale context is cleared or properly updated before new handoffs are issued. (See Conversation File Freshness Rule below.)
@@ -133,7 +162,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 
 
 
-### Implementation Phase (Sub-Agents)
+### Node 3: Implementation Phase (Sub-Agents)
 1. Sub-agent receives task specification from Tech Lead Agent in `/LLM_Journey/a-docs/communication/conversations/tech-lead-to-<role>.md`
    - **Handoff Template**: Must include `[Objective]`, `[Constraints]`, and `[Definition of Done]`.
 2. **Initial Verification**: Before starting code changes, verify environmental assumptions (e.g., check if a browser truly lacks a feature as claimed) and contract availability (e.g., confirm required selectors/IDs exist).
@@ -181,7 +210,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
   - `Tech Lead verification handoff -> [BA concerns <-> Tech Lead responses] (0..N rounds) -> closure`.
 - Disagreement is expected when it improves correctness; unresolved scope conflicts must be escalated to user.
 
-### Verification Phase (Tech Lead Agent)
+### Node 4: Verification Phase (Tech Lead Agent)
 1. Tech Lead reviews completed work reports
 2. **Diff Review**: Tech Lead inspects the code diffs for logic errors or missing edge cases (Adversarial Review).
 3. Tech Lead ensures integration works
@@ -190,7 +219,7 @@ Apply the canonical checklist in `$LLM_JOURNEY_ROLE_TECH_LEAD` before any direct
 6. **Post-Verification Drift Check (Mandatory):** Before issuing the BA handoff, confirm that feature files verified in steps 1–5 have not been modified after verification was recorded — whether by an agent or by the Human User directly. **Mechanism**: In synchronous single-session execution where verification and handoff issuance occur consecutively, this check is trivially satisfied — no drift is possible between sequential tool calls. In multi-session or async scenarios, re-read feature files or compare modification timestamps to confirm no intervening edits. If drift is detected, a re-verification pass is required. Note the drift in the BA handoff with the original and current file state.
 7. **Output:** Verified feature + completion report in `a-docs/communication/conversations/tech-lead-to-ba.md` following Handoff Protocol in `a-docs/communication/coordination/handoff-protocol.md`.
 
-### Acceptance Phase (BA Agent)
+### Node 5: Acceptance Phase (BA Agent)
 1. BA reviews the Tech Lead's report and verifies AC are met.
 2. **AC Evidence Annotation**: For each AC in the CR, mark `[x]` with a one-line evidence reference (file + line number). Apply graduated verification:
    - **Security constraints** (data must/must not appear, auth invariants) and **deleted contracts** (structural deletions that alter observable product behavior, test contracts, or external integration contracts — including but not limited to: removed testids, removed or renamed API endpoints, changed error codes, removed files, removed route handlers, removed metric instruments, removed observability configuration): independently re-read the cited file/line to confirm — **unless** the `tech-lead-to-ba.md` handoff includes **specific cited TL adversarial evidence** for that constraint. Specific cited TL adversarial evidence must identify: (a) the file path, (b) the line number or range, and (c) what the evidence demonstrates — i.e., what was independently confirmed (natural language is sufficient; a formal assertion-type label is not required). Example: "`__tests__/api/frontier.test.ts:45 — mocked-fetch test confirms no fetch calls triggered on 413 path`" qualifies; a general `"reviewed and confirmed"` note does not. In that case, the BA may accept the TL citation in place of an independent re-read and must log: `"graduated per specific cited TL adversarial evidence: [reproduce the TL citation]"`.
@@ -261,3 +290,26 @@ When execution feedback expands work beyond the approved handoff (for example to
 If a CR modifies shared UI under `app/ui/**`:
 - The implementing agent MUST list impacted routes in preflight.
 - The completion report MUST include a regression sanity check for each impacted route (at minimum: render integrity and primary interactive surface visibility).
+
+
+---
+
+## Workflow 2: Framework Update Graph
+
+**Summary:** A reusable workflow for handling upstream A-Society updates, ensuring changes are safely incorporated into `a-docs/`.
+
+### Node 1: Trigger (Owner Agent)
+1. Owner checks for upstream updates in `a-society/updates/`.
+2. Owner routes the updates into the Framework Update Graph.
+3. **Edge (Handoff):** Owner creates an update handoff artifact for the Curator and pauses.
+
+### Node 2: Execution (Curator Agent)
+1. Curator loads the updates and the Owner's handoff.
+2. Curator analyzes the impact and modifies the required files strictly within `a-docs/`.
+3. Curator generates feedback on the updates.
+4. **Edge (Handoff):** Curator writes an `updateXXX-curator-to-owner.md` artifact summarizing the changes and inviting final review, then pauses.
+
+### Node 3: Conclusion (Owner Agent)
+1. Owner resumes and loads the Curator's summary.
+2. Owner conducts a final review (Go/No-Go) to verify architectural vision integrity.
+3. Owner closes the update instance.

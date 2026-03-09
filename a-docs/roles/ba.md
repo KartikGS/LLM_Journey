@@ -231,3 +231,15 @@ If any answer is "no" → continue clarification.
 4. **Delegation Precision**: Never say "I will initate a task to install X". This causes Role Anxiety.
    - **Bad**: "I will install Zod..." (Implies you will break role).
    - **Good**: "I will create a Requirement for the Tech Lead to install Zod." (Clear delegation).
+
+## Input Validation
+
+- **Expected Input**: Freeform user request and/or `tech-lead-to-ba.md` handoff.
+- **Action on Invalid Input**: If the user intent is missing or the handoff format is incorrect, explicitly flag the discrepancy and request clarification before proceeding.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Start a new Tech Lead session (for planning) or resume existing Tech Lead session.
+2. **Next actor:** Tech Lead or User.
+3. **Required reading:** `ba-to-tech-lead.md`.

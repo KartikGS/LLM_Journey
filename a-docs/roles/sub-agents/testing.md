@@ -84,3 +84,15 @@ If tests fail due to the environment (e.g., Playwright version mismatch, CI vs l
 -   [ ] Are flakes minimized?
 -   [ ] Is the CI pipeline green?
 -   [ ] Have all false assumptions or missing dependencies been reported back to the Tech Lead?
+
+## Input Validation
+
+- **Expected Input**: `tech-lead-to-testing.md` handoff file.
+- **Action on Invalid Input**: If the handoff lacks clear objectives, boundaries, or DoD, flag the discrepancy in your preflight note before proceeding. Do not silently guess missing constraints.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Resume the existing CR Coordinator session (or Tech Lead session if N=0). Do not start a new session.
+2. **Next actor:** CR Coordinator.
+3. **Required reading:** `testing-to-tech-lead.md`.

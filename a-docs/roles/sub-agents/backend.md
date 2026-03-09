@@ -77,3 +77,15 @@ This scan is triggered by the security nature of the CR, not by an explicit hand
 -   [ ] Is the API compliant with the contracts specified in the Tech Lead handoff?
 -   [ ] Did I modify only files in backend scope (or explicitly delegated files)?
 -   [ ] Are there no debug artifacts (console.log, console.error, commented-out code blocks) in production code paths?
+
+## Input Validation
+
+- **Expected Input**: `tech-lead-to-backend.md` handoff file.
+- **Action on Invalid Input**: If the handoff lacks clear objectives, boundaries, or DoD, flag the discrepancy in your preflight note before proceeding. Do not silently guess missing constraints.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Resume the existing CR Coordinator session (or Tech Lead session if N=0). Do not start a new session.
+2. **Next actor:** CR Coordinator.
+3. **Required reading:** `backend-to-tech-lead.md`.

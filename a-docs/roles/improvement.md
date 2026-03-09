@@ -102,3 +102,15 @@ After completing all Phase 3 chunks:
 - [ ] Were all vocabulary pre-decisions from the synthesis used exactly — no independently coined synonyms?
 - [ ] Is the synthesis document updated with implementation notes and regression check outcomes?
 - [ ] Were any out-of-scope changes flagged as follow-up CR candidates rather than implemented inline?
+
+## Input Validation
+
+- **Expected Input**: Prior-role findings files or synthesis document.
+- **Action on Invalid Input**: If findings files are missing required sections or synthesis lacks actionable chunks, flag the discrepancy before proceeding with synthesis or implementation.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Resume the Owner session or human orchestrator session.
+2. **Next actor:** Owner or User.
+3. **Required reading:** `synthesis.md` or updated agent docs.

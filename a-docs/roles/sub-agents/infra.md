@@ -40,3 +40,15 @@ Before executing any task, also read:
 -   [ ] Is the local dev environment reproducible?
 -   [ ] Did I avoid route-level API logic unless explicitly delegated?
 -   [ ] **Verification**: Have you tested the *negative space*? (e.g., if you restrict X, did you verify Y is still allowed?)
+
+## Input Validation
+
+- **Expected Input**: `tech-lead-to-infra.md` handoff file.
+- **Action on Invalid Input**: If the handoff lacks clear objectives, boundaries, or DoD, flag the discrepancy in your preflight note before proceeding. Do not silently guess missing constraints.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Resume the existing CR Coordinator session (or Tech Lead session if N=0). Do not start a new session.
+2. **Next actor:** CR Coordinator.
+3. **Required reading:** `infra-to-tech-lead.md`.

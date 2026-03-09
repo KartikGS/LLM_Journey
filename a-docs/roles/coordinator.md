@@ -174,3 +174,15 @@ Use this library to select the relevant domain checks for a given CR type. Recor
 - [ ] Review `keep-in-mind.md`: promote or retire any technical/security entries resolved by this CR.
 - [ ] Verify documentation updates are present.
 - [ ] **Return verified conclusion summary to Tech Lead.** Coordinator closes its session here. Remaining steps (BA handoff authoring, contract registry update) belong to the Tech Lead (Session B).
+
+## Input Validation
+
+- **Expected Input**: `TL-session-state.md` and either `<role>-to-tech-lead.md` completion report or Tech Lead issued handoff.
+- **Action on Invalid Input**: If the session state is missing or the completion report format is incorrect, flag the discrepancy before proceeding with adversarial review.
+
+## Handoff Output
+
+At each pause point, this role must precisely instruct the human orchestrator:
+1. **Session routing:** Resume the existing Tech Lead session or start/resume a sub-agent session.
+2. **Next actor:** Tech Lead or Sub-agent.
+3. **Required reading:** Conclusion summary or `tech-lead-to-<role>.md` handoff.
